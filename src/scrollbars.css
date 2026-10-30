@@ -1,0 +1,35 @@
+/* Native scrolling stays available to keyboards, touch and assistive technology. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb, #746451) var(--scroll-track, #191613);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: var(--scroll-track, #191613);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scroll-track, #191613);
+  border-radius: 999px;
+  background: var(--scroll-thumb, #746451);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary, #d99b26);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--primary, #f5a623);
+}
+
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: auto;
+  }
+}

@@ -134,30 +134,48 @@
         </div>
       </div>
       <nav id="admin-navigation" aria-label="Administración">
-        @for (item of nav(); track item[0]) {
-          <button
-            [class.current]="tab() === item[0]"
-            [attr.aria-current]="tab() === item[0] ? 'page' : null"
-            [attr.aria-label]="item[2]"
-            [title]="item[2]"
-            (click)="openTab(item[0])"
-          >
-            <span><app-icon [name]="item[1]" /></span>
+        @for (group of navigation(); track group.id) {
+          <section class="sidebar-group" [attr.aria-label]="group.label">
             @if (sidebarExpanded()) {
-              <span
-                class="sidebar-label"
+              <h2
+                class="sidebar-group-label"
                 animate.enter="sidebar-label-enter"
                 animate.leave="sidebar-label-leave"
-                >{{ item[2] }}</span
               >
+                {{ group.label }}
+              </h2>
             }
-            @if (item[0] === 'service' && pending()) {
-              <small>{{ pending() }}</small>
+            @for (item of group.items; track item.id) {
+              <button
+                type="button"
+                [class.current]="tab() === item.id"
+                [attr.aria-current]="tab() === item.id ? 'page' : null"
+                [attr.aria-label]="item.label"
+                [title]="item.label"
+                (click)="openTab(item.id)"
+              >
+                <span><app-icon [name]="item.icon" /></span>
+                @if (sidebarExpanded()) {
+                  <span
+                    class="sidebar-label"
+                    animate.enter="sidebar-label-enter"
+                    animate.leave="sidebar-label-leave"
+                    >{{ item.label }}</span
+                  >
+                }
+                @if (item.id === 'service' && pending()) {
+                  <small [attr.aria-label]="pending() + ' pedidos pendientes'">{{
+                    pending() > 99 ? '99+' : pending()
+                  }}</small>
+                }
+                @if (item.id === 'inventory' && low().length) {
+                  <small [attr.aria-label]="low().length + ' productos con stock bajo'">{{
+                    low().length > 99 ? '99+' : low().length
+                  }}</small>
+                }
+              </button>
             }
-            @if (item[0] === 'inventory' && low().length) {
-              <small>{{ low().length }}</small>
-            }
-          </button>
+          </section>
         }
       </nav>
       <div class="sidebar-bottom">
@@ -1177,6 +1195,19 @@
                         pattern="[A-Z]{3}"
                         required
                     /></label>
+                  </div>
+                  <div class="menu-price-preference">
+                    <label class="checkbox"
+                      ><input
+                        type="checkbox"
+                        name="showMenuPrices"
+                        [(ngModel)]="settings.showMenuPrices"
+                      />Mostrar precios en la carta pública</label
+                    >
+                    <p>
+                      Se aplica a las tarjetas y a los detalles de productos. Los pedidos y las
+                      cuentas siempre muestran sus importes.
+                    </p>
                   </div>
                   <label>Dirección<input name="address" [(ngModel)]="settings.address" /></label
                   ><label>Horario<input name="hours" [(ngModel)]="settings.hours" /></label

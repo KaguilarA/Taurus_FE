@@ -1,0 +1,86 @@
+<dialog
+  #dialog
+  class="product-dialog"
+  aria-labelledby="menu-product-title"
+  (cancel)="handleCancel($event)"
+  (close)="handleClosed()"
+  (click)="handleBackdrop($event)"
+>
+  <button
+    type="button"
+    class="dialog-close"
+    aria-label="Cerrar detalles del producto"
+    (click)="close()"
+  >
+    <app-icon name="x" />
+  </button>
+  @if (product(); as item) {
+    <article class="product-detail" animate.enter="detail-enter">
+      <div class="product-visual">
+        @if (image()) {
+          <img [src]="image()" [alt]="item.name" (error)="imageFailed.set(true)" />
+        } @else {
+          <div class="product-image-placeholder">
+            <app-icon name="utensils" /><span>Imagen por agregar</span>
+          </div>
+        }
+      </div>
+      <div class="product-information">
+        <p class="detail-category">{{ category() }}</p>
+        <h2 id="menu-product-title">{{ item.name }}</h2>
+        @if (item.featured) {
+          <span class="detail-featured">Especialidad de la casa</span>
+        }
+        <p class="detail-description">
+          {{ item.description || 'Consultá al personal para conocer más sobre este producto.' }}
+        </p>
+        @if (item.inventory === 'ml') {
+          <div class="detail-servings" aria-label="Presentaciones disponibles">
+            @for (size of servings; track size.key) {
+              <div>
+                <span
+                  >{{ size.label }} <small>{{ settings().servings[size.key] }} ml</small></span
+                >
+                @if (showPrices()) {
+                  <strong>{{ money(item.prices[size.key]) }}</strong>
+                }
+              </div>
+            }
+          </div>
+        } @else if (showPrices()) {
+          <p class="detail-price">{{ money(item.price) }}</p>
+        }
+        @if (loading()) {
+          <p class="detail-status" role="status">Actualizando detalles…</p>
+        }
+        @if (error()) {
+          <div class="detail-error" role="alert">
+            <p>{{ error() }}</p>
+            <button type="button" class="button outline" (click)="retry()">Reintentar</button>
+          </div>
+        }
+        @if (canOrder()) {
+          <div class="detail-order">
+            @if (item.inventory === 'ml') {
+              <label
+                >Presentación<select [value]="serving()" (change)="chooseServing($event)">
+                  @for (size of servings; track size.key) {
+                    <option [value]="size.key">{{ size.label }}</option>
+                  }
+                </select></label
+              >
+            }
+            <button
+              class="button accent"
+              type="button"
+              [disabled]="loading() || !!error() || submitting()"
+              (click)="addToOrder()"
+            >
+              <app-icon name="plus" /> Agregar al pedido
+            </button>
+          </div>
+        }
+      </div>
+    </article>
+  }
+</dialog>

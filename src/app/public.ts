@@ -1,4 +1,5 @@
-import { ProductDetails } from './product-details';
+import { MenuComponent } from './menu/menu.component';
+import type { MenuItem } from './menu/menu.models';
 import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -9,10 +10,8 @@ import {
   Api,
   PublicState,
   CalendarEvent,
-  Product,
   Serving,
   GuestBill,
-  categoryName,
   servingName,
   themeAccent,
 } from './api';
@@ -21,7 +20,7 @@ import { OrderSubscription } from './order-socket';
 import { ScrollReveal } from './scroll-reveal';
 @Component({
   selector: 'app-public',
-  imports: [RouterLink, FormsModule, DatePipe, Icon, ProductDetails],
+  imports: [RouterLink, FormsModule, DatePipe, Icon, MenuComponent],
   providers: [ScrollReveal],
   templateUrl: './public.html',
 })
@@ -32,10 +31,6 @@ export class PublicPage {
   private readonly meta = inject(Meta);
   readonly data = signal<PublicState | null>(null);
   readonly error = signal('');
-  readonly filter = signal('all');
-  readonly selectedProduct = signal<Product | null>(null);
-  readonly drinkFilter = signal('all');
-  readonly categoryName = categoryName;
   readonly servingName = servingName;
   readonly eventIcon = (kind: CalendarEvent['kind']): IconName =>
     ({ music: 'music', karaoke: 'mic-vocal', sports: 'tv', other: 'calendar-days' })[
@@ -58,7 +53,7 @@ export class PublicPage {
   }
   readonly bill = signal<GuestBill | null>(null);
   readonly cart = signal<
-    { product: Product; serving: Serving | 'unit'; quantity: number; price: number }[]
+    { product: MenuItem; serving: Serving | 'unit'; quantity: number; price: number }[]
   >([]);
   readonly total = computed(() =>
     this.cart().reduce((sum, line) => sum + line.price * line.quantity, 0),
@@ -67,12 +62,6 @@ export class PublicPage {
   readonly notice = signal('');
   readonly connected = signal(false);
   readonly tableToken = new URLSearchParams(location.search).get('mesa');
-  readonly sizes: { key: Serving; name: string }[] = [
-    { key: 'shot', name: 'Shot' },
-    { key: 'small', name: 'Pequeño' },
-    { key: 'large', name: 'Grande' },
-  ];
-  selectedServing: Record<string, Serving> = {};
   notes = '';
   private requestId = crypto.randomUUID();
   private orderSubscription?: OrderSubscription;
@@ -91,16 +80,6 @@ export class PublicPage {
   sectionLink(section: string) {
     return location.pathname + location.search + '#' + section;
   }
-  readonly products = computed(
-    () =>
-      this.data()?.products.filter(
-        (p) =>
-          (this.filter() === 'all' || p.category === this.filter()) &&
-          (this.filter() !== 'drink' ||
-            this.drinkFilter() === 'all' ||
-            p.drinkType === this.drinkFilter()),
-      ) ?? [],
-  );
   constructor() {
     void this.load();
     this.destroyRef.onDestroy(() => {
@@ -221,10 +200,12 @@ export class PublicPage {
       this.connected.set(false);
     }
   }
-  add(product: Product) {
+  add(
+    product: MenuItem,
+    selectedServing: Serving | 'unit' = product.inventory === 'ml' ? 'shot' : 'unit',
+  ) {
     if (this.busy() || this.bill()?.status !== 'open') return;
-    const serving =
-      product.inventory === 'ml' ? (this.selectedServing[product._id] ?? 'shot') : 'unit';
+    const serving = product.inventory === 'ml' ? selectedServing : 'unit';
     const cart = this.cart().map((line) => ({ ...line }));
     const found = cart.find((line) => line.product._id === product._id && line.serving === serving);
     if (found) found.quantity++;

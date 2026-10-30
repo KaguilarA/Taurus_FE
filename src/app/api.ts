@@ -1,3 +1,4 @@
+import type { MenuPage } from './menu/menu.models';
 import { Injectable, signal } from '@angular/core';
 import { openOrderSocket, OrderScope } from './order-socket';
 export type Serving = 'large' | 'small' | 'shot';
@@ -56,6 +57,7 @@ export interface Settings {
   hours: string;
   phone: string;
   currency: string;
+  showMenuPrices?: boolean;
   accent: string;
   servings: Record<Serving, number>;
 }
@@ -124,7 +126,7 @@ export interface CalendarEvent {
   active: boolean;
   isSample: boolean;
 }
-export type PublicState = Pick<State, 'settings' | 'products' | 'promotions' | 'events'>;
+export type PublicState = Pick<State, 'settings' | 'promotions' | 'events'> & { menu: MenuPage };
 export interface Report {
   revenue: number;
   count: number;
@@ -140,17 +142,24 @@ export class Api {
   readonly state = signal<State | null>(null);
   readonly authenticated = signal(false);
   readonly role = signal<Role | null>(null);
-  async request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+  async request<T>(
+    path: string,
+    method = 'GET',
+    body?: unknown,
+    options: { signal?: AbortSignal } = {},
+  ): Promise<T> {
     const multipart = body instanceof FormData;
     let response: Response;
     try {
       response = await fetch('/api' + path, {
         method,
+        signal: options.signal,
         credentials: 'include',
         headers: body && !multipart ? { 'Content-Type': 'application/json' } : {},
         body: multipart ? body : body ? JSON.stringify(body) : undefined,
       });
-    } catch {
+    } catch (reason) {
+      if (options.signal?.aborted) throw reason;
       throw new Error('No hay conexión con el servidor. Verificá que la API esté encendida.');
     }
     const data = await response.json().catch(() => ({}));

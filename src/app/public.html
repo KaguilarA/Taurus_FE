@@ -20,13 +20,6 @@
         /></a>
       </nav>
     </header>
-    @if (selectedProduct(); as product) {
-      <app-product-details
-        [product]="product"
-        [currency]="d.settings.currency"
-        (dismissed)="selectedProduct.set(null)"
-      />
-    }
     <main>
       @if (error()) {
         <p class="alert error page-width" role="alert">{{ error() }}</p>
@@ -139,120 +132,14 @@
         <span><app-icon name="sparkles" /></span> BUENA COMIDA
         <span><app-icon name="sparkles" /></span> BUENA COMPAÑÍA
       </div>
-      <section id="carta" class="page-width menu-section">
-        <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
-          <div>
-            <p class="eyebrow">HECHO PARA DISFRUTAR</p>
-            <h2>Tu antojo tiene lugar.</h2>
-          </div>
-          <div class="tabs" aria-label="Filtrar carta">
-            @for (
-              option of [
-                ['all', 'Todo'],
-                ['food', 'Comidas'],
-                ['drink', 'Bebidas'],
-                ['snack', 'Snacks y botanas'],
-              ];
-              track option[0]
-            ) {
-              <button [class.selected]="filter() === option[0]" (click)="filter.set(option[0])">
-                {{ option[1] }}
-              </button>
-            }
-          </div>
-        </div>
-        @if (filter() === 'drink') {
-          <div class="tabs mb-6" aria-label="Subtipo de bebida">
-            @for (
-              option of [
-                ['all', 'Todas'],
-                ['non_alcoholic', 'Libre de alcohol'],
-                ['alcoholic', 'Con alcohol'],
-              ];
-              track option[0]
-            ) {
-              <button
-                [class.selected]="drinkFilter() === option[0]"
-                (click)="drinkFilter.set(option[0])"
-              >
-                {{ option[1] }}
-              </button>
-            }
-          </div>
-        }
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          @for (product of products(); track product._id) {
-            <article
-              class="menu-card"
-              (animate.enter)="reveal.enter($event, $index)"
-              (animate.leave)="reveal.leave($event)"
-            >
-              <div class="p-6">
-                <div class="flex justify-between items-start gap-4">
-                  <h3>{{ product.name }}</h3>
-                  <span class="price">{{
-                    api.money(
-                      product.inventory === 'ml' ? product.prices.shot : product.price,
-                      d.settings.currency
-                    )
-                  }}</span>
-                </div>
-                <button
-                  type="button"
-                  class="button outline mt-4"
-                  (click)="selectedProduct.set(product)"
-                >
-                  Ver detalles
-                </button>
-                <small class="muted"
-                  >{{ categoryName(product.category) }}
-                  @if (product.drinkType) {
-                    · {{ product.drinkType === 'alcoholic' ? 'Con alcohol' : 'Libre de alcohol' }}
-                  }
-                </small>
-                @if (product.inventory === 'ml') {
-                  <div class="serving-prices">
-                    @for (
-                      size of [
-                        ['shot', 'Shot'],
-                        ['small', 'Pequeño'],
-                        ['large', 'Grande'],
-                      ];
-                      track size[0]
-                    ) {
-                      <span
-                        >{{ size[1] }} · {{ $any(d.settings.servings)[size[0]] }} ml<br /><strong>{{
-                          api.money($any(product.prices)[size[0]], d.settings.currency)
-                        }}</strong></span
-                      >
-                    }
-                  </div>
-                }
-                @if (bill()?.status === 'open') {
-                  <div class="flex gap-3 items-center mt-4">
-                    @if (product.inventory === 'ml') {
-                      <label
-                        >Medida<select
-                          [ngModel]="selectedServing[product._id] || 'shot'"
-                          (ngModelChange)="selectedServing[product._id] = $event"
-                        >
-                          @for (size of sizes; track size.key) {
-                            <option [value]="size.key">{{ size.name }}</option>
-                          }
-                        </select></label
-                      >
-                    }
-                    <button class="button accent" [disabled]="busy()" (click)="add(product)">
-                      <app-icon name="plus" /> Agregar
-                    </button>
-                  </div>
-                }
-              </div>
-            </article>
-          } @empty {
-            <p class="muted">Pronto tendremos nuevos productos en esta sección.</p>
-          }
-        </div>
+      <app-menu
+        [settings]="d.settings"
+        [initialPage]="d.menu"
+        [canOrder]="bill()?.status === 'open'"
+        [submitting]="busy()"
+        (productAdded)="add($event.product, $event.serving)"
+      />
+      <section class="page-width">
         @if (bill()?.status === 'open' && cart().length) {
           <section id="tu-pedido" class="guest-account cart-panel mt-8" aria-label="Tu pedido">
             <h2>Tu pedido</h2>

@@ -1,0 +1,132 @@
+<section id="carta" class="menu-section page-width" aria-labelledby="menu-heading">
+  <div #heading class="menu-heading">
+    <div>
+      <p class="eyebrow">HECHO PARA DISFRUTAR</p>
+      <h2 id="menu-heading">Tu antojo tiene lugar.</h2>
+    </div>
+    <label class="menu-search"
+      ><app-icon name="search" /><span class="sr-only">Buscar en la carta</span
+      ><input
+        type="search"
+        placeholder="¿Qué se te antoja?"
+        maxlength="100"
+        [value]="store.search()"
+        (input)="searchChanged($event)"
+    /></label>
+  </div>
+  <div class="menu-toolbar">
+    <nav class="menu-filters" aria-label="Categorías del menú">
+      @for (category of categories; track category.value) {
+        <button
+          type="button"
+          [attr.aria-pressed]="store.query().category === category.value"
+          (click)="store.setCategory(category.value)"
+        >
+          {{ category.label }}
+        </button>
+      }
+    </nav>
+    <p class="menu-count" role="status">
+      @if (store.loading()) {
+        Buscando en la carta…
+      } @else if (store.page(); as page) {
+        {{ page.total }} {{ page.total === 1 ? 'producto' : 'productos' }}
+      }
+    </p>
+  </div>
+  @if (store.query().category === 'drink') {
+    <nav class="drink-filters" aria-label="Tipos de bebidas">
+      @for (filter of drinkFilters; track filter.value) {
+        <button
+          type="button"
+          [attr.aria-pressed]="store.query().drinkType === filter.value"
+          (click)="store.setDrinkType(filter.value)"
+        >
+          {{ filter.label }}
+        </button>
+      }
+    </nav>
+  }
+  <div [attr.aria-busy]="store.loading()">
+    @if (store.error()) {
+      <div class="menu-message" role="alert">
+        <h3>No pudimos cargar la carta</h3>
+        <p>{{ store.error() }}</p>
+        <button class="button outline" (click)="store.retry()">Intentar de nuevo</button>
+      </div>
+    } @else if (store.page(); as page) {
+      <div class="menu-grid" [class.menu-grid-loading]="store.loading()">
+        @for (product of page.items; track product._id) {
+          <app-product-card
+            [product]="product"
+            [settings]="settings()"
+            [canOrder]="canOrder()"
+            [submitting]="submitting()"
+            (detailsRequested)="openDetails($event)"
+            (productAdded)="productAdded.emit($event)"
+            (animate.enter)="reveal.enter($event, $index)"
+            (animate.leave)="reveal.leave($event)"
+          />
+        } @empty {
+          <div class="menu-message">
+            <app-icon name="search" />
+            <h3>No encontramos productos</h3>
+            <p>Probá con otro nombre o elegí otra categoría.</p>
+            <button class="button outline" (click)="store.clear()">Ver toda la carta</button>
+          </div>
+        }
+      </div>
+      @if (page.pageCount > 1) {
+        <nav class="menu-pagination" aria-label="Páginas del menú">
+          <p>
+            {{ (page.page - 1) * page.pageSize + 1 }}–{{
+              (page.page - 1) * page.pageSize + page.items.length
+            }}
+            de {{ page.total }}
+          </p>
+          <div>
+            <button
+              type="button"
+              [disabled]="page.page === 1 || store.loading()"
+              (click)="changePage(page.page - 1)"
+              aria-label="Página anterior"
+            >
+              ←
+            </button>
+            @for (number of store.pageNumbers(); track number) {
+              <button
+                type="button"
+                [attr.aria-label]="'Página ' + number"
+                [attr.aria-current]="number === page.page ? 'page' : null"
+                [disabled]="store.loading()"
+                (click)="changePage(number)"
+              >
+                {{ number }}
+              </button>
+            }
+            <button
+              type="button"
+              [disabled]="page.page === page.pageCount || store.loading()"
+              (click)="changePage(page.page + 1)"
+              aria-label="Página siguiente"
+            >
+              →
+            </button>
+          </div>
+        </nav>
+      }
+    } @else {
+      <div class="menu-grid" aria-label="Cargando productos">
+        @for (item of placeholders; track item) {
+          <div class="menu-skeleton"></div>
+        }
+      </div>
+    }
+  </div>
+</section>
+<app-product-dialog
+  [settings]="settings()"
+  [canOrder]="canOrder()"
+  [submitting]="submitting()"
+  (productAdded)="productAdded.emit($event)"
+/>

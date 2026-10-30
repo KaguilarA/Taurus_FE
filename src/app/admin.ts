@@ -5,7 +5,7 @@ import { RouterLink, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Icon } from './icon';
 import { ImageUpload } from './image-upload';
-import { IconName } from './icon-names';
+import { navigationFor } from './admin-navigation';
 import { OrderSubscription } from './order-socket';
 import {
   Api,
@@ -49,6 +49,7 @@ const blankProduct = (): Product => ({
   selector: 'app-admin',
   imports: [FormsModule, RouterLink, DatePipe, Icon, ImageUpload],
   templateUrl: './admin.html',
+  styleUrl: './admin.css',
 })
 export class AdminPage {
   readonly MathFloor = Math.floor;
@@ -66,11 +67,7 @@ export class AdminPage {
     () =>
       ({ admin: 'Administrador', kitchen: 'Cocina', waiter: 'Mesero' })[this.api.role() ?? 'admin'],
   );
-  readonly nav = computed(() =>
-    this.allNav.filter(
-      (item) => this.api.role() === 'admin' || ['service', 'profile'].includes(item[0]),
-    ),
-  );
+  readonly navigation = computed(() => navigationFor(this.api.role()));
   readonly pending = computed(
     () => this.service().orders.filter((order) => order.orderStatus === 'pending').length,
   );
@@ -115,20 +112,6 @@ export class AdminPage {
         .state()
         ?.products.filter((p) => p.name.toLowerCase().includes(this.search().toLowerCase())) ?? [],
   );
-  readonly allNav: [string, IconName, string][] = [
-    ['service', 'activity', 'Pedidos en vivo'],
-    ['profile', 'users-round', 'Mi perfil'],
-    ['overview', 'house', 'Resumen'],
-    ['sales', 'shopping-bag', 'Punto de venta'],
-    ['inventory', 'package', 'Inventario'],
-    ['products', 'utensils', 'Productos'],
-    ['promotions', 'sparkles', 'Promociones'],
-    ['events', 'calendar-days', 'Eventos'],
-    ['reports', 'chart-no-axes-combined', 'Reportes'],
-    ['settings', 'settings-2', 'Personalización'],
-    ['tables', 'qr-code', 'Mesas y códigos QR'],
-    ['accounts', 'users-round', 'Equipo y roles'],
-  ];
   readonly sizes: { key: Serving; name: string }[] = [
     { key: 'large', name: 'Grande' },
     { key: 'small', name: 'Pequeño' },
@@ -261,7 +244,13 @@ export class AdminPage {
     this.search.set('');
     this.error.set('');
     this.notice.set('');
-    if (tab === 'settings') this.settings = structuredClone(this.api.state()!.settings);
+    if (tab === 'settings') {
+      const settings = this.api.state()!.settings;
+      this.settings = {
+        ...structuredClone(settings),
+        showMenuPrices: settings.showMenuPrices ?? true,
+      };
+    }
     if (tab === 'tables') void this.run(() => this.loadTables());
     if (tab === 'profile')
       void this.run(async () => {

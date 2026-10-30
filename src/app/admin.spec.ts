@@ -72,11 +72,18 @@ describe('Restaurant orders', () => {
   it('shows only service operations to kitchen and waiter roles', () => {
     for (const role of ['kitchen', 'waiter'] as const) {
       api.role.set(role);
-      expect(page.nav().map((item) => item[0])).toEqual(['service', 'profile']);
+      expect(page.navigation().flatMap((group) => group.items.map((item) => item.id))).toEqual([
+        'service',
+        'profile',
+      ]);
     }
     api.role.set('admin');
-    expect(page.nav().map((item) => item[0])).toContain('accounts');
-    expect(page.nav().map((item) => item[0])).toContain('tables');
+    expect(page.navigation().flatMap((group) => group.items.map((item) => item.id))).toContain(
+      'accounts',
+    );
+    expect(page.navigation().flatMap((group) => group.items.map((item) => item.id))).toContain(
+      'tables',
+    );
   });
   it('handles snacks without inventory and enables payment only after delivery', () => {
     page.editProduct();

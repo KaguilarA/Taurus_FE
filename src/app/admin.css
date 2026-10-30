@@ -1,0 +1,106 @@
+.sidebar {
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
+.sidebar-heading,
+.sidebar-bottom {
+  flex-shrink: 0;
+}
+
+.sidebar-toggle {
+  margin-bottom: 12px;
+}
+
+.sidebar-caption {
+  margin: 16px 10px;
+}
+
+.sidebar nav {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  padding-block: 4px;
+  scrollbar-width: thin;
+}
+
+.sidebar-group {
+  display: grid;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.sidebar-group + .sidebar-group {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.sidebar-group-label {
+  margin: 4px 10px 6px;
+  color: var(--text-muted);
+  font:
+    500 10px/1.5 'Space Grotesk',
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sidebar nav button {
+  min-height: 44px;
+  padding: 10px;
+  gap: 10px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.sidebar nav button > .sidebar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar nav button:focus-visible,
+.sidebar-toggle:focus-visible,
+.sidebar-bottom a:focus-visible,
+.sidebar-bottom button:focus-visible {
+  outline: 2px solid var(--text-warm);
+  outline-offset: -2px;
+}
+
+.sidebar-bottom {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-bottom > a {
+  padding-block: 10px;
+}
+
+.sidebar .account {
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.sidebar .account > button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 6px;
+}
+
+.sidebar .account > button:hover {
+  background: var(--surface-raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar nav button {
+    transition: none;
+  }
+}

@@ -1,0 +1,56 @@
+<article class="menu-item-card">
+  <div class="menu-item-meta">
+    <span>{{ category() }}</span>
+    @if (product().featured) {
+      <span class="house-label">De la casa</span>
+    }
+  </div>
+  <div class="menu-item-heading">
+    <h3>{{ product().name }}</h3>
+    @if (showPrices()) {
+      <span class="menu-item-price">
+        @if (product().inventory === 'ml') {
+          <small>Desde</small>
+        }
+        {{ price() }}</span
+      >
+    }
+  </div>
+  @if (product().description) {
+    <p class="menu-item-description">{{ product().description }}</p>
+  }
+  <div class="menu-item-footer">
+    <button
+      class="menu-item-details"
+      type="button"
+      [attr.aria-label]="'Ver detalles de ' + product().name"
+      (click)="detailsRequested.emit(selection())"
+    >
+      Ver detalles <app-icon name="arrow-up-right" />
+    </button>
+    @if (canOrder()) {
+      <div class="menu-item-order">
+        @if (product().inventory === 'ml') {
+          <select
+            [attr.aria-label]="'Medida de ' + product().name"
+            [value]="serving()"
+            (change)="chooseServing($event)"
+          >
+            @for (option of servings; track option.key) {
+              <option [value]="option.key">{{ option.label }}</option>
+            }
+          </select>
+        }
+        <button
+          class="menu-item-add"
+          type="button"
+          [disabled]="submitting()"
+          [attr.aria-label]="'Agregar ' + product().name + ' al pedido'"
+          (click)="productAdded.emit(selection())"
+        >
+          <app-icon name="plus" /><span>Agregar</span>
+        </button>
+      </div>
+    }
+  </div>
+</article>
