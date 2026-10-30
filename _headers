@@ -24,3 +24,12 @@
 
 /business/setup
   Cache-Control: no-cache
+
+/admin/*
+  Cache-Control: no-cache
+
+/producto/*
+  Cache-Control: no-cache
+
+/cuenta/*
+  Cache-Control: no-cache
