@@ -778,19 +778,6 @@
                                 : p.stock + (p.inventory === 'ml' ? ' ml disponibles' : ' unidades')
                             }}
                           </p>
-                          @if (p.category === 'drink') {
-                            <label
-                              >Subtipo de bebida<select
-                                name="drinkType"
-                                [(ngModel)]="p.drinkType"
-                                required
-                              >
-                                <option value="">Seleccionar subtipo</option>
-                                <option value="non_alcoholic">Libre de alcohol</option>
-                                <option value="alcoholic">Con alcohol</option>
-                              </select></label
-                            >
-                          }
                           @if (p.inventory === 'ml') {
                             <label class="mt-3"
                               >Medida<select
@@ -1254,7 +1241,7 @@
           <app-icon name="x" />
         </button>
       </div>
-      <form class="form-grid p-6" (ngSubmit)="saveProduct()">
+      <form class="form-grid p-6" (ngSubmit)="saveProduct()" #productForm="ngForm">
         <label>Nombre<input name="name" [(ngModel)]="p.name" required maxlength="150" /></label
         ><label
           >Descripción<textarea
@@ -1293,6 +1280,23 @@
             </select></label
           >
         </div>
+        @if (p.category === 'drink') {
+          <label
+            >Subcategoría de bebida (obligatoria)<select
+              name="drinkType"
+              [(ngModel)]="p.drinkType"
+              required
+              #drinkType="ngModel"
+            >
+              <option value="">Seleccioná una subcategoría</option>
+              <option value="non_alcoholic">Libre de alcohol</option>
+              <option value="alcoholic">Con alcohol</option>
+            </select></label
+          >
+          @if (!p.drinkType) {
+            <p class="muted">Seleccioná si la bebida contiene alcohol antes de guardar.</p>
+          }
+        }
         @if (p.inventory === 'ml') {
           <div class="grid sm:grid-cols-3 gap-4">
             @for (size of sizes; track size.key) {
@@ -1352,7 +1356,7 @@
         @if (error()) {
           <p class="alert error" role="alert">{{ error() }}</p>
         }
-        <button class="button dark" [disabled]="busy() || imageUploading()">
+        <button class="button dark" [disabled]="busy() || imageUploading() || productForm.invalid">
           <app-icon name="save" /> Guardar producto
         </button>
       </form>

@@ -28,6 +28,22 @@ describe('Restaurant orders', () => {
       movements: [],
     });
   });
+  it('requires a beverage subcategory before sending a save request', async () => {
+    const request = vi.spyOn(api, 'request').mockResolvedValue({});
+    page.product = { ...product, _id: 'rum', name: 'Ron', category: 'drink', drinkType: '' };
+    page.saveProduct();
+    expect(request).not.toHaveBeenCalled();
+    expect(page.error()).toContain('subcategoría');
+    page.product.drinkType = 'alcoholic';
+    vi.spyOn(api, 'load').mockResolvedValue(undefined);
+    page.saveProduct();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(request).toHaveBeenCalledWith(
+      '/admin/products/rum',
+      'PUT',
+      expect.objectContaining({ drinkType: 'alcoholic' }),
+    );
+  });
   it('keeps different serving prices separate and merges identical servings', () => {
     page.add(product);
     page.add(product);

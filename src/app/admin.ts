@@ -35,6 +35,7 @@ const blankProduct = (): Product => ({
   description: '',
   image: '',
   category: 'food',
+  drinkType: '',
   inventory: 'none',
   price: 0,
   prices: { large: 0, small: 0, shot: 0 },
@@ -289,6 +290,13 @@ export class AdminPage {
   }
   saveProduct() {
     const product = this.product!;
+    if (
+      product.category === 'drink' &&
+      !['alcoholic', 'non_alcoholic'].includes(product.drinkType ?? '')
+    ) {
+      this.error.set('Seleccioná la subcategoría de la bebida.');
+      return;
+    }
     void this.run(async () => {
       await this.api.request(
         '/admin/products' + (product._id ? '/' + product._id : ''),
