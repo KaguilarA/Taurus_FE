@@ -9,3 +9,15 @@
 
 /admin
   Cache-Control: no-cache
+
+/deployment.json
+  Cache-Control: no-store
+
+/start
+  Cache-Control: no-cache
+
+/setup
+  Cache-Control: no-cache
+
+/business/setup
+  Cache-Control: no-cache
