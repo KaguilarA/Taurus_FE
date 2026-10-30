@@ -65,6 +65,7 @@ export interface Product {
   description: string;
   image: string;
   category: 'food' | 'drink' | 'snack';
+  drinkType?: 'non_alcoholic' | 'alcoholic' | '';
   inventory: 'none' | 'unit' | 'ml';
   price: number;
   prices: Record<Serving, number>;
@@ -162,7 +163,10 @@ export class Api {
   uploadImage(file: File, purpose: 'product' | 'promotion' | 'event' | 'branding') {
     const form = new FormData();
     form.append('image', file);
-    return this.request<{ url: string }>('/admin/images?purpose=' + purpose, 'POST', form);
+    return this.request<{
+      url: string;
+      optimization?: { originalBytes: number; optimizedBytes: number; savedBytes: number };
+    }>('/admin/images?purpose=' + purpose, 'POST', form);
   }
   async load() {
     const state = await this.request<State>('/admin/state');

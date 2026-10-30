@@ -20,6 +20,13 @@
         /></a>
       </nav>
     </header>
+    @if (selectedProduct(); as product) {
+      <app-product-details
+        [product]="product"
+        [currency]="d.settings.currency"
+        (dismissed)="selectedProduct.set(null)"
+      />
+    }
     <main>
       @if (error()) {
         <p class="alert error page-width" role="alert">{{ error() }}</p>
@@ -102,7 +109,16 @@
           Para pedir y consultar tu cuenta, escaneá el QR de tu mesa o posición en el bar.
         </p>
       }
-      <section class="hero page-width grid lg:grid-cols-2 gap-8 items-center">
+      <section
+        class="hero page-width hero-background"
+        [style.background-image]="
+          d.settings.heroImage
+            ? 'linear-gradient(90deg, rgba(15,10,7,.88), rgba(15,10,7,.35)), url(' +
+              d.settings.heroImage +
+              ')'
+            : null
+        "
+      >
         <div class="hero-copy">
           <p class="eyebrow"><span class="status-dot"></span> {{ d.settings.address }}</p>
           <h1>{{ d.settings.tagline }}</h1>
@@ -117,17 +133,6 @@
           <div class="hero-footnote">
             <span>COCINA CON CARÁCTER</span><span>TRAGOS SIN PRISA</span>
           </div>
-        </div>
-        <div class="hero-art">
-          <img
-            [src]="d.settings.heroImage || '/images/hero.svg'"
-            alt="Ambiente y especialidades de la casa"
-            fetchpriority="high"
-          />
-          <div class="hero-sticker">
-            Un buen trago.<br />Un mejor rato.<span><app-icon name="sparkles" /></span>
-          </div>
-          <span class="image-caption">EL LUGAR ES AQUÍ. EL MOMENTO ES AHORA.</span>
         </div>
       </section>
       <div class="ticker" aria-hidden="true">
@@ -158,6 +163,25 @@
             }
           </div>
         </div>
+        @if (filter() === 'drink') {
+          <div class="tabs mb-6" aria-label="Subtipo de bebida">
+            @for (
+              option of [
+                ['all', 'Todas'],
+                ['non_alcoholic', 'Libre de alcohol'],
+                ['alcoholic', 'Con alcohol'],
+              ];
+              track option[0]
+            ) {
+              <button
+                [class.selected]="drinkFilter() === option[0]"
+                (click)="drinkFilter.set(option[0])"
+              >
+                {{ option[1] }}
+              </button>
+            }
+          </div>
+        }
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (product of products(); track product._id) {
             <article
@@ -165,16 +189,6 @@
               (animate.enter)="reveal.enter($event, $index)"
               (animate.leave)="reveal.leave($event)"
             >
-              <div class="product-image">
-                <img
-                  [src]="product.image || '/images/hero.svg'"
-                  [alt]="product.name"
-                  loading="lazy"
-                />
-                @if (product.featured) {
-                  <span class="product-badge">DE LA CASA <app-icon name="arrow-up-right" /></span>
-                }
-              </div>
               <div class="p-6">
                 <div class="flex justify-between items-start gap-4">
                   <h3>{{ product.name }}</h3>
@@ -185,8 +199,19 @@
                     )
                   }}</span>
                 </div>
-                <p>{{ product.description }}</p>
-                <small class="muted">{{ categoryName(product.category) }}</small>
+                <button
+                  type="button"
+                  class="button outline mt-4"
+                  (click)="selectedProduct.set(product)"
+                >
+                  Ver detalles
+                </button>
+                <small class="muted"
+                  >{{ categoryName(product.category) }}
+                  @if (product.drinkType) {
+                    · {{ product.drinkType === 'alcoholic' ? 'Con alcohol' : 'Libre de alcohol' }}
+                  }
+                </small>
                 @if (product.inventory === 'ml') {
                   <div class="serving-prices">
                     @for (

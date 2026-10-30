@@ -59,4 +59,14 @@ describe('Image uploads through the backend', () => {
     expect(upload).not.toHaveBeenCalled();
     expect(component.error()).toContain('5 MB');
   });
+  it('shows the actual saving reported by the backend after optimization', async () => {
+    const component = TestBed.createComponent(ImageUpload).componentInstance;
+    vi.spyOn(TestBed.inject(Api), 'uploadImage').mockResolvedValue({
+      url: 'https://res.cloudinary.com/sample/optimized.png',
+      optimization: { originalBytes: 1000, optimizedBytes: 400, savedBytes: 600 },
+    });
+    await component.select(event(new File(['png'], 'photo.png', { type: 'image/png' })));
+    expect(component.notice()).toContain('60% menos peso');
+    expect(component.notice()).toContain('Guardá los cambios');
+  });
 });

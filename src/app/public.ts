@@ -1,3 +1,4 @@
+import { ProductDetails } from './product-details';
 import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -20,7 +21,7 @@ import { OrderSubscription } from './order-socket';
 import { ScrollReveal } from './scroll-reveal';
 @Component({
   selector: 'app-public',
-  imports: [RouterLink, FormsModule, DatePipe, Icon],
+  imports: [RouterLink, FormsModule, DatePipe, Icon, ProductDetails],
   providers: [ScrollReveal],
   templateUrl: './public.html',
 })
@@ -32,6 +33,8 @@ export class PublicPage {
   readonly data = signal<PublicState | null>(null);
   readonly error = signal('');
   readonly filter = signal('all');
+  readonly selectedProduct = signal<Product | null>(null);
+  readonly drinkFilter = signal('all');
   readonly categoryName = categoryName;
   readonly servingName = servingName;
   readonly eventIcon = (kind: CalendarEvent['kind']): IconName =>
@@ -91,7 +94,11 @@ export class PublicPage {
   readonly products = computed(
     () =>
       this.data()?.products.filter(
-        (p) => this.filter() === 'all' || p.category === this.filter(),
+        (p) =>
+          (this.filter() === 'all' || p.category === this.filter()) &&
+          (this.filter() !== 'drink' ||
+            this.drinkFilter() === 'all' ||
+            p.drinkType === this.drinkFilter()),
       ) ?? [],
   );
   constructor() {

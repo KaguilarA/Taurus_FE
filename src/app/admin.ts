@@ -66,7 +66,9 @@ export class AdminPage {
       ({ admin: 'Administrador', kitchen: 'Cocina', waiter: 'Mesero' })[this.api.role() ?? 'admin'],
   );
   readonly nav = computed(() =>
-    this.allNav.filter((item) => this.api.role() === 'admin' || item[0] === 'service'),
+    this.allNav.filter(
+      (item) => this.api.role() === 'admin' || ['service', 'profile'].includes(item[0]),
+    ),
   );
   readonly pending = computed(
     () => this.service().orders.filter((order) => order.orderStatus === 'pending').length,
@@ -114,6 +116,7 @@ export class AdminPage {
   );
   readonly allNav: [string, IconName, string][] = [
     ['service', 'activity', 'Pedidos en vivo'],
+    ['profile', 'users-round', 'Mi perfil'],
     ['overview', 'house', 'Resumen'],
     ['sales', 'shopping-bag', 'Punto de venta'],
     ['inventory', 'package', 'Inventario'],
@@ -130,6 +133,60 @@ export class AdminPage {
     { key: 'small', name: 'Pequeño' },
     { key: 'shot', name: 'Shot' },
   ];
+  profile: StaffAccount | null = null;
+  ownPassword = { currentPassword: '', password: '', passwordConfirmation: '' };
+  resetMode = false;
+  resetState = '';
+  resetPassword = { password: '', passwordConfirmation: '' };
+  readonly resetRequests = signal<
+    { _id: string; account?: { name: string; username: string }; createdAt: string }[]
+  >([]);
+  requestReset() {
+    void this.run(async () => {
+      const result = await this.api.request<{ state: string }>('/auth/reset/request', 'POST', {
+        username: this.username,
+      });
+      this.resetState = result.state;
+      this.notice.set(
+        'Solicitud enviada. Un administrador debe aprobarla. Conservá este navegador abierto.',
+      );
+    });
+  }
+  checkReset() {
+    void this.run(async () => {
+      this.resetState = (await this.api.request<{ state: string }>('/auth/reset/status')).state;
+    });
+  }
+  finishReset() {
+    void this.run(async () => {
+      await this.api.request('/auth/reset/complete', 'POST', this.resetPassword);
+      this.resetPassword = { password: '', passwordConfirmation: '' };
+      this.resetMode = false;
+      this.resetState = '';
+    }, 'Contraseña actualizada. Ya podés iniciar sesión.');
+  }
+  saveProfile() {
+    void this.run(async () => {
+      this.profile = await this.api.request<StaffAccount>('/admin/me', 'PUT', this.profile);
+    }, 'Perfil actualizado.');
+  }
+  changeOwnPassword() {
+    void this.run(async () => {
+      await this.api.request('/admin/me/password', 'PUT', this.ownPassword);
+      this.ownPassword = { currentPassword: '', password: '', passwordConfirmation: '' };
+    }, 'Contraseña actualizada. Las demás sesiones deberán ingresar de nuevo.');
+  }
+  loadResets() {
+    void this.run(async () => {
+      this.resetRequests.set(await this.api.request('/admin/password-resets'));
+    });
+  }
+  decideReset(id: string, state: string) {
+    void this.run(async () => {
+      await this.api.request('/admin/password-resets/' + id, 'PATCH', { state });
+      this.resetRequests.set(await this.api.request('/admin/password-resets'));
+    }, 'Solicitud atendida.');
+  }
   username = '';
   password = '';
   label = '';
@@ -205,6 +262,10 @@ export class AdminPage {
     this.notice.set('');
     if (tab === 'settings') this.settings = structuredClone(this.api.state()!.settings);
     if (tab === 'tables') void this.run(() => this.loadTables());
+    if (tab === 'profile')
+      void this.run(async () => {
+        this.profile = await this.api.request<StaffAccount>('/admin/me');
+      });
     if (tab === 'accounts') void this.run(() => this.loadAccounts());
   }
   async loadReport() {

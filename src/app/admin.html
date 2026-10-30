@@ -33,6 +33,67 @@
           {{ busy() ? 'Ingresando…' : 'Entrar al panel' }}<app-icon name="arrow-up-right" />
         </button>
       </form>
+      <button
+        type="button"
+        class="button outline mt-4"
+        (click)="resetMode = !resetMode; checkReset()"
+      >
+        Olvidé mi contraseña
+      </button>
+      @if (notice()) {
+        <p role="status" class="alert success">{{ notice() }}</p>
+      }
+      @if (resetMode) {
+        <section class="mt-6" aria-label="Recuperar contraseña">
+          <h2>Recuperar acceso</h2>
+          <p>
+            Un administrador debe verificar tu identidad y aprobar la solicitud. Completá el proceso
+            en este mismo navegador antes de 30 minutos.
+          </p>
+          @if (resetState === 'approved') {
+            <form class="form-grid mt-4" (ngSubmit)="finishReset()">
+              <label
+                >Nueva contraseña<input
+                  type="password"
+                  name="resetPassword"
+                  [(ngModel)]="resetPassword.password"
+                  required
+                  minlength="12"
+                  autocomplete="new-password"
+              /></label>
+              <label
+                >Confirmar contraseña<input
+                  type="password"
+                  name="resetConfirmation"
+                  [(ngModel)]="resetPassword.passwordConfirmation"
+                  required
+                  minlength="12"
+                  autocomplete="new-password"
+              /></label>
+              <button class="button accent" [disabled]="busy()">Actualizar contraseña</button>
+            </form>
+          } @else if (resetState === 'pending') {
+            <p class="mt-4">Pendiente de aprobación.</p>
+            <button class="button outline mt-4" [disabled]="busy()" (click)="checkReset()">
+              Consultar aprobación
+            </button>
+          } @else {
+            @if (resetState === 'rejected') {
+              <p>Solicitud rechazada. Contactá a un administrador.</p>
+            }
+            <form class="form-grid mt-4" (ngSubmit)="requestReset()">
+              <label
+                >Usuario<input
+                  name="resetUsername"
+                  [(ngModel)]="username"
+                  required
+                  autocomplete="username"
+              /></label>
+              <button class="button accent" [disabled]="busy()">Solicitar aprobación</button>
+            </form>
+          }
+        </section>
+      }
       <a class="back-link" routerLink="/"><app-icon name="arrow-left" /> Volver a la carta</a>
     </section>
   </main>
@@ -211,6 +272,95 @@
         }
         @if (notice()) {
           <p class="alert success" role="status">{{ notice() }}</p>
+        }
+        @if (tab() === 'profile' && profile) {
+          <div class="grid lg:grid-cols-2 gap-6">
+            <form class="panel p-6 form-grid" (ngSubmit)="saveProfile()">
+              <h2>Mi perfil</h2>
+              <label
+                >Nombre<input
+                  name="ownName"
+                  [(ngModel)]="profile.name"
+                  required
+                  maxlength="100"
+                  autocomplete="name"
+              /></label>
+              <label
+                >Usuario<input
+                  name="ownUsername"
+                  [(ngModel)]="profile.username"
+                  required
+                  minlength="3"
+                  maxlength="40"
+                  autocomplete="username"
+              /></label>
+              <button class="button accent" [disabled]="busy()">Guardar perfil</button>
+            </form>
+            <form class="panel p-6 form-grid" (ngSubmit)="changeOwnPassword()">
+              <h2>Cambiar mi contraseña</h2>
+              <label
+                >Contraseña actual<input
+                  type="password"
+                  name="currentPassword"
+                  [(ngModel)]="ownPassword.currentPassword"
+                  autocomplete="current-password"
+                  required
+              /></label>
+              <label
+                >Nueva contraseña<input
+                  type="password"
+                  name="ownNewPassword"
+                  [(ngModel)]="ownPassword.password"
+                  autocomplete="new-password"
+                  minlength="12"
+                  required
+              /></label>
+              <label
+                >Confirmar contraseña<input
+                  type="password"
+                  name="ownConfirmPassword"
+                  [(ngModel)]="ownPassword.passwordConfirmation"
+                  autocomplete="new-password"
+                  minlength="12"
+                  required
+              /></label>
+              <button class="button accent" [disabled]="busy()">Cambiar contraseña</button>
+            </form>
+          </div>
+        }
+        @if (tab() === 'accounts') {
+          <section class="panel p-6 mb-6">
+            <h2>Recuperación de contraseñas</h2>
+            <p>
+              Verificá la identidad de la persona antes de aprobar. La aprobación le permite elegir
+              una contraseña en el navegador donde inició su solicitud.
+            </p>
+            <button class="button outline mt-4" (click)="loadResets()" [disabled]="busy()">
+              Consultar solicitudes pendientes
+            </button>
+            @for (request of resetRequests(); track request._id) {
+              <article class="mt-4">
+                <strong>{{ request.account?.name }} · {{ request.account?.username }}</strong>
+                <p>{{ request.createdAt | date: 'short' }}</p>
+                <button
+                  class="button accent"
+                  (click)="decideReset(request._id, 'approved')"
+                  [disabled]="busy()"
+                >
+                  Aprobar
+                </button>
+                <button
+                  class="button outline"
+                  (click)="decideReset(request._id, 'rejected')"
+                  [disabled]="busy()"
+                >
+                  Rechazar
+                </button>
+              </article>
+            } @empty {
+              <p class="mt-4">Consultá para ver las solicitudes pendientes.</p>
+            }
+          </section>
         }
         @if (api.state(); as state) {
           @if (tab() === 'events') {
@@ -628,6 +778,19 @@
                                 : p.stock + (p.inventory === 'ml' ? ' ml disponibles' : ' unidades')
                             }}
                           </p>
+                          @if (p.category === 'drink') {
+                            <label
+                              >Subtipo de bebida<select
+                                name="drinkType"
+                                [(ngModel)]="p.drinkType"
+                                required
+                              >
+                                <option value="">Seleccionar subtipo</option>
+                                <option value="non_alcoholic">Libre de alcohol</option>
+                                <option value="alcoholic">Con alcohol</option>
+                              </select></label
+                            >
+                          }
                           @if (p.inventory === 'ml') {
                             <label class="mt-3"
                               >Medida<select

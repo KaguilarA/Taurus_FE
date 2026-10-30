@@ -59,6 +59,24 @@ describe('QR guest ordering', () => {
     page.quantity(0, -1);
     expect(page.total()).toBe(8000);
   });
+  it('filters alcoholic and alcohol-free beverages without guessing legacy subtypes', () => {
+    page.data.set({
+      settings,
+      products: [
+        { ...rum, drinkType: 'alcoholic' },
+        { ...rum, _id: 'soda', drinkType: 'non_alcoholic' },
+        { ...rum, _id: 'legacy' },
+      ],
+      promotions: [],
+    });
+    page.filter.set('drink');
+    page.drinkFilter.set('alcoholic');
+    expect(page.products().map((p) => p._id)).toEqual(['rum']);
+    page.drinkFilter.set('non_alcoholic');
+    expect(page.products().map((p) => p._id)).toEqual(['soda']);
+    page.drinkFilter.set('all');
+    expect(page.products()).toHaveLength(3);
+  });
   it('preserves the cart and identifier after an uncertain network result', async () => {
     page.add(snack);
     const call = vi.mocked(api.request);

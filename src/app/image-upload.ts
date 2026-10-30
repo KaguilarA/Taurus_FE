@@ -10,7 +10,7 @@ import { Api } from './api';
         <img class="upload-preview" [src]="value()" alt="Vista previa de la imagen seleccionada" />
       }
       <label class="image-file-label">
-        {{ uploading() ? 'Subiendo imagen…' : value() ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+        {{ uploading() ? 'Optimizando y subiendo…' : value() ? 'Cambiar imagen' : 'Seleccionar imagen' }}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -19,7 +19,7 @@ import { Api } from './api';
           [attr.aria-label]="label()"
         />
       </label>
-      <p class="upload-hint">JPG, PNG o WebP · Máximo 5 MB</p>
+      <p class="upload-hint">JPG, PNG o WebP · Máximo 5 MB · Optimización automática</p>
       @if (error()) {
         <p class="alert error" role="alert">{{ error() }}</p>
       }
@@ -73,7 +73,13 @@ export class ImageUpload {
     try {
       const result = await this.api.uploadImage(file, this.purpose());
       this.value.set(result.url);
-      this.notice.set('Imagen subida. Guardá los cambios para publicarla.');
+      const stats = result.optimization;
+      const saved = stats && stats.originalBytes > 0
+        ? Math.round((stats.savedBytes / stats.originalBytes) * 100)
+        : 0;
+      this.notice.set(saved > 0
+        ? `Imagen optimizada: ${saved}% menos peso. Guardá los cambios para publicarla.`
+        : 'Imagen subida. Guardá los cambios para publicarla.');
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'No se pudo subir la imagen.');
     } finally {

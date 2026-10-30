@@ -56,7 +56,7 @@ describe('Restaurant orders', () => {
   it('shows only service operations to kitchen and waiter roles', () => {
     for (const role of ['kitchen', 'waiter'] as const) {
       api.role.set(role);
-      expect(page.nav().map((item) => item[0])).toEqual(['service']);
+      expect(page.nav().map((item) => item[0])).toEqual(['service', 'profile']);
     }
     api.role.set('admin');
     expect(page.nav().map((item) => item[0])).toContain('accounts');
