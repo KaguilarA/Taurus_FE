@@ -1,0 +1,4 @@
+# Cloudflare Pages Functions runtime variables. Copy to a private .dev.vars for local Wrangler tests.
+# Configure these same variables in the Pages production environment, then redeploy.
+BACKEND_ORIGIN=https://YOUR-BACKEND.onrender.com
+PUBLIC_FRONTEND_URL=https://YOUR-FRONTEND.pages.dev

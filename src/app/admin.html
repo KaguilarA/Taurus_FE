@@ -1,0 +1,1408 @@
+@if (loading()) {
+  <main class="connection-state"><p>Preparando tu espacio…</p></main>
+} @else if (!api.authenticated()) {
+  <main class="login-page">
+    <a routerLink="/" class="brand">{{ businessName() }}<span>PANEL ADMINISTRATIVO</span></a>
+    <section class="login-card">
+      <p class="eyebrow">TODO EN SU LUGAR</p>
+      <h1>Bienvenido de vuelta.</h1>
+      <p class="muted mb-8">Tu restaurante, bajo control.</p>
+      <form (ngSubmit)="login()" class="form-grid">
+        <label
+          >Usuario<input
+            type="text"
+            name="username"
+            [(ngModel)]="username"
+            required
+            autocomplete="username"
+            placeholder="admin"
+            autocapitalize="none"
+            spellcheck="false" /></label
+        ><label
+          >Contraseña<input
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            required
+            autocomplete="current-password"
+        /></label>
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button accent" [disabled]="busy() || imageUploading()">
+          {{ busy() ? 'Ingresando…' : 'Entrar al panel' }}<app-icon name="arrow-up-right" />
+        </button>
+      </form>
+      <a class="back-link" routerLink="/"><app-icon name="arrow-left" /> Volver a la carta</a>
+    </section>
+  </main>
+} @else {
+  <div
+    class="admin-shell"
+    [class.sidebar-expanded]="sidebarExpanded()"
+    [style.--accent]="api.state()?.settings?.accent"
+    (keydown.escape)="sidebarExpanded.set(false)"
+  >
+    @if (sidebarExpanded()) {
+      <button
+        class="sidebar-backdrop"
+        animate.enter="sidebar-backdrop-enter"
+        animate.leave="sidebar-backdrop-leave"
+        aria-label="Cerrar menú lateral"
+        (click)="sidebarExpanded.set(false)"
+      ></button>
+    }
+    <aside class="sidebar" aria-label="Menú administrativo">
+      <button
+        type="button"
+        class="sidebar-toggle"
+        aria-controls="admin-navigation"
+        [attr.aria-expanded]="sidebarExpanded()"
+        [attr.aria-label]="sidebarExpanded() ? 'Contraer menú lateral' : 'Expandir menú lateral'"
+        [title]="sidebarExpanded() ? 'Contraer menú lateral' : 'Expandir menú lateral'"
+        (click)="sidebarExpanded.set(!sidebarExpanded())"
+      >
+        <app-icon [name]="sidebarExpanded() ? 'panel-left-close' : 'panel-left-open'" />
+      </button>
+      <div class="sidebar-heading" [attr.aria-hidden]="sidebarExpanded() ? null : 'true'">
+        <div>
+          <a routerLink="/" class="brand" [attr.tabindex]="sidebarExpanded() ? 0 : -1"
+            >{{ api.state()?.settings?.name || businessName() }}<span>BUSINESS MANAGER</span></a
+          >
+          <p class="sidebar-caption">TU ESPACIO DE TRABAJO</p>
+        </div>
+      </div>
+      <nav id="admin-navigation" aria-label="Administración">
+        @for (item of nav(); track item[0]) {
+          <button
+            [class.current]="tab() === item[0]"
+            [attr.aria-current]="tab() === item[0] ? 'page' : null"
+            [attr.aria-label]="item[2]"
+            [title]="item[2]"
+            (click)="openTab(item[0])"
+          >
+            <span><app-icon [name]="item[1]" /></span>
+            @if (sidebarExpanded()) {
+              <span
+                class="sidebar-label"
+                animate.enter="sidebar-label-enter"
+                animate.leave="sidebar-label-leave"
+                >{{ item[2] }}</span
+              >
+            }
+            @if (item[0] === 'service' && pending()) {
+              <small>{{ pending() }}</small>
+            }
+            @if (item[0] === 'inventory' && low().length) {
+              <small>{{ low().length }}</small>
+            }
+          </button>
+        }
+      </nav>
+      <div class="sidebar-bottom">
+        <a
+          routerLink="/"
+          target="_blank"
+          aria-label="Ver página pública"
+          title="Ver página pública"
+        >
+          @if (sidebarExpanded()) {
+            <span
+              class="sidebar-label"
+              animate.enter="sidebar-label-enter"
+              animate.leave="sidebar-label-leave"
+              >Ver página pública</span
+            >
+          }
+          <app-icon name="arrow-up-right" />
+        </a>
+        <div class="account">
+          @if (sidebarExpanded()) {
+            <span
+              class="avatar"
+              animate.enter="sidebar-label-enter"
+              animate.leave="sidebar-label-leave"
+              ><app-icon name="user-round"
+            /></span>
+            <div
+              class="sidebar-identity"
+              animate.enter="sidebar-label-enter"
+              animate.leave="sidebar-label-leave"
+            >
+              <strong>{{ roleName() }}</strong
+              ><small>Acceso al negocio</small>
+            </div>
+          }
+          <button
+            (click)="logout()"
+            aria-label="Cerrar sesión"
+            [disabled]="busy() || imageUploading()"
+          >
+            <app-icon name="log-out" />
+          </button>
+        </div>
+      </div>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-header">
+        <span
+          >Workspace <span class="muted">/ {{ api.state()?.settings?.name }}</span></span
+        ><a routerLink="/" class="public-link">Página pública <app-icon name="arrow-up-right" /></a>
+      </header>
+      <div class="admin-content">
+        <div class="section-heading flex flex-wrap gap-4 justify-between items-end">
+          <div>
+            <p class="eyebrow">{{ api.state()?.settings?.name }} / OPERACIONES</p>
+            <h1>
+              {{
+                tab() === 'service'
+                  ? 'Cada mesa, al día.'
+                  : tab() === 'events'
+                    ? 'La agenda de tu bar.'
+                    : tab() === 'tables'
+                      ? 'Un QR para cada lugar.'
+                      : tab() === 'accounts'
+                        ? 'Tu equipo, conectado.'
+                        : tab() === 'overview'
+                          ? 'Un buen día empieza aquí.'
+                          : tab() === 'sales'
+                            ? 'Cada pedido, en su punto.'
+                            : tab() === 'inventory'
+                              ? 'Tu barra, bajo control.'
+                              : tab() === 'products'
+                                ? 'Una carta con carácter.'
+                                : tab() === 'promotions'
+                                  ? 'Más motivos para volver.'
+                                  : tab() === 'reports'
+                                    ? 'Los números de tu negocio.'
+                                    : 'Hacelo tuyo.'
+              }}
+            </h1>
+            <p class="muted">
+              {{
+                tab() === 'overview'
+                  ? 'Una mirada a lo que pasa en tu restaurante.'
+                  : tab() === 'inventory'
+                    ? 'Botellas, medidas y movimientos. Todo en un solo lugar.'
+                    : tab() === 'settings'
+                      ? 'Cambiá imágenes, textos y medidas sin tocar el código.'
+                      : 'Gestioná cada detalle desde aquí.'
+              }}
+            </p>
+          </div>
+          @if (tab() === 'products') {
+            <button class="button dark" (click)="editProduct()">
+              <app-icon name="plus" /> Nuevo producto
+            </button>
+          }
+          @if (tab() === 'promotions') {
+            <button class="button dark" (click)="editPromotion()">
+              <app-icon name="plus" /> Nueva promoción
+            </button>
+          }
+          @if (tab() === 'events') {
+            <button class="button dark" (click)="editEvent()">
+              <app-icon name="plus" /> Nuevo evento
+            </button>
+          }
+        </div>
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        @if (notice()) {
+          <p class="alert success" role="status">{{ notice() }}</p>
+        }
+        @if (api.state(); as state) {
+          @if (tab() === 'events') {
+            <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              @for (event of state.events ?? []; track event._id) {
+                <article class="panel admin-event p-6">
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="badge">{{ event.active ? 'Publicado' : 'Pausado' }}</span>
+                    @if (event.isSample) {
+                      <span class="badge warning">Evento de muestra</span>
+                    }
+                  </div>
+                  <h2>{{ event.title }}</h2>
+                  <p class="muted mt-3">{{ event.description }}</p>
+                  <p class="mt-4">
+                    {{
+                      event.starts
+                        ? (event.starts | date: 'dd/MM/yyyy HH:mm')
+                        : 'Fecha por confirmar'
+                    }}
+                  </p>
+                  <p class="muted mt-2">{{ event.location }}</p>
+                  <button class="button soft mt-5" (click)="editEvent(event)">
+                    <app-icon name="pencil" /> Editar evento
+                  </button>
+                </article>
+              } @empty {
+                <section class="panel empty-state">
+                  Creá tu primer evento para promocionarlo en la página pública.
+                </section>
+              }
+            </div>
+          }
+          @if (tab() === 'service') {
+            <div class="flex flex-wrap justify-between gap-4 mb-6">
+              <p role="status">
+                <span class="status-dot" [class.offline]="!connected()"></span>
+                {{
+                  connected()
+                    ? 'Conectado por socket en tiempo real'
+                    : service().orders.length
+                      ? 'Reconectando las actualizaciones'
+                      : 'Sin órdenes activas · verificando nuevos pedidos'
+                }}
+                · {{ service().bills.length }} cuentas abiertas
+              </p>
+              <button
+                class="button outline"
+                [disabled]="busy() || imageUploading()"
+                (click)="refreshOrders()"
+              >
+                Actualizar pedidos
+              </button>
+            </div>
+            <div class="grid xl:grid-cols-2 gap-6">
+              @for (bill of service().bills; track bill._id) {
+                <section class="panel service-card">
+                  <div class="panel-heading">
+                    <h2>{{ bill.label }}</h2>
+                    <strong>{{ api.money(bill.total) }}</strong>
+                  </div>
+                  @for (order of ordersFor(bill._id); track order._id) {
+                    <article
+                      class="service-order"
+                      [class.order-ready]="order.orderStatus === 'ready'"
+                    >
+                      <div class="flex justify-between items-center gap-3">
+                        <strong>{{ order.createdAt | date: 'shortTime' }}</strong
+                        ><span class="badge">{{ statusName(order.orderStatus) }}</span>
+                      </div>
+                      @for (item of order.items; track $index) {
+                        <p>
+                          {{ item.quantity }} × {{ item.name }}
+                          {{ item.serving !== 'unit' ? '· ' + servingName(item.serving) : '' }}
+                        </p>
+                      }
+                      @if (order.notes) {
+                        <p class="order-note">Nota: {{ order.notes }}</p>
+                      }
+                      <div class="flex flex-wrap gap-3 mt-4">
+                        @if (api.role() !== 'waiter' && order.orderStatus === 'pending') {
+                          <button
+                            class="button dark"
+                            [disabled]="busy() || imageUploading()"
+                            (click)="advance(order._id, 'preparing')"
+                          >
+                            <app-icon name="chef-hat" /> Empezar preparación
+                          </button>
+                        }
+                        @if (api.role() !== 'waiter' && order.orderStatus === 'preparing') {
+                          <button
+                            class="button accent"
+                            [disabled]="busy() || imageUploading()"
+                            (click)="advance(order._id, 'ready')"
+                          >
+                            <app-icon name="circle-check" /> Marcar listo
+                          </button>
+                        }
+                        @if (api.role() !== 'kitchen' && order.orderStatus === 'ready') {
+                          <button
+                            class="button accent"
+                            [disabled]="busy() || imageUploading()"
+                            (click)="advance(order._id, 'delivered')"
+                          >
+                            <app-icon name="check-check" /> Marcar entregado
+                          </button>
+                        }
+                      </div>
+                    </article>
+                  } @empty {
+                    <p class="muted p-6">El cliente está explorando la carta.</p>
+                  }
+                  @if (api.role() !== 'kitchen') {
+                    <form class="bill-payment form-grid" (ngSubmit)="payBill(bill._id)">
+                      <label
+                        >Medio de pago<select
+                          [name]="'method-' + bill._id"
+                          [ngModel]="billMethods[bill._id] || 'cash'"
+                          (ngModelChange)="billMethods[bill._id] = $event"
+                          [disabled]="busy() || imageUploading()"
+                        >
+                          <option value="cash">Efectivo</option>
+                          <option value="sinpe">SIMPE</option>
+                          <option value="card">Tarjeta</option>
+                        </select></label
+                      >
+                      <label
+                        >Referencia (opcional)<input
+                          [name]="'ref-' + bill._id"
+                          [(ngModel)]="billReferences[bill._id]"
+                          maxlength="150"
+                          [disabled]="busy() || imageUploading()"
+                          placeholder="Referencia o comprobante"
+                      /></label>
+                      <p class="muted">
+                        Registrá el pago después de verificar que fue recibido. El sistema no
+                        ejecuta el cobro.
+                      </p>
+                      <button class="button dark" [disabled]="busy() || !canPay(bill._id)">
+                        <app-icon name="banknote" /> Registrar pago · {{ api.money(bill.total) }}
+                      </button>
+                      @if (!canPay(bill._id)) {
+                        <small>Se habilita al entregar todos los pedidos.</small>
+                      }
+                    </form>
+                  }
+                </section>
+              } @empty {
+                <section class="panel empty-state">
+                  Sin cuentas abiertas. Los pedidos de los QR aparecerán aquí.
+                </section>
+              }
+            </div>
+          }
+          @if (tab() === 'tables') {
+            <form class="panel form-grid p-6 mb-6" (ngSubmit)="createTable()">
+              <label
+                >Mesa o posición en el bar<input
+                  name="tableName"
+                  [(ngModel)]="tableName"
+                  maxlength="100"
+                  required
+                  placeholder="Ej. Mesa 04 o Barra 02"
+              /></label>
+              <button class="button dark" [disabled]="busy() || imageUploading()">
+                Crear código QR
+              </button>
+              <p class="muted">
+                Cada QR identifica el lugar y abre una cuenta compartida. Configurá FRONTEND_URL en
+                la API con la dirección pública HTTPS antes de imprimirlos.
+              </p>
+            </form>
+            <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              @for (table of tables(); track table._id) {
+                <article class="panel qr-card">
+                  <h2>{{ table.name }}</h2>
+                  <span class="badge">{{ table.active ? 'Activa' : 'Pausada' }}</span
+                  ><img
+                    [src]="table.qr"
+                    [alt]="'Código QR de ' + table.name"
+                    width="240"
+                    height="240"
+                  />
+                  <div class="flex flex-wrap gap-3">
+                    <a class="button dark" [href]="table.qr" [download]="table.name + '-qr.png'"
+                      ><app-icon name="download" /> Descargar QR</a
+                    ><a class="button outline" [href]="table.url" target="_blank" rel="noreferrer"
+                      >Probar menú <app-icon name="arrow-up-right" /></a
+                    ><button
+                      class="button outline"
+                      [disabled]="busy() || imageUploading()"
+                      (click)="toggleTable(table)"
+                    >
+                      {{ table.active ? 'Pausar' : 'Activar' }}
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+          @if (tab() === 'accounts') {
+            <div class="grid lg:grid-cols-2 gap-6">
+              <form class="panel form-grid p-6" (ngSubmit)="createAccount()">
+                <h2>Crear acceso</h2>
+                <label
+                  >Nombre<input name="staffName" [(ngModel)]="staff.name" required maxlength="100"
+                /></label>
+                <label
+                  >Usuario<input
+                    name="staffUsername"
+                    type="text"
+                    [(ngModel)]="staff.username"
+                    required
+                    minlength="3"
+                    maxlength="40"
+                    autocapitalize="none"
+                    spellcheck="false"
+                /></label>
+                <label
+                  >Contraseña<input
+                    name="staffPassword"
+                    type="password"
+                    [(ngModel)]="staff.password"
+                    required
+                    minlength="8"
+                    maxlength="200"
+                    autocomplete="new-password"
+                /></label>
+                <label
+                  >Rol<select name="staffRole" [(ngModel)]="staff.role">
+                    <option value="admin">Administrador</option>
+                    <option value="kitchen">Cocina</option>
+                    <option value="waiter">Mesero</option>
+                  </select></label
+                >
+                <p class="muted">
+                  Cocina prepara los pedidos. El mesero marca entregas y registra pagos. El
+                  administrador tiene acceso a toda la configuración.
+                </p>
+                <button class="button dark" [disabled]="busy() || imageUploading()">
+                  Crear acceso
+                </button>
+              </form>
+              <section class="panel p-6">
+                <h2>Equipo</h2>
+                @for (account of accounts(); track account._id) {
+                  <article class="guest-order">
+                    <strong>{{ account.name || account.username }}</strong>
+                    <p>{{ account.username }}</p>
+                    <span class="badge">{{
+                      account.role === 'admin'
+                        ? 'Administrador'
+                        : account.role === 'kitchen'
+                          ? 'Cocina'
+                          : 'Mesero'
+                    }}</span>
+                  </article>
+                }
+              </section>
+            </div>
+          }
+          @if (tab() === 'overview') {
+            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+              <article class="stat-card">
+                <span>Ventas acumuladas</span><strong>{{ api.money(report().revenue) }}</strong
+                ><small>{{
+                  from || to
+                    ? 'Período seleccionado en Reportes'
+                    : 'Ventas pagadas · todos los períodos'
+                }}</small>
+              </article>
+              <article class="stat-card">
+                <span>Órdenes registradas</span><strong>{{ report().count }}</strong
+                ><small>Sin incluir anulaciones</small>
+              </article>
+              <article class="stat-card">
+                <span>Productos en la carta</span><strong>{{ state.products.length }}</strong
+                ><small>Comidas y bebidas</small>
+              </article>
+              <article class="stat-card attention">
+                <span>Atención al inventario</span
+                ><strong>{{ low().length }} <small>productos</small></strong
+                ><button (click)="openTab('inventory')">
+                  Revisar existencias <app-icon name="arrow-up-right" />
+                </button>
+              </article>
+            </div>
+            <div class="grid xl:grid-cols-3 gap-6">
+              <section class="panel xl:col-span-2">
+                <div class="panel-heading">
+                  <h2>Los favoritos de la casa</h2>
+                  <button (click)="openTab('reports')">
+                    Ver reporte <app-icon name="arrow-up-right" />
+                  </button>
+                </div>
+                @for (
+                  row of report().ranking.slice(0, 5);
+                  track row._id.productId;
+                  let i = $index
+                ) {
+                  <div class="ranking-row">
+                    <span class="rank">0{{ i + 1 }}</span>
+                    <div class="grow">
+                      <strong>{{ row.name }}</strong
+                      ><small>{{ categoryName(row._id.category) }}</small>
+                    </div>
+                    <div class="text-right">
+                      <strong>{{ row.quantity }} vendidos</strong
+                      ><small>{{ api.money(row.revenue) }}</small>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="empty-state">
+                    Tu primer pedido empieza la historia.<button
+                      class="button dark mt-5"
+                      (click)="openTab('sales')"
+                    >
+                      Registrar una venta <app-icon name="arrow-up-right" />
+                    </button>
+                  </div>
+                }
+              </section>
+              <section class="quick-panel">
+                <span class="eyebrow">QUE NO SE DETENGA EL SERVICIO</span>
+                <h2>La próxima buena venta empieza aquí.</h2>
+                <p>Registrá pedidos y actualizá el inventario al mismo tiempo.</p>
+                <button class="button dark" (click)="openTab('sales')">
+                  Abrir punto de venta <app-icon name="arrow-up-right" /></button
+                ><span class="big-star" aria-hidden="true"><app-icon name="sparkles" /></span>
+              </section>
+            </div>
+            <section class="panel mt-6">
+              <div class="panel-heading">
+                <h2>Últimas ventas</h2>
+                <span class="muted">100 más recientes</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cuenta</th>
+                      <th>Fecha</th>
+                      <th>Estado</th>
+                      <th>Total</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (sale of state.sales; track sale._id) {
+                      <tr>
+                        <td>
+                          <strong>{{ sale.label }}</strong
+                          ><small>{{ sale.items.length }} líneas · {{ sale._id.slice(-6) }}</small>
+                        </td>
+                        <td>{{ sale.createdAt | date: 'dd MMM, HH:mm' }}</td>
+                        <td>
+                          <span class="badge" [class.warning]="sale.status === 'void'">{{
+                            sale.status === 'paid'
+                              ? 'Pagada'
+                              : sale.status === 'open'
+                                ? 'Pendiente de pago'
+                                : 'Anulada'
+                          }}</span>
+                        </td>
+                        <td>{{ api.money(sale.total) }}</td>
+                        <td>
+                          @if (sale.paymentMethod) {
+                            <small>{{
+                              sale.paymentMethod === 'cash'
+                                ? 'Efectivo'
+                                : sale.paymentMethod === 'sinpe'
+                                  ? 'SIMPE'
+                                  : 'Tarjeta'
+                            }}</small>
+                          }
+                          @if (sale.status === 'paid' && !sale.billId) {
+                            <button class="text-button" (click)="voidId = sale._id">
+                              <app-icon name="x" /> Anular
+                            </button>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">Todavía no hay ventas.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          }
+          @if (tab() === 'sales') {
+            <div class="pos-layout">
+              <section>
+                <label class="search-box"
+                  ><span><app-icon name="search" /></span
+                  ><input
+                    aria-label="Buscar productos"
+                    placeholder="Buscar en la carta…"
+                    [ngModel]="search()"
+                    (ngModelChange)="search.set($event)"
+                /></label>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+                  @for (p of filtered(); track p._id) {
+                    @if (p.active) {
+                      <article class="pos-card">
+                        <img [src]="p.image || '/images/hero.svg'" [alt]="p.name" />
+                        <div class="p-4">
+                          <h3>{{ p.name }}</h3>
+                          <p class="muted text-sm">
+                            {{
+                              p.inventory === 'none'
+                                ? 'Sin inventario'
+                                : p.stock + (p.inventory === 'ml' ? ' ml disponibles' : ' unidades')
+                            }}
+                          </p>
+                          @if (p.inventory === 'ml') {
+                            <label class="mt-3"
+                              >Medida<select
+                                [ngModel]="selectedServing[p._id] || 'shot'"
+                                (ngModelChange)="selectedServing[p._id] = $event"
+                              >
+                                <option value="" disabled>Seleccioná</option>
+                                @for (size of sizes; track size.key) {
+                                  <option [ngValue]="size.key">
+                                    {{ size.name }} · {{ state.settings.servings[size.key] }} ml ·
+                                    {{ api.money(p.prices[size.key]) }}
+                                  </option>
+                                }
+                              </select></label
+                            >
+                          } @else {
+                            <strong class="block mt-4">{{ api.money(p.price) }}</strong>
+                          }
+                          <button
+                            class="button soft w-full mt-4"
+                            [disabled]="busy() || (p.inventory !== 'none' && p.stock === 0)"
+                            (click)="add(p)"
+                          >
+                            <app-icon name="plus" /> Agregar
+                            {{ p.inventory === 'ml' && !selectedServing[p._id] ? 'shot' : '' }}
+                          </button>
+                        </div>
+                      </article>
+                    }
+                  }
+                </div>
+              </section>
+              <aside class="order-panel">
+                <div class="panel-heading">
+                  <h2>Orden actual</h2>
+                  <span class="badge">{{ cart().length }}</span>
+                </div>
+                <label
+                  >Nombre de cuenta o mesa<input
+                    [(ngModel)]="label"
+                    placeholder="Ej. Mesa 04"
+                    [disabled]="busy() || imageUploading()"
+                /></label>
+                <div class="order-lines">
+                  @for (line of cart(); track $index; let i = $index) {
+                    <div class="order-line">
+                      <div>
+                        <strong>{{ line.product.name }}</strong
+                        ><small
+                          >{{
+                            line.serving === 'unit'
+                              ? 'Unidad'
+                              : line.serving === 'large'
+                                ? 'Grande'
+                                : line.serving === 'small'
+                                  ? 'Pequeño'
+                                  : 'Shot'
+                          }}
+                          · {{ api.money(line.price) }}</small
+                        >
+                      </div>
+                      <div class="quantity">
+                        <button
+                          (click)="quantity(i, -1)"
+                          [disabled]="busy() || imageUploading()"
+                          [attr.aria-label]="'Quitar ' + line.product.name"
+                        >
+                          <app-icon name="minus" /></button
+                        ><span>{{ line.quantity }}</span
+                        ><button
+                          (click)="quantity(i, 1)"
+                          [disabled]="busy() || imageUploading()"
+                          [attr.aria-label]="'Agregar ' + line.product.name"
+                        >
+                          <app-icon name="plus" />
+                        </button>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-state">
+                      La mesa está lista.<br />Agregá productos para comenzar.
+                    </div>
+                  }
+                </div>
+                <div class="order-total">
+                  <span>Total</span><strong>{{ api.money(total()) }}</strong>
+                </div>
+                <label
+                  >Medio de pago<select
+                    [(ngModel)]="paymentMethod"
+                    [disabled]="busy() || imageUploading()"
+                  >
+                    <option value="cash">Efectivo</option>
+                    <option value="sinpe">SIMPE</option>
+                    <option value="card">Tarjeta</option>
+                  </select></label
+                >
+                <p class="muted text-xs my-4">
+                  Los precios incluyen los impuestos que hayas incorporado al precio del producto.
+                  No procesa pagos electrónicos.
+                </p>
+                <button
+                  class="button dark w-full"
+                  (click)="checkout()"
+                  [disabled]="busy() || !cart().length"
+                >
+                  {{ busy() ? 'Registrando…' : 'Confirmar venta' }}<app-icon name="circle-check" />
+                </button>
+              </aside>
+            </div>
+          }
+          @if (tab() === 'inventory') {
+            @if (low().length) {
+              <div class="alert stock-alert">
+                <app-icon name="circle-alert" /> {{ low().length }} productos llegaron a su mínimo.
+                Es un buen momento para reponer.
+              </div>
+            }
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Existencias de la barra</h2>
+                <span class="muted">{{ stock().length }} productos</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Disponible</th>
+                      <th>Rendimiento</th>
+                      <th>Estado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of stock(); track p._id) {
+                      <tr>
+                        <td>
+                          <strong>{{ p.name }}</strong
+                          ><small>{{
+                            p.inventory === 'ml'
+                              ? 'Botella de ' + p.bottleMl + ' ml'
+                              : 'Inventario por unidad'
+                          }}</small>
+                        </td>
+                        <td>
+                          <strong>{{ p.stock }} {{ p.inventory === 'ml' ? 'ml' : 'uds.' }}</strong>
+                          @if (p.inventory === 'ml') {
+                            <small
+                              >{{ (p.stock / p.bottleMl).toFixed(2) }} botellas equivalentes</small
+                            >
+                          }
+                        </td>
+                        <td>
+                          {{
+                            p.inventory === 'ml'
+                              ? availableShots(p) +
+                                ' shots de ' +
+                                state.settings.servings.shot +
+                                ' ml'
+                              : p.stock + ' servicios'
+                          }}
+                        </td>
+                        <td>
+                          <span class="badge" [class.warning]="p.stock <= p.minimum">{{
+                            p.stock <= p.minimum ? 'Reponer' : 'Disponible'
+                          }}</span
+                          ><small>Mínimo: {{ p.minimum }}</small>
+                        </td>
+                        <td>
+                          <button class="button small soft" (click)="openStock(p)">
+                            Ajustar <app-icon name="arrow-up-right" />
+                          </button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">Agregá una bebida para comenzar a llevar inventario.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section class="panel mt-6">
+              <div class="panel-heading">
+                <h2>Historial de movimientos</h2>
+                <span class="muted">100 más recientes</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Producto</th>
+                      <th>Motivo</th>
+                      <th>Movimiento</th>
+                      <th>Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of state.movements; track m._id) {
+                      <tr>
+                        <td>{{ m.createdAt | date: 'dd MMM, HH:mm' }}</td>
+                        <td>{{ m.productName }}</td>
+                        <td>{{ m.reason }}</td>
+                        <td [class.positive]="m.delta > 0">
+                          {{ m.delta > 0 ? '+' : '' }}{{ m.delta }}
+                          {{ m.unit === 'ml' ? 'ml' : 'uds.' }}
+                        </td>
+                        <td>{{ m.balance }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">No hay movimientos registrados.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          }
+          @if (tab() === 'products') {
+            <label class="search-box mb-6"
+              ><span><app-icon name="search" /></span
+              ><input
+                aria-label="Buscar productos"
+                placeholder="Buscar un producto…"
+                [ngModel]="search()"
+                (ngModelChange)="search.set($event)"
+            /></label>
+            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              @for (p of filtered(); track p._id) {
+                <article class="admin-product">
+                  <img [src]="p.image || '/images/hero.svg'" [alt]="p.name" />
+                  <div class="p-5">
+                    <div class="flex justify-between gap-3">
+                      <span class="eyebrow">{{ categoryName(p.category) }}</span
+                      ><span class="badge" [class.warning]="!p.active">{{
+                        p.active ? 'Visible' : 'Archivado'
+                      }}</span>
+                    </div>
+                    <h3 class="my-3">{{ p.name }}</h3>
+                    <p class="muted text-sm">{{ p.description }}</p>
+                    <div class="flex justify-between items-center mt-5">
+                      <strong
+                        >{{ api.money(p.inventory === 'ml' ? p.prices.shot : p.price)
+                        }}{{ p.inventory === 'ml' ? ' / shot' : '' }}</strong
+                      ><button class="text-button" (click)="editProduct(p)">
+                        <app-icon name="pencil" /> Editar
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              } @empty {
+                <p class="empty-state">No hay productos. Creá el primero para armar tu carta.</p>
+              }
+            </div>
+          }
+          @if (tab() === 'promotions') {
+            <div class="grid md:grid-cols-2 gap-6">
+              @for (p of state.promotions; track p._id) {
+                <article class="admin-promo panel">
+                  <img [src]="p.image || '/images/rum.svg'" [alt]="p.title" />
+                  <div class="p-6">
+                    <span class="badge">{{ p.active ? 'Habilitada' : 'Pausada' }}</span>
+                    <h2 class="my-4">{{ p.title }}</h2>
+                    <p class="muted">{{ p.description }}</p>
+                    <p class="text-xs muted my-5">
+                      {{ p.starts | date: 'dd/MM/yyyy HH:mm' }} —
+                      {{ p.ends | date: 'dd/MM/yyyy HH:mm' }}
+                    </p>
+                    <button class="text-button" (click)="editPromotion(p)">
+                      <app-icon name="pencil" /> Editar promoción
+                    </button>
+                  </div>
+                </article>
+              } @empty {
+                <p class="empty-state">
+                  Creá tu primera promoción. Aparecerá en la página pública durante su vigencia.
+                </p>
+              }
+            </div>
+          }
+          @if (tab() === 'reports') {
+            <form
+              class="report-filters flex flex-wrap items-end gap-4 mb-6"
+              (ngSubmit)="refreshReport()"
+            >
+              <label>Desde<input type="date" name="from" [(ngModel)]="from" /></label
+              ><label>Hasta (inclusive)<input type="date" name="to" [(ngModel)]="to" /></label
+              ><button class="button dark" [disabled]="busy() || imageUploading()">
+                Aplicar período</button
+              ><button type="button" class="button soft" (click)="exportCsv()">
+                <app-icon name="download" /> Descargar CSV
+              </button>
+            </form>
+            <div class="grid sm:grid-cols-2 gap-5 mb-6">
+              <article class="stat-card">
+                <span>Ingresos del período</span><strong>{{ api.money(report().revenue) }}</strong>
+              </article>
+              <article class="stat-card">
+                <span>Ventas pagadas</span><strong>{{ report().count }}</strong>
+              </article>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-6">
+              @for (
+                category of [
+                  ['food', 'Comidas más vendidas'],
+                  ['drink', 'Bebidas más vendidas'],
+                  ['snack', 'Snacks y botanas más vendidos'],
+                ];
+                track category[0]
+              ) {
+                <section class="panel">
+                  <div class="panel-heading">
+                    <h2>{{ category[1] }}</h2>
+                  </div>
+                  @for (row of report().ranking; track row._id.productId) {
+                    @if (row._id.category === category[0]) {
+                      <div class="ranking-row">
+                        <div class="grow">
+                          <strong>{{ row.name }}</strong>
+                          <div class="bar-track">
+                            <div
+                              [style.width.%]="
+                                (row.quantity / (report().ranking[0]?.quantity || 1)) * 100
+                              "
+                            ></div>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <strong>{{ row.quantity }} vendidos</strong
+                          ><small>{{ api.money(row.revenue) }}</small>
+                        </div>
+                      </div>
+                    }
+                  }
+                  @if (!report().ranking.length) {
+                    <p class="empty-state">No hay ventas en este período.</p>
+                  }
+                </section>
+              }
+            </div>
+            <p class="muted text-sm mt-5">
+              Ordenado por cantidad de servicios vendidos. Las anulaciones no se incluyen. Las
+              ventas conservan el precio y nombre del momento de la compra.
+            </p>
+          }
+          @if (tab() === 'settings' && settings) {
+            <form (ngSubmit)="saveSettings()" class="settings-layout">
+              <div>
+                <section class="panel p-6 form-grid">
+                  <h2>La identidad de tu negocio</h2>
+                  <label
+                    >Nombre<input
+                      name="name"
+                      [(ngModel)]="settings.name"
+                      required
+                      maxlength="150" /></label
+                  ><label
+                    >Tipo de negocio<input
+                      name="subtitle"
+                      [(ngModel)]="settings.subtitle"
+                      maxlength="150"
+                  /></label>
+                  <label
+                    >Frase principal<input
+                      name="tagline"
+                      [(ngModel)]="settings.tagline"
+                      maxlength="200" /></label
+                  ><label
+                    >Descripción<textarea
+                      name="description"
+                      [(ngModel)]="settings.description"
+                      rows="3"
+                      maxlength="500"
+                    ></textarea></label
+                  ><app-image-upload
+                    [(value)]="settings.heroImage"
+                    purpose="branding"
+                    label="Imagen principal de la carta"
+                    [disabled]="busy()"
+                    (pending)="imageUploading.set($event)"
+                  />
+                  <div class="grid sm:grid-cols-2 gap-4">
+                    <label
+                      >Color de marca<input
+                        type="color"
+                        name="accent"
+                        [(ngModel)]="settings.accent" /></label
+                    ><label
+                      >Moneda (ISO)<input
+                        name="currency"
+                        [(ngModel)]="settings.currency"
+                        maxlength="3"
+                        pattern="[A-Z]{3}"
+                        required
+                    /></label>
+                  </div>
+                  <label>Dirección<input name="address" [(ngModel)]="settings.address" /></label
+                  ><label>Horario<input name="hours" [(ngModel)]="settings.hours" /></label
+                  ><label
+                    >Teléfono de contacto<input name="phone" [(ngModel)]="settings.phone"
+                  /></label>
+                </section>
+              </div>
+              <div>
+                <section class="panel p-6 form-grid">
+                  <p class="eyebrow">A LA MEDIDA DE TU BARRA</p>
+                  <h2>Cada mililitro cuenta.</h2>
+                  <p class="muted text-sm">
+                    Definí cuánto se sirve en cada tamaño. Estas medidas aplican a todas las bebidas
+                    por mililitros y a las próximas ventas.
+                  </p>
+                  @for (size of sizes; track size.key) {
+                    <label
+                      >{{ size.name }} (ml)<input
+                        type="number"
+                        [name]="size.key"
+                        [(ngModel)]="settings.servings[size.key]"
+                        min="1"
+                        max="10000"
+                        step="1"
+                        required
+                    /></label>
+                  }
+                  <p class="muted text-xs">
+                    Ejemplo: botella de 1000 ml ÷ shot de {{ settings.servings.shot }} ml =
+                    {{ MathFloor(1000 / settings.servings.shot) }} shots completos.
+                  </p>
+                  <button class="button dark" [disabled]="busy() || imageUploading()">
+                    <app-icon name="save" /> Guardar y publicar
+                  </button>
+                </section>
+                <section class="panel p-6 mt-5">
+                  <h3>Un cambio de imagen, sin complicaciones.</h3>
+                  <p class="muted text-sm mt-3">
+                    Subí una imagen desde tu equipo y revisá la vista previa. Guardá los cambios
+                    cuando esté lista para aparecer en la carta.
+                  </p>
+                </section>
+              </div>
+            </form>
+          }
+        }
+      </div>
+    </main>
+  </div>
+}
+@if (product; as p) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="product-title">
+      <div class="panel-heading">
+        <h2 id="product-title">{{ p._id ? 'Editar producto' : 'Nuevo producto' }}</h2>
+        <button
+          (click)="product = null"
+          aria-label="Cerrar"
+          [disabled]="busy() || imageUploading()"
+        >
+          <app-icon name="x" />
+        </button>
+      </div>
+      <form class="form-grid p-6" (ngSubmit)="saveProduct()">
+        <label>Nombre<input name="name" [(ngModel)]="p.name" required maxlength="150" /></label
+        ><label
+          >Descripción<textarea
+            name="description"
+            [(ngModel)]="p.description"
+            maxlength="500"
+          ></textarea></label
+        ><app-image-upload
+          [(value)]="p.image"
+          purpose="product"
+          label="Imagen del producto"
+          [disabled]="busy()"
+          (pending)="imageUploading.set($event)"
+        />
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label
+            >Categoría<select
+              name="category"
+              [(ngModel)]="p.category"
+              (ngModelChange)="changeCategory()"
+              [disabled]="!!p._id"
+            >
+              <option value="food">Comida</option>
+              <option value="drink">Bebida</option>
+              <option value="snack">Snacks y botanas</option>
+            </select></label
+          ><label
+            >Inventario<select
+              name="inventory"
+              [(ngModel)]="p.inventory"
+              [disabled]="p.category !== 'drink' || !!p._id"
+            >
+              <option value="none" [disabled]="p.category === 'drink'">Sin inventario</option>
+              <option value="unit">Por unidad</option>
+              <option value="ml">Por mililitros</option>
+            </select></label
+          >
+        </div>
+        @if (p.inventory === 'ml') {
+          <div class="grid sm:grid-cols-3 gap-4">
+            @for (size of sizes; track size.key) {
+              <label
+                >Precio {{ size.name
+                }}<input
+                  type="number"
+                  [name]="size.key"
+                  [(ngModel)]="p.prices[size.key]"
+                  min="0"
+                  step="0.01"
+                  required
+              /></label>
+            }
+          </div>
+          <label
+            >Contenido de una botella (ml)<input
+              type="number"
+              name="bottle"
+              [(ngModel)]="p.bottleMl"
+              min="1"
+              step="1"
+              required
+          /></label>
+        } @else {
+          <label
+            >Precio de venta<input
+              type="number"
+              name="price"
+              [(ngModel)]="p.price"
+              min="0"
+              step="0.01"
+              required
+          /></label>
+        }
+        @if (p.inventory !== 'none') {
+          <label
+            >Alerta de mínimo ({{ p.inventory === 'ml' ? 'ml' : 'unidades' }})<input
+              type="number"
+              name="minimum"
+              [(ngModel)]="p.minimum"
+              min="0"
+              step="1"
+              required
+          /></label>
+          <p class="muted text-xs">
+            Las existencias se cargan y ajustan desde Inventario para conservar el historial.
+          </p>
+        }
+        <label class="checkbox"
+          ><input type="checkbox" name="active" [(ngModel)]="p.active" />Visible en la carta y
+          disponible para venta</label
+        ><label class="checkbox"
+          ><input type="checkbox" name="featured" [(ngModel)]="p.featured" />Destacar como
+          especialidad de la casa</label
+        >
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button dark" [disabled]="busy() || imageUploading()">
+          <app-icon name="save" /> Guardar producto
+        </button>
+      </form>
+    </section>
+  </div>
+}
+@if (selectedStock; as p) {
+  <div class="modal-backdrop">
+    <section class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="stock-title">
+      <div class="panel-heading">
+        <h2 id="stock-title">Ajustar {{ p.name }}</h2>
+        <button
+          (click)="selectedStock = null"
+          aria-label="Cerrar"
+          [disabled]="busy() || imageUploading()"
+        >
+          <app-icon name="x" />
+        </button>
+      </div>
+      <form class="form-grid p-6" (ngSubmit)="saveStock()">
+        <p class="muted">
+          Saldo actual: {{ p.stock }} {{ p.inventory === 'ml' ? 'ml' : 'unidades' }}
+        </p>
+        @if (p.inventory === 'ml') {
+          <label
+            >Registrar en<select name="mode" [(ngModel)]="stockMode">
+              <option value="bottles">Botellas de {{ p.bottleMl }} ml</option>
+              <option value="ml">Mililitros</option>
+            </select></label
+          >
+        }
+        <label
+          >Cantidad (negativa para merma o salida)<input
+            name="quantity"
+            type="number"
+            step="1"
+            [(ngModel)]="stockQuantity"
+            required /></label
+        ><label
+          >Motivo<input
+            name="reason"
+            [(ngModel)]="stockReason"
+            required
+            maxlength="250"
+            placeholder="Ej. Compra, merma, conteo físico"
+        /></label>
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button dark" [disabled]="busy() || imageUploading()">
+          Registrar movimiento
+        </button>
+      </form>
+    </section>
+  </div>
+}
+@if (promotion; as p) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="promo-title">
+      <div class="panel-heading">
+        <h2 id="promo-title">{{ p._id ? 'Editar promoción' : 'Nueva promoción' }}</h2>
+        <button
+          (click)="promotion = null"
+          aria-label="Cerrar"
+          [disabled]="busy() || imageUploading()"
+        >
+          <app-icon name="x" />
+        </button>
+      </div>
+      <form class="form-grid p-6" (ngSubmit)="savePromotion()">
+        <label>Título<input name="title" [(ngModel)]="p.title" required maxlength="150" /></label
+        ><label
+          >Descripción y condiciones<textarea
+            name="description"
+            [(ngModel)]="p.description"
+            maxlength="500"
+            rows="3"
+          ></textarea></label
+        ><app-image-upload
+          [(value)]="p.image"
+          purpose="promotion"
+          label="Imagen de la promoción"
+          [disabled]="busy()"
+          (pending)="imageUploading.set($event)"
+        />
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label
+            >Desde (hora local)<input
+              type="datetime-local"
+              name="starts"
+              [(ngModel)]="p.starts"
+              required /></label
+          ><label
+            >Hasta (hora local)<input
+              type="datetime-local"
+              name="ends"
+              [(ngModel)]="p.ends"
+              required
+          /></label>
+        </div>
+        <label class="checkbox"
+          ><input type="checkbox" name="active" [(ngModel)]="p.active" />Habilitar durante estas
+          fechas</label
+        >
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button dark" [disabled]="busy() || imageUploading()">
+          <app-icon name="save" /> Guardar promoción
+        </button>
+      </form>
+    </section>
+  </div>
+}
+@if (voidId) {
+  <div class="modal-backdrop">
+    <section class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="void-title">
+      <div class="panel-heading">
+        <h2 id="void-title">Anular venta</h2>
+        <button (click)="voidId = ''" aria-label="Cerrar" [disabled]="busy() || imageUploading()">
+          <app-icon name="x" />
+        </button>
+      </div>
+      <form class="form-grid p-6" (ngSubmit)="voidSale()">
+        <p>La venta saldrá de los reportes y las bebidas volverán al inventario.</p>
+        <label
+          >Motivo<input name="reason" [(ngModel)]="voidReason" required maxlength="250"
+        /></label>
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button dark" [disabled]="busy() || imageUploading()">
+          Confirmar anulación
+        </button>
+      </form>
+    </section>
+  </div>
+}
+
+@if (event; as e) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="event-title">
+      <div class="panel-heading">
+        <h2 id="event-title">{{ e._id ? 'Editar evento' : 'Nuevo evento' }}</h2>
+        <button (click)="event = null" aria-label="Cerrar" [disabled]="busy() || imageUploading()">
+          <app-icon name="x" />
+        </button>
+      </div>
+      <form class="form-grid p-6" (ngSubmit)="saveEvent()">
+        <label
+          >Título<input name="eventTitle" [(ngModel)]="e.title" required maxlength="150"
+        /></label>
+        <label
+          >Tipo<select name="eventKind" [(ngModel)]="e.kind">
+            <option value="music">Música en vivo</option>
+            <option value="karaoke">Karaoke</option>
+            <option value="sports">Deportes</option>
+            <option value="other">Otro evento</option>
+          </select></label
+        >
+        <label
+          >Descripción<textarea
+            name="eventDescription"
+            [(ngModel)]="e.description"
+            maxlength="1000"
+            rows="3"
+          ></textarea>
+        </label>
+        <app-image-upload
+          [(value)]="e.image"
+          purpose="event"
+          label="Imagen del evento"
+          [disabled]="busy()"
+          (pending)="imageUploading.set($event)"
+        />
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label
+            >Inicio<input name="eventStarts" type="datetime-local" [(ngModel)]="e.starts" /></label
+          ><label
+            >Fin<input
+              name="eventEnds"
+              type="datetime-local"
+              [(ngModel)]="e.ends"
+              [required]="!!e.starts"
+          /></label>
+        </div>
+        <p class="muted">
+          Las horas usan la zona horaria de tu navegador. Para una fecha por confirmar, dejá inicio
+          y fin vacíos.
+        </p>
+        <label>Lugar<input name="eventLocation" [(ngModel)]="e.location" maxlength="200" /></label>
+        <label
+          >Información de entrada<input
+            name="eventAdmission"
+            [(ngModel)]="e.admission"
+            maxlength="100"
+            placeholder="Ej. Entrada libre o consultar condiciones"
+        /></label>
+        <label class="checkbox"
+          ><input name="eventActive" type="checkbox" [(ngModel)]="e.active" /> Publicar en la
+          agenda</label
+        >
+        <label class="checkbox"
+          ><input name="eventSample" type="checkbox" [(ngModel)]="e.isSample" /> Identificar como
+          evento de muestra</label
+        >
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button dark" [disabled]="busy() || imageUploading()">
+          <app-icon name="save" /> Guardar evento
+        </button>
+      </form>
+    </section>
+  </div>
+}
