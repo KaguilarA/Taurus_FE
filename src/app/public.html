@@ -112,11 +112,9 @@
       <section
         class="hero page-width hero-background"
         [style.background-image]="
-          d.settings.heroImage
-            ? 'linear-gradient(90deg, rgba(15,10,7,.88), rgba(15,10,7,.35)), url(' +
-              d.settings.heroImage +
-              ')'
-            : null
+          'linear-gradient(90deg, rgba(15,10,7,.88), rgba(15,10,7,.35)), url(' +
+          (d.settings.heroImage || '/images/hero.svg') +
+          ')'
         "
       >
         <div class="hero-copy">
