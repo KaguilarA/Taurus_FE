@@ -1,0 +1,167 @@
+<app-admin-page-heading
+  title="Un buen día empieza aquí."
+  description="Una mirada a lo que pasa en tu restaurante."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+      <article class="stat-card">
+        <span>Ventas acumuladas</span><strong>{{ api.money(report().revenue) }}</strong
+        ><small>{{
+          from || to ? 'Período seleccionado en Reportes' : 'Ventas pagadas · todos los períodos'
+        }}</small>
+      </article>
+      <article class="stat-card">
+        <span>Órdenes registradas</span><strong>{{ report().count }}</strong
+        ><small>Sin incluir anulaciones</small>
+      </article>
+      <article class="stat-card">
+        <span>Productos en la carta</span><strong>{{ state.products.length }}</strong
+        ><small>Comidas y bebidas</small>
+      </article>
+      <article class="stat-card attention">
+        <span>Atención al inventario</span
+        ><strong>{{ low().length }} <small>productos</small></strong
+        ><button routerLink="/admin/inventory">
+          Revisar existencias <app-icon name="arrow-up-right" />
+        </button>
+      </article>
+    </div>
+    <div class="grid xl:grid-cols-3 gap-6">
+      <section class="panel xl:col-span-2">
+        <div class="panel-heading">
+          <h2>Los favoritos de la casa</h2>
+          <button routerLink="/admin/reports">
+            Ver reporte <app-icon name="arrow-up-right" />
+          </button>
+        </div>
+        @for (row of report().ranking.slice(0, 5); track row._id.productId; let i = $index) {
+          <div class="ranking-row">
+            <span class="rank">0{{ i + 1 }}</span>
+            <div class="grow">
+              <strong>{{ row.name }}</strong
+              ><small>{{ categoryName(row._id.category) }}</small>
+            </div>
+            <div class="text-right">
+              <strong>{{ row.quantity }} vendidos</strong
+              ><small>{{ api.money(row.revenue) }}</small>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">
+            Tu primer pedido empieza la historia.<button
+              class="button dark mt-5"
+              routerLink="/admin/sales"
+            >
+              Registrar una venta <app-icon name="arrow-up-right" />
+            </button>
+          </div>
+        }
+      </section>
+      <section class="quick-panel">
+        <span class="eyebrow">QUE NO SE DETENGA EL SERVICIO</span>
+        <h2>La próxima buena venta empieza aquí.</h2>
+        <p>Registrá pedidos y actualizá el inventario al mismo tiempo.</p>
+        <button class="button dark" routerLink="/admin/sales">
+          Abrir punto de venta <app-icon name="arrow-up-right" /></button
+        ><span class="big-star" aria-hidden="true"><app-icon name="sparkles" /></span>
+      </section>
+    </div>
+    <section class="panel mt-6">
+      <div class="panel-heading">
+        <h2>Últimas ventas</h2>
+        <span class="muted">100 más recientes</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sale of state.sales; track sale._id) {
+              <tr>
+                <td>
+                  <strong>{{ sale.label }}</strong
+                  ><small>{{ sale.items.length }} líneas · {{ sale._id.slice(-6) }}</small>
+                </td>
+                <td>{{ sale.createdAt | date: 'dd MMM, HH:mm' }}</td>
+                <td>
+                  <span class="badge" [class.warning]="sale.status === 'void'">{{
+                    sale.status === 'paid'
+                      ? 'Pagada'
+                      : sale.status === 'open'
+                        ? 'Pendiente de pago'
+                        : 'Anulada'
+                  }}</span>
+                </td>
+                <td>{{ api.money(sale.total) }}</td>
+                <td>
+                  @if (sale.paymentMethod) {
+                    <small>{{
+                      sale.paymentMethod === 'cash'
+                        ? 'Efectivo'
+                        : sale.paymentMethod === 'sinpe'
+                          ? 'SIMPE'
+                          : 'Tarjeta'
+                    }}</small>
+                  }
+                  @if (sale.status === 'paid' && !sale.billId) {
+                    <button class="text-button" (click)="voidId = sale._id">
+                      <app-icon name="x" /> Anular
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">Todavía no hay ventas.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    @if (voidId) {
+      <div class="modal-backdrop">
+        <section class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="void-title">
+          <div class="panel-heading">
+            <h2 id="void-title">Anular venta</h2>
+            <button
+              (click)="voidId = ''"
+              aria-label="Cerrar"
+              [disabled]="busy() || imageUploading()"
+            >
+              <app-icon name="x" />
+            </button>
+          </div>
+          <form class="form-grid p-6" (ngSubmit)="voidSale()">
+            <p>La venta saldrá de los reportes y las bebidas volverán al inventario.</p>
+            <label
+              >Motivo<input name="reason" [(ngModel)]="voidReason" required maxlength="250"
+            /></label>
+            @if (error()) {
+              <p class="alert error" role="alert">{{ error() }}</p>
+            }
+            <button class="button dark" [disabled]="busy() || imageUploading()">
+              Confirmar anulación
+            </button>
+          </form>
+        </section>
+      </div>
+    }
+  }
+}

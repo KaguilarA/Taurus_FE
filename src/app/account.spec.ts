@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { AccountPage } from './account';
@@ -225,6 +225,9 @@ describe('QR guest ordering', () => {
         } as never,
       ],
     });
+    fixture.detectChanges();
+    const [menuBlock] = await fixture.getDeferBlocks();
+    await menuBlock.render(DeferBlockState.Complete);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('app-menu')).toBeTruthy();

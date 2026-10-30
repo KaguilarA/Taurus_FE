@@ -82,5 +82,17 @@
         }
       </div>
     </article>
+  } @else {
+    <div class="product-loading" [attr.aria-busy]="loading()">
+      <h2 id="menu-product-title">Detalles del producto</h2>
+      @if (error()) {
+        <p role="alert">{{ error() }}</p>
+        <button class="button outline" (click)="retry()">Reintentar</button>
+      } @else {
+        <div class="detail-skeleton" role="status" aria-label="Cargando detalles">
+          <span></span><span></span><span></span>
+        </div>
+      }
+    </div>
   }
 </dialog>

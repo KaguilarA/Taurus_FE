@@ -1,0 +1,128 @@
+<app-admin-page-heading title="La agenda de tu bar." description="Organizá los próximos eventos."
+  ><button class="button dark" (click)="editEvent()">
+    <app-icon name="plus" /> Nuevo evento
+  </button></app-admin-page-heading
+>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+      @for (event of state.events ?? []; track event._id) {
+        <article class="panel admin-event p-6">
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="badge">{{ event.active ? 'Publicado' : 'Pausado' }}</span>
+            @if (event.isSample) {
+              <span class="badge warning">Evento de muestra</span>
+            }
+          </div>
+          <h2>{{ event.title }}</h2>
+          <p class="muted mt-3">{{ event.description }}</p>
+          <p class="mt-4">
+            {{ event.starts ? (event.starts | date: 'dd/MM/yyyy HH:mm') : 'Fecha por confirmar' }}
+          </p>
+          <p class="muted mt-2">{{ event.location }}</p>
+          <button class="button soft mt-5" (click)="editEvent(event)">
+            <app-icon name="pencil" /> Editar evento
+          </button>
+        </article>
+      } @empty {
+        <section class="panel empty-state">
+          Creá tu primer evento para promocionarlo en la página pública.
+        </section>
+      }
+    </div>
+    @if (event; as e) {
+      <div class="modal-backdrop">
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="event-title">
+          <div class="panel-heading">
+            <h2 id="event-title">{{ e._id ? 'Editar evento' : 'Nuevo evento' }}</h2>
+            <button
+              (click)="event = null"
+              aria-label="Cerrar"
+              [disabled]="busy() || imageUploading()"
+            >
+              <app-icon name="x" />
+            </button>
+          </div>
+          <form class="form-grid p-6" (ngSubmit)="saveEvent()">
+            <label
+              >Título<input name="eventTitle" [(ngModel)]="e.title" required maxlength="150"
+            /></label>
+            <label
+              >Tipo<select name="eventKind" [(ngModel)]="e.kind">
+                <option value="music">Música en vivo</option>
+                <option value="karaoke">Karaoke</option>
+                <option value="sports">Deportes</option>
+                <option value="other">Otro evento</option>
+              </select></label
+            >
+            <label
+              >Descripción<textarea
+                name="eventDescription"
+                [(ngModel)]="e.description"
+                maxlength="1000"
+                rows="3"
+              ></textarea>
+            </label>
+            <app-image-upload
+              [(value)]="e.image"
+              purpose="event"
+              label="Imagen del evento"
+              [disabled]="busy()"
+              (pending)="imageUploading.set($event)"
+            />
+            <div class="grid sm:grid-cols-2 gap-4">
+              <label
+                >Inicio<input
+                  name="eventStarts"
+                  type="datetime-local"
+                  [(ngModel)]="e.starts" /></label
+              ><label
+                >Fin<input
+                  name="eventEnds"
+                  type="datetime-local"
+                  [(ngModel)]="e.ends"
+                  [required]="!!e.starts"
+              /></label>
+            </div>
+            <p class="muted">
+              Las horas usan la zona horaria de tu navegador. Para una fecha por confirmar, dejá
+              inicio y fin vacíos.
+            </p>
+            <label
+              >Lugar<input name="eventLocation" [(ngModel)]="e.location" maxlength="200"
+            /></label>
+            <label
+              >Información de entrada<input
+                name="eventAdmission"
+                [(ngModel)]="e.admission"
+                maxlength="100"
+                placeholder="Ej. Entrada libre o consultar condiciones"
+            /></label>
+            <label class="checkbox"
+              ><input name="eventActive" type="checkbox" [(ngModel)]="e.active" /> Publicar en la
+              agenda</label
+            >
+            <label class="checkbox"
+              ><input name="eventSample" type="checkbox" [(ngModel)]="e.isSample" /> Identificar
+              como evento de muestra</label
+            >
+            @if (error()) {
+              <p class="alert error" role="alert">{{ error() }}</p>
+            }
+            <button class="button dark" [disabled]="busy() || imageUploading()">
+              <app-icon name="save" /> Guardar evento
+            </button>
+          </form>
+        </section>
+      </div>
+    }
+  }
+}

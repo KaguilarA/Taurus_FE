@@ -1,0 +1,137 @@
+<div
+  class="admin-shell"
+  [class.sidebar-expanded]="sidebarExpanded()"
+  [style.--accent]="api.state()?.settings?.accent"
+  (keydown.escape)="sidebarExpanded.set(false)"
+>
+  @if (sidebarExpanded()) {
+    <button
+      class="sidebar-backdrop"
+      animate.enter="sidebar-backdrop-enter"
+      animate.leave="sidebar-backdrop-leave"
+      aria-label="Cerrar menú lateral"
+      (click)="sidebarExpanded.set(false)"
+    ></button>
+  }
+  <aside class="sidebar" aria-label="Menú administrativo">
+    <button
+      type="button"
+      class="sidebar-toggle"
+      aria-controls="admin-navigation"
+      [attr.aria-expanded]="sidebarExpanded()"
+      [attr.aria-label]="sidebarExpanded() ? 'Contraer menú lateral' : 'Expandir menú lateral'"
+      [title]="sidebarExpanded() ? 'Contraer menú lateral' : 'Expandir menú lateral'"
+      (click)="sidebarExpanded.set(!sidebarExpanded())"
+    >
+      <app-icon [name]="sidebarExpanded() ? 'panel-left-close' : 'panel-left-open'" />
+    </button>
+    <div class="sidebar-heading" [attr.aria-hidden]="sidebarExpanded() ? null : 'true'">
+      <div>
+        <a routerLink="/" class="brand" [attr.tabindex]="sidebarExpanded() ? 0 : -1"
+          >{{ api.state()?.settings?.name || 'Administración' }}<span>BUSINESS MANAGER</span></a
+        >
+        <p class="sidebar-caption">TU ESPACIO DE TRABAJO</p>
+      </div>
+    </div>
+    <nav id="admin-navigation" aria-label="Administración">
+      @for (group of navigation(); track group.id) {
+        <section class="sidebar-group" [attr.aria-label]="group.label">
+          @if (sidebarExpanded()) {
+            <h2
+              class="sidebar-group-label"
+              animate.enter="sidebar-label-enter"
+              animate.leave="sidebar-label-leave"
+            >
+              {{ group.label }}
+            </h2>
+          }
+          @for (item of group.items; track item.id) {
+            <a
+              [routerLink]="['/admin', item.id]"
+              routerLinkActive="current"
+              ariaCurrentWhenActive="page"
+              [attr.aria-label]="item.label"
+              [title]="item.label"
+              (click)="closeOnMobile()"
+            >
+              <span><app-icon [name]="item.icon" /></span>
+              @if (sidebarExpanded()) {
+                <span
+                  class="sidebar-label"
+                  animate.enter="sidebar-label-enter"
+                  animate.leave="sidebar-label-leave"
+                  >{{ item.label }}</span
+                >
+              }
+              @if (item.id === 'service' && activity.pending()) {
+                <small [attr.aria-label]="activity.pending() + ' pedidos pendientes'">{{
+                  activity.pending() > 99 ? '99+' : activity.pending()
+                }}</small>
+              }
+              @if (item.id === 'inventory' && low().length) {
+                <small [attr.aria-label]="low().length + ' productos con stock bajo'">{{
+                  low().length > 99 ? '99+' : low().length
+                }}</small>
+              }
+            </a>
+          }
+        </section>
+      }
+    </nav>
+    <div class="sidebar-bottom">
+      <a routerLink="/" target="_blank" aria-label="Ver página pública" title="Ver página pública">
+        @if (sidebarExpanded()) {
+          <span
+            class="sidebar-label"
+            animate.enter="sidebar-label-enter"
+            animate.leave="sidebar-label-leave"
+            >Ver página pública</span
+          >
+        }
+        <app-icon name="arrow-up-right" />
+      </a>
+      <div class="account">
+        @if (sidebarExpanded()) {
+          <span
+            class="avatar"
+            animate.enter="sidebar-label-enter"
+            animate.leave="sidebar-label-leave"
+            ><app-icon name="user-round"
+          /></span>
+          <div
+            class="sidebar-identity"
+            animate.enter="sidebar-label-enter"
+            animate.leave="sidebar-label-leave"
+          >
+            <strong>{{ roleName() }}</strong
+            ><small>Acceso al negocio</small>
+          </div>
+        }
+        <button (click)="logout()" aria-label="Cerrar sesión" [disabled]="loggingOut()">
+          <app-icon name="log-out" />
+        </button>
+      </div>
+    </div>
+  </aside>
+  <main class="admin-main">
+    <header class="admin-header">
+      <span
+        >{{ api.state()?.settings?.name }} <span class="muted">/ {{ sectionLabel() }}</span></span
+      ><a routerLink="/" class="public-link">Página pública <app-icon name="arrow-up-right" /></a>
+    </header>
+    <div class="admin-content">
+      @if (activity.notice()) {
+        <p class="alert success" role="status">
+          {{ activity.notice() }}
+          <button type="button" (click)="activity.notice.set('')" aria-label="Cerrar aviso">
+            <app-icon name="x" />
+          </button>
+        </p>
+      }
+      @if (activity.error()) {
+        <p class="alert error" role="alert">{{ activity.error() }}</p>
+      }
+      <router-outlet />
+    </div>
+  </main>
+</div>

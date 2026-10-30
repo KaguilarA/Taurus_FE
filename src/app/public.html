@@ -42,89 +42,34 @@
           </div>
         </div>
       </section>
-      <app-menu [settings]="d.settings" [initialPage]="d.menu" />
-      <section id="eventos" class="events-section page-width">
-        <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
-          <div>
-            <p class="eyebrow">LA AGENDA DE {{ d.settings.name }}</p>
-            <h2>El próximo buen plan.</h2>
-          </div>
-          <p class="events-intro">
-            Música, buena compañía y noches para recordar.<br />Consultá las fechas y vení con tu
-            gente.
-          </p>
-        </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          @for (event of d.events ?? []; track event._id) {
-            <article
-              class="event-card"
-              (animate.enter)="reveal.enter($event, $index)"
-              (animate.leave)="reveal.leave($event)"
-            >
-              <div class="event-poster">
-                @if (event.image) {
-                  <img [src]="event.image" [alt]="event.title" loading="lazy" />
-                }
-                <span class="event-brand">{{ d.settings.name }}</span>
-                <span class="event-emblem"><app-icon [name]="eventIcon(event.kind)" /></span>
-                <span class="event-ticket">{{
-                  event.isSample ? 'Evento de muestra' : event.starts ? 'En agenda' : 'Próximamente'
-                }}</span>
-                <h3>{{ event.title }}</h3>
-              </div>
-              <div class="event-details">
-                <p class="event-date"><app-icon name="calendar-days" /> {{ eventWhen(event) }}</p>
-                <p>{{ event.description }}</p>
-                <p class="event-location">
-                  <app-icon name="map-pin" /> {{ event.location || d.settings.address }}
-                </p>
-                @if (event.admission) {
-                  <span class="badge">Entrada: {{ event.admission }}</span>
-                }
-                <a class="button outline w-full mt-5" [href]="contactLink()"
-                  >Consultar evento <app-icon name="arrow-up-right"
-                /></a>
-              </div>
-            </article>
-          } @empty {
-            <article class="event-empty">
-              <app-icon name="calendar-days" />
-              <h3>Se vienen buenos planes.</h3>
-              <p>Pronto publicaremos los próximos eventos. Consultanos para conocer la agenda.</p>
-              <a class="button outline mt-5" [href]="contactLink()"
-                >Consultar agenda <app-icon name="arrow-up-right"
-              /></a>
-            </article>
-          }
-        </div>
-      </section>
-      <section id="promociones" class="page-width pb-20">
-        <p class="eyebrow">EXCUSAS PARA VOLVER</p>
-        <h2 class="mb-8">El plan se pone mejor.</h2>
-        <div class="grid md:grid-cols-2 gap-6">
-          @for (promo of d.promotions; track promo._id) {
-            <article
-              class="promo-card"
-              (animate.enter)="reveal.enter($event, $index)"
-              (animate.leave)="reveal.leave($event)"
-            >
-              <div>
-                <span class="promo-label">PROMOCIÓN ESPECIAL</span>
-                <h3>{{ promo.title }}</h3>
-                <p>{{ promo.description }}</p>
-                <a [href]="sectionLink('visitanos')"
-                  >Te esperamos <app-icon name="arrow-up-right"
-                /></a>
-              </div>
-              <img [src]="promo.image || '/images/rum.svg'" [alt]="promo.title" loading="lazy" />
-            </article>
-          } @empty {
-            <p class="muted">
-              Estamos preparando nuestras próximas promociones. Consultá en el local.
-            </p>
-          }
-        </div>
-      </section>
+      @defer (on viewport) {
+        <app-menu [settings]="d.settings" [initialPage]="d.menu" />
+      } @placeholder {
+        <app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+      } @loading (after 100ms; minimum 150ms) {
+        <app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+      } @error {
+        <app-deferred-error id="carta" section="el menú" />
+      }
+
+      @defer (on viewport) {
+        <app-public-events [settings]="d.settings" [events]="d.events ?? []" />
+      } @placeholder {
+        <app-section-skeleton id="eventos" label="Cargando eventos" />
+      } @loading (after 100ms; minimum 150ms) {
+        <app-section-skeleton id="eventos" label="Cargando eventos" />
+      } @error {
+        <app-deferred-error id="eventos" section="los eventos" />
+      }
+      @defer (on viewport) {
+        <app-public-promotions [promotions]="d.promotions" />
+      } @placeholder {
+        <app-section-skeleton id="promociones" label="Cargando promociones" [count]="2" />
+      } @loading (after 100ms; minimum 150ms) {
+        <app-section-skeleton id="promociones" label="Cargando promociones" [count]="2" />
+      } @error {
+        <app-deferred-error id="promociones" section="las promociones" />
+      }
       <section id="visitanos" class="visit-section">
         <div class="page-width grid md:grid-cols-2 gap-10">
           <div>
@@ -151,6 +96,7 @@
       <span>{{ d.settings.name }} · Hecho para pasarla bien.</span
       ><a routerLink="/admin">Administración <app-icon name="arrow-up-right" /></a>
     </footer>
+    <router-outlet [routerOutletData]="{ settings: d.settings }" />
   </div>
 } @else if (error()) {
   <main class="connection-state">

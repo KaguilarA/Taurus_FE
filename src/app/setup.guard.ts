@@ -28,7 +28,7 @@ export const configuredGuard: CanActivateFn = async (route, state) => {
       const auth = await api.request<{ authenticated: boolean; role: string }>('/auth/status');
       if (auth.authenticated && auth.role === 'admin') return router.parseUrl('/business/setup');
     }
-    if (route.routeConfig?.path === '' && route.queryParamMap.has('mesa'))
+    if (route.routeConfig?.path === '' && state.url.split(/[?#]/)[0] === '/' && route.queryParamMap.has('mesa'))
       return router.createUrlTree(['/cuenta'], {
         queryParams: { mesa: route.queryParamMap.get('mesa') },
       });

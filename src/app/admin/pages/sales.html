@@ -1,0 +1,145 @@
+<app-admin-page-heading
+  title="Cada pedido, en su punto."
+  description="Registrá ventas y actualizá las existencias."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <div class="pos-layout">
+      <section>
+        <label class="search-box"
+          ><span><app-icon name="search" /></span
+          ><input
+            aria-label="Buscar productos"
+            placeholder="Buscar en la carta…"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+        /></label>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+          @for (p of filtered(); track p._id) {
+            @if (p.active) {
+              <article class="pos-card">
+                <img [src]="p.image || '/images/hero.svg'" [alt]="p.name" />
+                <div class="p-4">
+                  <h3>{{ p.name }}</h3>
+                  <p class="muted text-sm">
+                    {{
+                      p.inventory === 'none'
+                        ? 'Sin inventario'
+                        : p.stock + (p.inventory === 'ml' ? ' ml disponibles' : ' unidades')
+                    }}
+                  </p>
+                  @if (p.inventory === 'ml') {
+                    <label class="mt-3"
+                      >Medida<select
+                        [ngModel]="selectedServing[p._id] || 'shot'"
+                        (ngModelChange)="selectedServing[p._id] = $event"
+                      >
+                        <option value="" disabled>Seleccioná</option>
+                        @for (size of sizes; track size.key) {
+                          <option [ngValue]="size.key">
+                            {{ size.name }} · {{ state.settings.servings[size.key] }} ml ·
+                            {{ api.money(p.prices[size.key]) }}
+                          </option>
+                        }
+                      </select></label
+                    >
+                  } @else {
+                    <strong class="block mt-4">{{ api.money(p.price) }}</strong>
+                  }
+                  <button
+                    class="button soft w-full mt-4"
+                    [disabled]="busy() || (p.inventory !== 'none' && p.stock === 0)"
+                    (click)="add(p)"
+                  >
+                    <app-icon name="plus" /> Agregar
+                    {{ p.inventory === 'ml' && !selectedServing[p._id] ? 'shot' : '' }}
+                  </button>
+                </div>
+              </article>
+            }
+          }
+        </div>
+      </section>
+      <aside class="order-panel">
+        <div class="panel-heading">
+          <h2>Orden actual</h2>
+          <span class="badge">{{ cart().length }}</span>
+        </div>
+        <label
+          >Nombre de cuenta o mesa<input
+            [(ngModel)]="label"
+            placeholder="Ej. Mesa 04"
+            [disabled]="busy() || imageUploading()"
+        /></label>
+        <div class="order-lines">
+          @for (line of cart(); track $index; let i = $index) {
+            <div class="order-line">
+              <div>
+                <strong>{{ line.product.name }}</strong
+                ><small
+                  >{{
+                    line.serving === 'unit'
+                      ? 'Unidad'
+                      : line.serving === 'large'
+                        ? 'Grande'
+                        : line.serving === 'small'
+                          ? 'Pequeño'
+                          : 'Shot'
+                  }}
+                  · {{ api.money(line.price) }}</small
+                >
+              </div>
+              <div class="quantity">
+                <button
+                  (click)="quantity(i, -1)"
+                  [disabled]="busy() || imageUploading()"
+                  [attr.aria-label]="'Quitar ' + line.product.name"
+                >
+                  <app-icon name="minus" /></button
+                ><span>{{ line.quantity }}</span
+                ><button
+                  (click)="quantity(i, 1)"
+                  [disabled]="busy() || imageUploading()"
+                  [attr.aria-label]="'Agregar ' + line.product.name"
+                >
+                  <app-icon name="plus" />
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state">La mesa está lista.<br />Agregá productos para comenzar.</div>
+          }
+        </div>
+        <div class="order-total">
+          <span>Total</span><strong>{{ api.money(total()) }}</strong>
+        </div>
+        <label
+          >Medio de pago<select [(ngModel)]="paymentMethod" [disabled]="busy() || imageUploading()">
+            <option value="cash">Efectivo</option>
+            <option value="sinpe">SIMPE</option>
+            <option value="card">Tarjeta</option>
+          </select></label
+        >
+        <p class="muted text-xs my-4">
+          Los precios incluyen los impuestos que hayas incorporado al precio del producto. No
+          procesa pagos electrónicos.
+        </p>
+        <button
+          class="button dark w-full"
+          (click)="checkout()"
+          [disabled]="busy() || !cart().length"
+        >
+          {{ busy() ? 'Registrando…' : 'Confirmar venta' }}<app-icon name="circle-check" />
+        </button>
+      </aside>
+    </div>
+  }
+}

@@ -1,0 +1,138 @@
+<app-admin-page-heading
+  title="Cada mesa, al día."
+  description="Gestioná las entregas y los pedidos de cada mesa."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <div class="flex flex-wrap justify-between gap-4 mb-6">
+      <p role="status">
+        <span class="status-dot" [class.offline]="!activity.connected()"></span>
+        {{
+          activity.connected()
+            ? 'Conectado por socket en tiempo real'
+            : activity.service().orders.length
+              ? 'Reconectando las actualizaciones'
+              : 'Sin órdenes activas · verificando nuevos pedidos'
+        }}
+        · {{ activity.service().bills.length }} cuentas abiertas
+      </p>
+      <button
+        class="button outline"
+        [disabled]="busy() || imageUploading()"
+        (click)="refreshOrders()"
+      >
+        Actualizar pedidos
+      </button>
+    </div>
+    <div class="grid xl:grid-cols-2 gap-6">
+      @for (bill of activity.service().bills; track bill._id) {
+        <section class="panel service-card">
+          <div class="panel-heading">
+            <h2>{{ bill.label }}</h2>
+            <strong>{{ api.money(bill.total) }}</strong>
+          </div>
+          @for (order of activity.ordersFor(bill._id); track order._id) {
+            <article class="service-order" [class.order-ready]="order.orderStatus === 'ready'">
+              <div class="flex justify-between items-center gap-3">
+                <strong>{{ order.createdAt | date: 'shortTime' }}</strong
+                ><span class="badge">Pedido</span>
+              </div>
+              @for (item of order.items; track $index; let itemIndex = $index) {
+                @if (api.role() !== 'kitchen' || item.category === 'food') {
+                  <div class="service-line">
+                    <div>
+                      <p>
+                        {{ item.quantity }} × {{ item.name }}
+                        {{ item.serving !== 'unit' ? '· ' + servingName(item.serving) : '' }}
+                      </p>
+                      <span class="badge">{{
+                        statusName(item.fulfillmentStatus || 'pending')
+                      }}</span>
+                    </div>
+                    @if (
+                      item.category === 'food' &&
+                      item.fulfillmentStatus === 'preparing' &&
+                      api.role() !== 'waiter'
+                    ) {
+                      <button
+                        class="button outline"
+                        [disabled]="busy()"
+                        (click)="advance(order._id, 'ready', itemIndex)"
+                      >
+                        Por servir
+                      </button>
+                    }
+                    @if (
+                      api.role() !== 'kitchen' &&
+                      ((item.category === 'food' && item.fulfillmentStatus === 'ready') ||
+                        (item.category !== 'food' && item.fulfillmentStatus === 'pending'))
+                    ) {
+                      <button
+                        class="button accent"
+                        [disabled]="busy()"
+                        (click)="advance(order._id, 'delivered', itemIndex)"
+                      >
+                        <app-icon name="check-check" /> Marcar servida
+                      </button>
+                    }
+                  </div>
+                }
+              }
+              @if (order.notes) {
+                <p class="order-note">Nota: {{ order.notes }}</p>
+              }
+            </article>
+          } @empty {
+            <p class="muted p-6">El cliente está explorando la carta.</p>
+          }
+          @if (api.role() !== 'kitchen') {
+            <form class="bill-payment form-grid" (ngSubmit)="payBill(bill._id)">
+              <label
+                >Medio de pago<select
+                  [name]="'method-' + bill._id"
+                  [ngModel]="billMethods[bill._id] || 'cash'"
+                  (ngModelChange)="billMethods[bill._id] = $event"
+                  [disabled]="busy() || imageUploading()"
+                >
+                  <option value="cash">Efectivo</option>
+                  <option value="sinpe">SIMPE</option>
+                  <option value="card">Tarjeta</option>
+                </select></label
+              >
+              <label
+                >Referencia (opcional)<input
+                  [name]="'ref-' + bill._id"
+                  [(ngModel)]="billReferences[bill._id]"
+                  maxlength="150"
+                  [disabled]="busy() || imageUploading()"
+                  placeholder="Referencia o comprobante"
+              /></label>
+              <p class="muted">
+                Registrá el pago después de verificar que fue recibido. El sistema no ejecuta el
+                cobro.
+              </p>
+              <button class="button dark" [disabled]="busy() || !activity.canPay(bill._id)">
+                <app-icon name="banknote" /> Registrar pago · {{ api.money(bill.total) }}
+              </button>
+              @if (!activity.canPay(bill._id)) {
+                <small>Se habilita al entregar todos los pedidos.</small>
+              }
+            </form>
+          }
+        </section>
+      } @empty {
+        <section class="panel empty-state">
+          Sin cuentas abiertas. Los pedidos de los QR aparecerán aquí.
+        </section>
+      }
+    </div>
+  }
+}

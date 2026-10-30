@@ -1,0 +1,54 @@
+<section id="eventos" class="events-section page-width">
+  <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+    <div>
+      <p class="eyebrow">LA AGENDA DE {{ settings().name }}</p>
+      <h2>El próximo buen plan.</h2>
+    </div>
+    <p class="events-intro">
+      Música, buena compañía y noches para recordar.<br />Consultá las fechas y vení con tu gente.
+    </p>
+  </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (event of events(); track event._id) {
+      <article
+        class="event-card"
+        (animate.enter)="reveal.enter($event, $index)"
+        (animate.leave)="reveal.leave($event)"
+      >
+        <div class="event-poster">
+          @if (event.image) {
+            <img [src]="event.image" [alt]="event.title" loading="lazy" />
+          }
+          <span class="event-brand">{{ settings().name }}</span>
+          <span class="event-emblem"><app-icon [name]="eventIcon(event.kind)" /></span>
+          <span class="event-ticket">{{
+            event.isSample ? 'Evento de muestra' : event.starts ? 'En agenda' : 'Próximamente'
+          }}</span>
+          <h3>{{ event.title }}</h3>
+        </div>
+        <div class="event-details">
+          <p class="event-date"><app-icon name="calendar-days" /> {{ eventWhen(event) }}</p>
+          <p>{{ event.description }}</p>
+          <p class="event-location">
+            <app-icon name="map-pin" /> {{ event.location || settings().address }}
+          </p>
+          @if (event.admission) {
+            <span class="badge">Entrada: {{ event.admission }}</span>
+          }
+          <a class="button outline w-full mt-5" [href]="contactLink()"
+            >Consultar evento <app-icon name="arrow-up-right"
+          /></a>
+        </div>
+      </article>
+    } @empty {
+      <article class="event-empty">
+        <app-icon name="calendar-days" />
+        <h3>Se vienen buenos planes.</h3>
+        <p>Pronto publicaremos los próximos eventos. Consultanos para conocer la agenda.</p>
+        <a class="button outline mt-5" [href]="contactLink()"
+          >Consultar agenda <app-icon name="arrow-up-right"
+        /></a>
+      </article>
+    }
+  </div>
+</section>

@@ -462,7 +462,7 @@ h3 {
 }
 .admin-shell {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 88px minmax(0, 1fr);
   min-height: 100vh;
 }
 .sidebar {
@@ -494,7 +494,7 @@ h3 {
   flex-direction: column;
   gap: 5px;
 }
-.sidebar nav button {
+.sidebar nav a {
   padding: 13px 15px;
   display: flex;
   align-items: center;
@@ -504,17 +504,17 @@ h3 {
   text-align: left;
   border-radius: 6px;
 }
-.sidebar nav button > span {
+.sidebar nav a > span {
   width: 20px;
   font-size: 18px;
   text-align: center;
 }
-.sidebar nav button.current {
+.sidebar nav a.current {
   background: var(--accent);
   color: var(--text);
   font-weight: 650;
 }
-.sidebar nav button:hover:not(.current) {
+.sidebar nav a:hover:not(.current) {
   background: var(--surface-raised);
 }
 .sidebar nav small {
@@ -1066,7 +1066,7 @@ input[type='color'] {
     padding-right: 12px;
   }
   .admin-shell {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
   }
   .settings-layout {
     grid-template-columns: 1fr 1fr;
@@ -1075,12 +1075,12 @@ input[type='color'] {
 @media (max-width: 900px) {
   .admin-shell,
   .admin-shell.sidebar-expanded {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
   }
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    width: 72px;
+    width: 88px;
     height: 100dvh;
     z-index: 40;
   }
@@ -1215,7 +1215,7 @@ h3,
 .accent,
 .dark,
 .tabs .selected,
-.sidebar nav button.current {
+.sidebar nav a.current {
   color: #21170a;
 }
 .dark {
@@ -1316,13 +1316,13 @@ input[type='color'] {
   background: #191816;
   overflow-y: auto;
 }
-.sidebar nav button {
+.sidebar nav a {
   min-height: 44px;
 }
-.sidebar nav button.current {
+.sidebar nav a.current {
   background: var(--accent);
 }
-.sidebar nav button > span {
+.sidebar nav a > span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1334,7 +1334,7 @@ input[type='color'] {
   background: #5b4120;
   color: #ffe0b2;
 }
-.sidebar nav button.current small {
+.sidebar nav a.current small {
   background: #38250b;
   color: #ffe3b7;
 }
@@ -1672,16 +1672,16 @@ a:focus-visible {
   flex-shrink: 0;
   gap: 6px;
 }
-.sidebar nav button {
+.sidebar nav a {
   position: relative;
   min-height: 44px;
   width: 100%;
   padding: 12px;
 }
-.sidebar nav button > span:first-child {
+.sidebar nav a > span:first-child {
   flex-shrink: 0;
 }
-.sidebar nav button > .sidebar-label {
+.sidebar nav a > .sidebar-label {
   width: auto;
   font: inherit;
   text-align: left;
@@ -1718,7 +1718,7 @@ a:focus-visible {
 .sidebar-backdrop {
   display: none;
 }
-.admin-shell:not(.sidebar-expanded) .sidebar nav button {
+.admin-shell:not(.sidebar-expanded) .sidebar nav a {
   justify-content: center;
 }
 .admin-shell:not(.sidebar-expanded) .sidebar nav small {
@@ -1741,7 +1741,7 @@ a:focus-visible {
 }
 @media (max-width: 900px) {
   .admin-shell.sidebar-expanded {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
   }
   .sidebar-backdrop {
     display: block;
@@ -1927,4 +1927,44 @@ a:focus-visible {
 
 body:has(dialog.product-dialog[open]) {
   overflow: hidden;
+}
+
+app-product-route {
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+app-product-route dialog.product-dialog {
+  pointer-events: auto;
+}
+.product-route-enter {
+  animation: product-route-hold 200ms linear;
+}
+.product-route-enter dialog[open] {
+  animation: product-route-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes product-route-hold {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes product-route-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-route-enter,
+  .product-route-enter dialog[open] {
+    animation: none;
+  }
 }

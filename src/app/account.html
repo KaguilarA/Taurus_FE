@@ -118,13 +118,22 @@
           </div>
         </section>
       }
-      <app-menu
-        [settings]="d.settings"
-        [initialPage]="d.menu"
-        [canOrder]="bill()?.status === 'open'"
-        [submitting]="busy()"
-        (productAdded)="add($event.product, $event.serving)"
-      />
+      @defer (on viewport) {
+        <app-menu
+          [settings]="d.settings"
+          [initialPage]="d.menu"
+          [canOrder]="bill()?.status === 'open'"
+          [submitting]="busy()"
+          (productAdded)="add($event.product, $event.serving)"
+        />
+      } @placeholder {
+        <app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+      } @loading (after 100ms; minimum 150ms) {
+        <app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+      } @error {
+        <app-deferred-error id="carta" section="el menú" />
+      }
+
       <section class="page-width">
         @if (bill()?.status === 'open' && cart().length) {
           <section id="tu-pedido" class="guest-account cart-panel mt-8" aria-label="Tu pedido">
@@ -179,6 +188,14 @@
         }
       </section>
     </main>
+    <router-outlet
+      [routerOutletData]="{
+        settings: d.settings,
+        canOrder: bill()?.status === 'open',
+        submitting: busy(),
+        addToOrder: addFromDetails,
+      }"
+    />
     @if (bill()?.status === 'open' && cart().length) {
       <a class="button accent guest-cart-link" href="#tu-pedido"
         >Ver pedido · {{ api.money(total(), d.settings.currency) }} <app-icon name="arrow-down"

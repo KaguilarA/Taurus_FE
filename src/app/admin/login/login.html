@@ -1,0 +1,100 @@
+@if (loading()) {
+  <app-page-skeleton variant="admin" />
+} @else {
+  <main class="login-page">
+    <a routerLink="/" class="brand">{{ businessName() }}<span>PANEL ADMINISTRATIVO</span></a>
+    <section class="login-card">
+      <p class="eyebrow">TODO EN SU LUGAR</p>
+      <h1>Bienvenido de vuelta.</h1>
+      <p class="muted mb-8">Tu restaurante, bajo control.</p>
+      <form (ngSubmit)="login()" class="form-grid">
+        <label
+          >Usuario<input
+            type="text"
+            name="username"
+            [(ngModel)]="username"
+            required
+            autocomplete="username"
+            placeholder="admin"
+            autocapitalize="none"
+            spellcheck="false" /></label
+        ><label
+          >Contraseña<input
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            required
+            autocomplete="current-password"
+        /></label>
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        <button class="button accent" [disabled]="busy() || imageUploading()">
+          {{ busy() ? 'Ingresando…' : 'Entrar al panel' }}<app-icon name="arrow-up-right" />
+        </button>
+      </form>
+      <button
+        type="button"
+        class="button outline mt-4"
+        (click)="resetMode = !resetMode; checkReset()"
+      >
+        Olvidé mi contraseña
+      </button>
+      @if (notice()) {
+        <p role="status" class="alert success">{{ notice() }}</p>
+      }
+      @if (resetMode) {
+        <section class="mt-6" aria-label="Recuperar contraseña">
+          <h2>Recuperar acceso</h2>
+          <p>
+            Un administrador debe verificar tu identidad y aprobar la solicitud. Completá el proceso
+            en este mismo navegador antes de 30 minutos.
+          </p>
+          @if (resetState === 'approved') {
+            <form class="form-grid mt-4" (ngSubmit)="finishReset()">
+              <label
+                >Nueva contraseña<input
+                  type="password"
+                  name="resetPassword"
+                  [(ngModel)]="resetPassword.password"
+                  required
+                  minlength="12"
+                  autocomplete="new-password"
+              /></label>
+              <label
+                >Confirmar contraseña<input
+                  type="password"
+                  name="resetConfirmation"
+                  [(ngModel)]="resetPassword.passwordConfirmation"
+                  required
+                  minlength="12"
+                  autocomplete="new-password"
+              /></label>
+              <button class="button accent" [disabled]="busy()">Actualizar contraseña</button>
+            </form>
+          } @else if (resetState === 'pending') {
+            <p class="mt-4">Pendiente de aprobación.</p>
+            <button class="button outline mt-4" [disabled]="busy()" (click)="checkReset()">
+              Consultar aprobación
+            </button>
+          } @else {
+            @if (resetState === 'rejected') {
+              <p>Solicitud rechazada. Contactá a un administrador.</p>
+            }
+            <form class="form-grid mt-4" (ngSubmit)="requestReset()">
+              <label
+                >Usuario<input
+                  name="resetUsername"
+                  [(ngModel)]="username"
+                  required
+                  autocomplete="username"
+              /></label>
+              <button class="button accent" [disabled]="busy()">Solicitar aprobación</button>
+            </form>
+          }
+        </section>
+      }
+      <a class="back-link" routerLink="/"><app-icon name="arrow-left" /> Volver a la carta</a>
+    </section>
+  </main>
+}

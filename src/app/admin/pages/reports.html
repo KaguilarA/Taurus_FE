@@ -1,0 +1,73 @@
+<app-admin-page-heading
+  title="Los números de tu negocio."
+  description="Consultá las ventas y los productos más pedidos."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <form class="report-filters flex flex-wrap items-end gap-4 mb-6" (ngSubmit)="refreshReport()">
+      <label>Desde<input type="date" name="from" [(ngModel)]="from" /></label
+      ><label>Hasta (inclusive)<input type="date" name="to" [(ngModel)]="to" /></label
+      ><button class="button dark" [disabled]="busy() || imageUploading()">Aplicar período</button
+      ><button type="button" class="button soft" (click)="exportCsv()">
+        <app-icon name="download" /> Descargar CSV
+      </button>
+    </form>
+    <div class="grid sm:grid-cols-2 gap-5 mb-6">
+      <article class="stat-card">
+        <span>Ingresos del período</span><strong>{{ api.money(report().revenue) }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>Ventas pagadas</span><strong>{{ report().count }}</strong>
+      </article>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-6">
+      @for (
+        category of [
+          ['food', 'Comidas más vendidas'],
+          ['drink', 'Bebidas más vendidas'],
+          ['snack', 'Snacks y botanas más vendidos'],
+        ];
+        track category[0]
+      ) {
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>{{ category[1] }}</h2>
+          </div>
+          @for (row of report().ranking; track row._id.productId) {
+            @if (row._id.category === category[0]) {
+              <div class="ranking-row">
+                <div class="grow">
+                  <strong>{{ row.name }}</strong>
+                  <div class="bar-track">
+                    <div
+                      [style.width.%]="(row.quantity / (report().ranking[0]?.quantity || 1)) * 100"
+                    ></div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <strong>{{ row.quantity }} vendidos</strong
+                  ><small>{{ api.money(row.revenue) }}</small>
+                </div>
+              </div>
+            }
+          }
+          @if (!report().ranking.length) {
+            <p class="empty-state">No hay ventas en este período.</p>
+          }
+        </section>
+      }
+    </div>
+    <p class="muted text-sm mt-5">
+      Ordenado por cantidad de servicios vendidos. Las anulaciones no se incluyen. Las ventas
+      conservan el precio y nombre del momento de la compra.
+    </p>
+  }
+}

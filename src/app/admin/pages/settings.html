@@ -1,0 +1,123 @@
+<app-admin-page-heading
+  title="Hacelo tuyo."
+  description="Cambiá imágenes, textos y medidas sin tocar el código."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    @if (settings) {
+      <form (ngSubmit)="saveSettings()" class="settings-layout">
+        <div>
+          <section class="panel p-6 form-grid">
+            <h2>La identidad de tu negocio</h2>
+            <label
+              >Nombre<input
+                name="name"
+                [(ngModel)]="settings.name"
+                required
+                maxlength="150" /></label
+            ><label
+              >Tipo de negocio<input
+                name="subtitle"
+                [(ngModel)]="settings.subtitle"
+                maxlength="150"
+            /></label>
+            <label
+              >Frase principal<input
+                name="tagline"
+                [(ngModel)]="settings.tagline"
+                maxlength="200" /></label
+            ><label
+              >Descripción<textarea
+                name="description"
+                [(ngModel)]="settings.description"
+                rows="3"
+                maxlength="500"
+              ></textarea></label
+            ><app-image-upload
+              [(value)]="settings.heroImage"
+              purpose="branding"
+              label="Imagen principal de la carta"
+              [disabled]="busy()"
+              (pending)="imageUploading.set($event)"
+            />
+            <div class="grid sm:grid-cols-2 gap-4">
+              <label
+                >Color de marca<input
+                  type="color"
+                  name="accent"
+                  [(ngModel)]="settings.accent" /></label
+              ><label
+                >Moneda (ISO)<input
+                  name="currency"
+                  [(ngModel)]="settings.currency"
+                  maxlength="3"
+                  pattern="[A-Z]{3}"
+                  required
+              /></label>
+            </div>
+            <div class="menu-price-preference">
+              <label class="checkbox"
+                ><input
+                  type="checkbox"
+                  name="showMenuPrices"
+                  [(ngModel)]="settings.showMenuPrices"
+                />Mostrar precios en la carta pública</label
+              >
+              <p>
+                Se aplica a las tarjetas y a los detalles de productos. Los pedidos y las cuentas
+                siempre muestran sus importes.
+              </p>
+            </div>
+            <label>Dirección<input name="address" [(ngModel)]="settings.address" /></label
+            ><label>Horario<input name="hours" [(ngModel)]="settings.hours" /></label
+            ><label>Teléfono de contacto<input name="phone" [(ngModel)]="settings.phone" /></label>
+          </section>
+        </div>
+        <div>
+          <section class="panel p-6 form-grid">
+            <p class="eyebrow">A LA MEDIDA DE TU BARRA</p>
+            <h2>Cada mililitro cuenta.</h2>
+            <p class="muted text-sm">
+              Definí cuánto se sirve en cada tamaño. Estas medidas aplican a todas las bebidas por
+              mililitros y a las próximas ventas.
+            </p>
+            @for (size of sizes; track size.key) {
+              <label
+                >{{ size.name }} (ml)<input
+                  type="number"
+                  [name]="size.key"
+                  [(ngModel)]="settings.servings[size.key]"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  required
+              /></label>
+            }
+            <p class="muted text-xs">
+              Ejemplo: botella de 1000 ml ÷ shot de {{ settings.servings.shot }} ml =
+              {{ MathFloor(1000 / settings.servings.shot) }} shots completos.
+            </p>
+            <button class="button dark" [disabled]="busy() || imageUploading()">
+              <app-icon name="save" /> Guardar y publicar
+            </button>
+          </section>
+          <section class="panel p-6 mt-5">
+            <h3>Un cambio de imagen, sin complicaciones.</h3>
+            <p class="muted text-sm mt-3">
+              Subí una imagen desde tu equipo y revisá la vista previa. Guardá los cambios cuando
+              esté lista para aparecer en la carta.
+            </p>
+          </section>
+        </div>
+      </form>
+    }
+  }
+}

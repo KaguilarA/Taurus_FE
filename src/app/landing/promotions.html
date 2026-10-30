@@ -1,0 +1,23 @@
+<section id="promociones" class="page-width pb-20">
+  <p class="eyebrow">EXCUSAS PARA VOLVER</p>
+  <h2 class="mb-8">El plan se pone mejor.</h2>
+  <div class="grid md:grid-cols-2 gap-6">
+    @for (promo of promotions(); track promo._id) {
+      <article
+        class="promo-card"
+        (animate.enter)="reveal.enter($event, $index)"
+        (animate.leave)="reveal.leave($event)"
+      >
+        <div>
+          <span class="promo-label">PROMOCIÓN ESPECIAL</span>
+          <h3>{{ promo.title }}</h3>
+          <p>{{ promo.description }}</p>
+          <a [href]="'/#visitanos'">Te esperamos <app-icon name="arrow-up-right" /></a>
+        </div>
+        <img [src]="promo.image || '/images/rum.svg'" [alt]="promo.title" loading="lazy" />
+      </article>
+    } @empty {
+      <p class="muted">Estamos preparando nuestras próximas promociones. Consultá en el local.</p>
+    }
+  </div>
+</section>

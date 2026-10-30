@@ -1,0 +1,71 @@
+<app-admin-page-heading
+  title="Tu perfil, al día."
+  description="Actualizá tus datos y tu contraseña."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    @if (profile) {
+      <div class="grid lg:grid-cols-2 gap-6">
+        <form class="panel p-6 form-grid" (ngSubmit)="saveProfile()">
+          <h2>Mi perfil</h2>
+          <label
+            >Nombre<input
+              name="ownName"
+              [(ngModel)]="profile.name"
+              required
+              maxlength="100"
+              autocomplete="name"
+          /></label>
+          <label
+            >Usuario<input
+              name="ownUsername"
+              [(ngModel)]="profile.username"
+              required
+              minlength="3"
+              maxlength="40"
+              autocomplete="username"
+          /></label>
+          <button class="button accent" [disabled]="busy()">Guardar perfil</button>
+        </form>
+        <form class="panel p-6 form-grid" (ngSubmit)="changeOwnPassword()">
+          <h2>Cambiar mi contraseña</h2>
+          <label
+            >Contraseña actual<input
+              type="password"
+              name="currentPassword"
+              [(ngModel)]="ownPassword.currentPassword"
+              autocomplete="current-password"
+              required
+          /></label>
+          <label
+            >Nueva contraseña<input
+              type="password"
+              name="ownNewPassword"
+              [(ngModel)]="ownPassword.password"
+              autocomplete="new-password"
+              minlength="12"
+              required
+          /></label>
+          <label
+            >Confirmar contraseña<input
+              type="password"
+              name="ownConfirmPassword"
+              [(ngModel)]="ownPassword.passwordConfirmation"
+              autocomplete="new-password"
+              minlength="12"
+              required
+          /></label>
+          <button class="button accent" [disabled]="busy()">Cambiar contraseña</button>
+        </form>
+      </div>
+    }
+  }
+}

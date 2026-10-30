@@ -1,9 +1,11 @@
+import { SectionSkeleton } from './shared/section-skeleton';
+import { DeferredError } from './shared/deferred-error';
 import { MenuComponent } from './menu/menu.component';
-import type { MenuItem } from './menu/menu.models';
+import type { MenuItem, MenuSelection } from './menu/menu.models';
 import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { Icon } from './icon';
 import { Api, PublicState, Serving, GuestBill, servingName, themeAccent } from './api';
@@ -13,12 +15,15 @@ import { PageSkeleton } from './page-skeleton';
   selector: 'app-account',
   imports: [
     RouterLink,
+    RouterOutlet,
     FormsModule,
     ReactiveFormsModule,
     DatePipe,
     Icon,
     MenuComponent,
     PageSkeleton,
+    SectionSkeleton,
+    DeferredError,
   ],
   templateUrl: './account.html',
   styleUrl: './account.css',
@@ -26,11 +31,14 @@ import { PageSkeleton } from './page-skeleton';
 export class AccountPage {
   readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   readonly data = signal<PublicState | null>(null);
   readonly error = signal('');
   readonly servingName = servingName;
+  readonly addFromDetails = (selection: MenuSelection) =>
+    this.add(selection.product, selection.serving);
   readonly search = new FormControl('', { nonNullable: true });
   readonly matches = signal<{ _id: string; label: string; createdAt: string }[]>([]);
   readonly searching = signal(false);
@@ -108,8 +116,8 @@ export class AccountPage {
   readonly busy = signal(false);
   readonly notice = signal('');
   readonly connected = signal(false);
-  tableToken = new URLSearchParams(location.search).get('mesa');
-  private readonly billToken = new URLSearchParams(location.search).get('cuenta');
+  tableToken = this.route.snapshot.queryParamMap.get('mesa');
+  private readonly billToken = this.route.snapshot.queryParamMap.get('cuenta');
   notes = '';
   private requestId = crypto.randomUUID();
   private orderSubscription?: OrderSubscription;
@@ -126,7 +134,7 @@ export class AccountPage {
       delivered: 'Servida',
     })[status] ?? status;
   sectionLink(section: string) {
-    return location.pathname + location.search + '#' + section;
+    return this.router.url.split('#')[0] + '#' + section;
   }
   constructor() {
     void this.load();

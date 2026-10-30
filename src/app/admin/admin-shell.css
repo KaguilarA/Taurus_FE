@@ -24,6 +24,7 @@
   overscroll-behavior-y: contain;
   padding-block: 4px;
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 .sidebar-group {
@@ -49,8 +50,10 @@
   white-space: nowrap;
 }
 
-.sidebar nav button {
+.sidebar nav a {
   min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
   padding: 10px;
   gap: 10px;
   transition:
@@ -58,13 +61,13 @@
     color 140ms ease;
 }
 
-.sidebar nav button > .sidebar-label {
+.sidebar nav a > .sidebar-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.sidebar nav button:focus-visible,
+.sidebar nav a:focus-visible,
 .sidebar-toggle:focus-visible,
 .sidebar-bottom a:focus-visible,
 .sidebar-bottom button:focus-visible {
@@ -100,33 +103,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar nav button {
+  .sidebar nav a {
     transition: none;
-  }
-}
-
-.service-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-block: 16px;
-  border-top: 1px solid var(--border);
-  margin-top: 12px;
-}
-.service-line > div {
-  min-width: 0;
-}
-.service-line p {
-  margin-bottom: 8px;
-}
-.service-line .button {
-  flex-shrink: 0;
-  font-size: 12px;
-  padding: 10px 14px;
-}
-@media (max-width: 600px) {
-  .service-line {
-    flex-wrap: wrap;
   }
 }

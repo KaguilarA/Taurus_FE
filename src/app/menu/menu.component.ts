@@ -5,10 +5,10 @@ import { ScrollReveal } from '../scroll-reveal';
 import { MenuStore } from './menu.store';
 import { DRINK_FILTERS, MENU_CATEGORIES, type MenuPage, type MenuSelection } from './menu.models';
 import { ProductCardComponent } from './product-card/product-card.component';
-import { ProductDialogComponent } from './product-dialog/product-dialog.component';
+import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-menu',
-  imports: [Icon, ProductCardComponent, ProductDialogComponent],
+  imports: [Icon, ProductCardComponent],
   providers: [MenuStore, ScrollReveal],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.css',
@@ -24,7 +24,8 @@ export class MenuComponent implements OnInit {
   readonly categories = MENU_CATEGORIES;
   readonly drinkFilters = DRINK_FILTERS;
   readonly placeholders = [0, 1, 2, 3, 4, 5];
-  private readonly dialog = viewChild.required(ProductDialogComponent);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly heading = viewChild.required<ElementRef<HTMLElement>>('heading');
   ngOnInit() {
     this.store.initialize(this.initialPage());
@@ -33,7 +34,12 @@ export class MenuComponent implements OnInit {
     if (event.target instanceof HTMLInputElement) this.store.setSearch(event.target.value);
   }
   openDetails(selection: MenuSelection) {
-    this.dialog().open(selection);
+    void this.router.navigate(['producto', selection.product._id], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+      queryParams: { presentacion: selection.serving === 'unit' ? null : selection.serving },
+      state: { productModal: true },
+    });
   }
   changePage(page: number) {
     this.store.goToPage(page);

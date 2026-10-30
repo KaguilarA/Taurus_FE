@@ -30,19 +30,18 @@ export class App {
   readonly navigating = signal(true);
   readonly destination = signal(location.pathname);
   constructor() {
-    inject(Router)
-      .events.pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        if (event instanceof NavigationStart) {
-          this.destination.set(event.url);
-          this.navigating.set(true);
-        }
-        if (
-          event instanceof NavigationEnd ||
-          event instanceof NavigationCancel ||
-          event instanceof NavigationError
-        )
-          this.navigating.set(false);
-      });
+    const router = inject(Router);
+    router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.destination.set(event.url);
+        this.navigating.set(!router.navigated);
+      }
+      if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      )
+        this.navigating.set(false);
+    });
   }
 }

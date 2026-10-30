@@ -6,6 +6,7 @@ import { Component, input } from '@angular/core';
     <div
       class="page-skeleton"
       [class.admin-skeleton]="variant() === 'admin'"
+      [class.section-skeleton]="variant() === 'section'"
       aria-busy="true"
       role="status"
       aria-label="Cargando contenido"
@@ -39,7 +40,7 @@ import { Component, input } from '@angular/core';
   styleUrl: './page-skeleton.css',
 })
 export class PageSkeleton {
-  readonly variant = input<'landing' | 'account' | 'admin'>('landing');
+  readonly variant = input<'landing' | 'account' | 'admin' | 'section'>('landing');
   readonly rows = [0, 1, 2, 3, 4, 5];
   readonly cards = [0, 1, 2, 3, 4, 5];
 }

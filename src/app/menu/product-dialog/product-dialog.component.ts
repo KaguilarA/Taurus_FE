@@ -24,6 +24,8 @@ export class ProductDialogComponent {
   readonly settings = input.required<Settings>();
   readonly canOrder = input(false);
   readonly submitting = input(false);
+  readonly routed = input(false);
+  readonly closed = output<void>();
   readonly productAdded = output<MenuSelection>();
   readonly product = signal<MenuItem | null>(null);
   readonly loading = signal(false);
@@ -43,10 +45,12 @@ export class ProductDialogComponent {
   private readonly destroyRef = inject(DestroyRef);
   private request?: AbortController;
   private requestVersion = 0;
+  private selectedId = '';
   constructor() {
     this.destroyRef.onDestroy(() => this.request?.abort());
   }
   open(selection: MenuSelection) {
+    this.selectedId = selection.product._id;
     this.product.set(selection.product);
     this.error.set('');
     this.imageFailed.set(false);
@@ -55,7 +59,21 @@ export class ProductDialogComponent {
     if (!dialog.open) dialog.showModal();
     void this.loadDetails(selection.product._id);
   }
+  openById(id: string, serving: Serving = 'shot') {
+    this.selectedId = id;
+    this.product.set(null);
+    this.error.set('');
+    this.imageFailed.set(false);
+    this.serving.set(serving);
+    const dialog = this.dialog().nativeElement;
+    if (!dialog.open) dialog.showModal();
+    void this.loadDetails(id);
+  }
   close() {
+    if (this.routed()) {
+      this.closed.emit();
+      return;
+    }
     this.request?.abort();
     this.requestVersion++;
     this.dialog().nativeElement.close();
@@ -66,6 +84,7 @@ export class ProductDialogComponent {
       this.request?.abort();
       this.requestVersion++;
       this.product.set(null);
+      if (this.routed()) this.closed.emit();
     }
   }
   handleCancel(event: Event) {
@@ -89,8 +108,7 @@ export class ProductDialogComponent {
       this.serving.set(event.target.value);
   }
   retry() {
-    const product = this.product();
-    if (product) void this.loadDetails(product._id);
+    if (this.selectedId) void this.loadDetails(this.selectedId);
   }
   addToOrder() {
     const product = this.product();

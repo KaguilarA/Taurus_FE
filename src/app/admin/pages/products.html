@@ -1,0 +1,192 @@
+<app-admin-page-heading
+  title="Una carta con carácter."
+  description="Administrá los productos de tu carta."
+  ><button class="button dark" (click)="editProduct()">
+    <app-icon name="plus" /> Nuevo producto
+  </button></app-admin-page-heading
+>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <label class="search-box mb-6"
+      ><span><app-icon name="search" /></span
+      ><input
+        aria-label="Buscar productos"
+        placeholder="Buscar un producto…"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+    /></label>
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+      @for (p of filtered(); track p._id) {
+        <article class="admin-product">
+          <img [src]="p.image || '/images/hero.svg'" [alt]="p.name" />
+          <div class="p-5">
+            <div class="flex justify-between gap-3">
+              <span class="eyebrow">{{ categoryName(p.category) }}</span
+              ><span class="badge" [class.warning]="!p.active">{{
+                p.active ? 'Visible' : 'Archivado'
+              }}</span>
+            </div>
+            <h3 class="my-3">{{ p.name }}</h3>
+            <p class="muted text-sm">{{ p.description }}</p>
+            <div class="flex justify-between items-center mt-5">
+              <strong
+                >{{ api.money(p.inventory === 'ml' ? p.prices.shot : p.price)
+                }}{{ p.inventory === 'ml' ? ' / shot' : '' }}</strong
+              ><button class="text-button" (click)="editProduct(p)">
+                <app-icon name="pencil" /> Editar
+              </button>
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-state">No hay productos. Creá el primero para armar tu carta.</p>
+      }
+    </div>
+    @if (product; as p) {
+      <div class="modal-backdrop">
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="product-title">
+          <div class="panel-heading">
+            <h2 id="product-title">{{ p._id ? 'Editar producto' : 'Nuevo producto' }}</h2>
+            <button
+              (click)="product = null"
+              aria-label="Cerrar"
+              [disabled]="busy() || imageUploading()"
+            >
+              <app-icon name="x" />
+            </button>
+          </div>
+          <form class="form-grid p-6" (ngSubmit)="saveProduct()" #productForm="ngForm">
+            <label>Nombre<input name="name" [(ngModel)]="p.name" required maxlength="150" /></label
+            ><label
+              >Descripción<textarea
+                name="description"
+                [(ngModel)]="p.description"
+                maxlength="500"
+              ></textarea></label
+            ><app-image-upload
+              [(value)]="p.image"
+              purpose="product"
+              label="Imagen del producto"
+              [disabled]="busy()"
+              (pending)="imageUploading.set($event)"
+            />
+            <div class="grid sm:grid-cols-2 gap-4">
+              <label
+                >Categoría<select
+                  name="category"
+                  [(ngModel)]="p.category"
+                  (ngModelChange)="changeCategory()"
+                  [disabled]="!!p._id"
+                >
+                  <option value="food">Comida</option>
+                  <option value="drink">Bebida</option>
+                  <option value="snack">Snacks y botanas</option>
+                </select></label
+              ><label
+                >Inventario<select
+                  name="inventory"
+                  [(ngModel)]="p.inventory"
+                  [disabled]="p.category !== 'drink' || !!p._id"
+                >
+                  <option value="none" [disabled]="p.category === 'drink'">Sin inventario</option>
+                  <option value="unit">Por unidad</option>
+                  <option value="ml">Por mililitros</option>
+                </select></label
+              >
+            </div>
+            @if (p.category === 'drink') {
+              <label
+                >Subcategoría de bebida (obligatoria)<select
+                  name="drinkType"
+                  [(ngModel)]="p.drinkType"
+                  required
+                  #drinkType="ngModel"
+                >
+                  <option value="">Seleccioná una subcategoría</option>
+                  <option value="non_alcoholic">Libre de alcohol</option>
+                  <option value="alcoholic">Con alcohol</option>
+                </select></label
+              >
+              @if (!p.drinkType) {
+                <p class="muted">Seleccioná si la bebida contiene alcohol antes de guardar.</p>
+              }
+            }
+            @if (p.inventory === 'ml') {
+              <div class="grid sm:grid-cols-3 gap-4">
+                @for (size of sizes; track size.key) {
+                  <label
+                    >Precio {{ size.name
+                    }}<input
+                      type="number"
+                      [name]="size.key"
+                      [(ngModel)]="p.prices[size.key]"
+                      min="0"
+                      step="0.01"
+                      required
+                  /></label>
+                }
+              </div>
+              <label
+                >Contenido de una botella (ml)<input
+                  type="number"
+                  name="bottle"
+                  [(ngModel)]="p.bottleMl"
+                  min="1"
+                  step="1"
+                  required
+              /></label>
+            } @else {
+              <label
+                >Precio de venta<input
+                  type="number"
+                  name="price"
+                  [(ngModel)]="p.price"
+                  min="0"
+                  step="0.01"
+                  required
+              /></label>
+            }
+            @if (p.inventory !== 'none') {
+              <label
+                >Alerta de mínimo ({{ p.inventory === 'ml' ? 'ml' : 'unidades' }})<input
+                  type="number"
+                  name="minimum"
+                  [(ngModel)]="p.minimum"
+                  min="0"
+                  step="1"
+                  required
+              /></label>
+              <p class="muted text-xs">
+                Las existencias se cargan y ajustan desde Inventario para conservar el historial.
+              </p>
+            }
+            <label class="checkbox"
+              ><input type="checkbox" name="active" [(ngModel)]="p.active" />Visible en la carta y
+              disponible para venta</label
+            ><label class="checkbox"
+              ><input type="checkbox" name="featured" [(ngModel)]="p.featured" />Destacar como
+              especialidad de la casa</label
+            >
+            @if (error()) {
+              <p class="alert error" role="alert">{{ error() }}</p>
+            }
+            <button
+              class="button dark"
+              [disabled]="busy() || imageUploading() || productForm.invalid"
+            >
+              <app-icon name="save" /> Guardar producto
+            </button>
+          </form>
+        </section>
+      </div>
+    }
+  }
+}

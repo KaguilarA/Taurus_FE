@@ -1,13 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
-import { AdminPage } from './admin';
+import { Component, inject } from '@angular/core';
+import { OrderActivity } from './admin/order-activity';
+
+@Component({ template: '', providers: [OrderActivity] })
+class SocketOwner {
+  readonly activity = inject(OrderActivity);
+}
 import { Api, ServiceState, Settings } from './api';
 
 it('discovers the first staff order without subscribing while idle and cleans up on navigation', async () => {
   vi.useFakeTimers();
   try {
-    TestBed.configureTestingModule({ imports: [AdminPage], providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ imports: [SocketOwner], providers: [provideRouter([])] });
     const api = TestBed.inject(Api);
     const settings = { name: 'Felos Bar', currency: 'CRC' } as Settings;
     let service: ServiceState = { bills: [], orders: [] };
@@ -32,9 +38,10 @@ it('discovers the first staff order without subscribing while idle and cleans up
         connection(true);
         return subscription;
       });
-    const fixture = TestBed.createComponent(AdminPage);
-    const page = fixture.componentInstance;
-    await vi.waitFor(() => expect(page.loading()).toBe(false));
+    await api.status();
+    await api.load();
+    const fixture = TestBed.createComponent(SocketOwner);
+    await vi.advanceTimersByTimeAsync(0);
     expect(socket).not.toHaveBeenCalled();
     service = {
       bills: [],

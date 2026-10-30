@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Api, PublicState } from './api';
@@ -38,6 +38,15 @@ describe('Landing and account separation', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(element.querySelector('.landing-hero h1')?.textContent).toBe('Buena compañía');
+    expect(element.querySelector('app-menu')).toBeNull();
+    expect(element.querySelector('app-public-events')).toBeNull();
+    expect(element.querySelector('app-public-promotions')).toBeNull();
+    expect(element.querySelector('app-section-skeleton#carta')).toBeTruthy();
+    const [menuBlock] = await fixture.getDeferBlocks();
+    await menuBlock.render(DeferBlockState.Loading);
+    expect(element.querySelector('app-section-skeleton#carta')).toBeTruthy();
+    await menuBlock.render(DeferBlockState.Complete);
+    fixture.detectChanges();
     expect(element.querySelector('app-menu')).toBeTruthy();
     expect(element.querySelector('a[href="/cuenta"]')).toBeTruthy();
     expect(element.querySelector('.ticker, .guest-account, .guest-cart-link')).toBeNull();

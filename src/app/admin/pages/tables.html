@@ -1,0 +1,53 @@
+<app-admin-page-heading
+  title="Un QR para cada lugar."
+  description="Administrá las mesas y sus accesos al menú."
+></app-admin-page-heading>
+@if (error()) {
+  <p class="alert error" role="alert">{{ error() }}</p>
+}
+@if (notice()) {
+  <p class="alert success" role="status">{{ notice() }}</p>
+}
+@if (loading()) {
+  <app-page-skeleton variant="section" />
+} @else {
+  @if (api.state(); as state) {
+    <form class="panel form-grid p-6 mb-6" (ngSubmit)="createTable()">
+      <label
+        >Mesa o posición en el bar<input
+          name="tableName"
+          [(ngModel)]="tableName"
+          maxlength="100"
+          required
+          placeholder="Ej. Mesa 04 o Barra 02"
+      /></label>
+      <button class="button dark" [disabled]="busy() || imageUploading()">Crear código QR</button>
+      <p class="muted">
+        Cada QR identifica el lugar y abre una cuenta compartida. Configurá FRONTEND_URL en la API
+        con la dirección pública HTTPS antes de imprimirlos.
+      </p>
+    </form>
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+      @for (table of tables(); track table._id) {
+        <article class="panel qr-card">
+          <h2>{{ table.name }}</h2>
+          <span class="badge">{{ table.active ? 'Activa' : 'Pausada' }}</span
+          ><img [src]="table.qr" [alt]="'Código QR de ' + table.name" width="240" height="240" />
+          <div class="flex flex-wrap gap-3">
+            <a class="button dark" [href]="table.qr" [download]="table.name + '-qr.png'"
+              ><app-icon name="download" /> Descargar QR</a
+            ><a class="button outline" [href]="table.url" target="_blank" rel="noreferrer"
+              >Probar menú <app-icon name="arrow-up-right" /></a
+            ><button
+              class="button outline"
+              [disabled]="busy() || imageUploading()"
+              (click)="toggleTable(table)"
+            >
+              {{ table.active ? 'Pausar' : 'Activar' }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+}

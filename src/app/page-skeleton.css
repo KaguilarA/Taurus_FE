@@ -79,7 +79,7 @@ article {
 }
 .admin-skeleton {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 88px minmax(0, 1fr);
 }
 aside {
   background: var(--surface);
@@ -114,4 +114,19 @@ aside i {
   span {
     animation: none;
   }
+}
+
+.section-skeleton {
+  min-height: 0;
+  background: transparent;
+}
+.section-skeleton .skeleton-content {
+  width: 100%;
+  padding: 0;
+}
+.section-skeleton header {
+  display: none;
+}
+.section-skeleton section {
+  min-height: 120px;
 }
