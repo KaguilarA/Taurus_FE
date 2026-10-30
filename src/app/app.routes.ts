@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
-import { firstAdminGuard, configuredGuard, businessSetupGuard } from './setup.guard';
+import { firstAdminGuard, configuredGuard, businessSetupGuard, startupGuard } from './setup.guard';
 
 export const routes: Routes = [
+  {
+    path: 'start',
+    canActivate: [startupGuard],
+    loadComponent: () => import('./startup').then((m) => m.StartupPage),
+  },
   {
     path: 'business/setup',
     canActivate: [businessSetupGuard],

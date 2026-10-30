@@ -4,7 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { Api } from './api';
-import { configuredGuard, firstAdminGuard, businessSetupGuard } from './setup.guard';
+import { configuredGuard, firstAdminGuard, businessSetupGuard, startupGuard } from './setup.guard';
 
 @Component({ template: '' })
 class Screen {}
@@ -24,6 +24,7 @@ describe('Initial administrator routing', () => {
           { path: '', pathMatch: 'full', component: Screen, canActivate: [configuredGuard] },
           { path: 'admin', component: Screen, canActivate: [configuredGuard] },
           { path: 'setup', component: Screen, canActivate: [firstAdminGuard] },
+          { path: 'start', component: Screen, canActivate: [startupGuard] },
           { path: 'business/setup', component: Screen, canActivate: [businessSetupGuard] },
         ]),
         {
@@ -92,5 +93,32 @@ describe('Initial administrator routing', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/business/setup');
     expect(TestBed.inject(Router).url).toBe('/admin');
+  });
+  it('redirects the public menu to business onboarding when an authenticated admin has no business', async () => {
+    required = false;
+    businessRequired = true;
+    authenticated = true;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/#carta');
+    expect(TestBed.inject(Router).url).toBe('/business/setup');
+  });
+  it('requires login before continuing business onboarding from the public menu', async () => {
+    required = false;
+    businessRequired = true;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/');
+    expect(TestBed.inject(Router).url).toBe('/admin');
+  });
+  it('does not expose the public menu when checking configuration fails', async () => {
+    fail = true;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/');
+    expect(TestBed.inject(Router).url).toBe('/start');
+  });
+  it('allows the public menu again once the business is configured', async () => {
+    required = false;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/start');
+    expect(TestBed.inject(Router).url).toBe('/');
   });
 });
