@@ -28,6 +28,10 @@ export const configuredGuard: CanActivateFn = async (route, state) => {
       const auth = await api.request<{ authenticated: boolean; role: string }>('/auth/status');
       if (auth.authenticated && auth.role === 'admin') return router.parseUrl('/business/setup');
     }
+    if (route.routeConfig?.path === '' && route.queryParamMap.has('mesa'))
+      return router.createUrlTree(['/cuenta'], {
+        queryParams: { mesa: route.queryParamMap.get('mesa') },
+      });
     return true;
   } catch {
     // A failed check must never make the public menu accessible.
@@ -45,7 +49,9 @@ export const startupGuard: CanActivateFn = async () => {
     if (setup.required) return router.parseUrl('/setup');
     if (!setup.businessRequired) return router.parseUrl('/');
     const auth = await api.request<{ authenticated: boolean; role: string }>('/auth/status');
-    return router.parseUrl(auth.authenticated && auth.role === 'admin' ? '/business/setup' : '/admin');
+    return router.parseUrl(
+      auth.authenticated && auth.role === 'admin' ? '/business/setup' : '/admin',
+    );
   } catch {
     // Render a recoverable connection error; never reopen registration on failure.
     return true;

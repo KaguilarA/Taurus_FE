@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Icon } from './icon';
+import { PageSkeleton } from './page-skeleton';
 import { ImageUpload } from './image-upload';
 import { navigationFor } from './admin-navigation';
 import { OrderSubscription } from './order-socket';
@@ -47,7 +48,7 @@ const blankProduct = (): Product => ({
 });
 @Component({
   selector: 'app-admin',
-  imports: [FormsModule, RouterLink, DatePipe, Icon, ImageUpload],
+  imports: [FormsModule, RouterLink, DatePipe, Icon, ImageUpload, PageSkeleton],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
@@ -69,14 +70,14 @@ export class AdminPage {
   );
   readonly navigation = computed(() => navigationFor(this.api.role()));
   readonly pending = computed(
-    () => this.service().orders.filter((order) => order.orderStatus === 'pending').length,
+    () => this.service().orders.filter((order) => order.orderStatus !== 'delivered').length,
   );
   readonly statusName = (status: string) =>
     ({
-      pending: 'Recibido',
+      pending: 'Pedida',
       preparing: 'En preparación',
-      ready: 'Listo para entregar',
-      delivered: 'Entregado',
+      ready: 'Por servir',
+      delivered: 'Servida',
     })[status] ?? status;
   tableName = '';
   staff = { name: '', username: '', password: '', role: 'waiter' as Role };
@@ -572,9 +573,12 @@ export class AdminPage {
     const orders = this.ordersFor(billId);
     return orders.length > 0 && orders.every((order) => order.orderStatus === 'delivered');
   }
-  advance(id: string, status: string) {
+  advance(id: string, status: string, itemIndex?: number) {
     void this.run(async () => {
-      await this.api.request('/admin/orders/' + id, 'PATCH', { status });
+      await this.api.request('/admin/orders/' + id, 'PATCH', {
+        status,
+        ...(itemIndex === undefined ? {} : { itemIndex }),
+      });
       await this.loadService();
     }, 'Pedido actualizado.');
   }

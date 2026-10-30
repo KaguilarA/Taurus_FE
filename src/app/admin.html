@@ -1,5 +1,5 @@
 @if (loading()) {
-  <main class="connection-state"><p>Preparando tu espacio…</p></main>
+  <app-page-skeleton variant="admin" />
 } @else if (!api.authenticated()) {
   <main class="login-page">
     <a routerLink="/" class="brand">{{ businessName() }}<span>PANEL ADMINISTRATIVO</span></a>
@@ -447,46 +447,54 @@
                     >
                       <div class="flex justify-between items-center gap-3">
                         <strong>{{ order.createdAt | date: 'shortTime' }}</strong
-                        ><span class="badge">{{ statusName(order.orderStatus) }}</span>
+                        ><span class="badge">Pedido</span>
                       </div>
-                      @for (item of order.items; track $index) {
-                        <p>
-                          {{ item.quantity }} × {{ item.name }}
-                          {{ item.serving !== 'unit' ? '· ' + servingName(item.serving) : '' }}
-                        </p>
+                      @for (item of order.items; track $index; let itemIndex = $index) {
+                        @if (api.role() !== 'kitchen' || item.category === 'food') {
+                          <div class="service-line">
+                            <div>
+                              <p>
+                                {{ item.quantity }} × {{ item.name }}
+                                {{
+                                  item.serving !== 'unit' ? '· ' + servingName(item.serving) : ''
+                                }}
+                              </p>
+                              <span class="badge">{{
+                                statusName(item.fulfillmentStatus || 'pending')
+                              }}</span>
+                            </div>
+                            @if (
+                              item.category === 'food' &&
+                              item.fulfillmentStatus === 'preparing' &&
+                              api.role() !== 'waiter'
+                            ) {
+                              <button
+                                class="button outline"
+                                [disabled]="busy()"
+                                (click)="advance(order._id, 'ready', itemIndex)"
+                              >
+                                Por servir
+                              </button>
+                            }
+                            @if (
+                              api.role() !== 'kitchen' &&
+                              ((item.category === 'food' && item.fulfillmentStatus === 'ready') ||
+                                (item.category !== 'food' && item.fulfillmentStatus === 'pending'))
+                            ) {
+                              <button
+                                class="button accent"
+                                [disabled]="busy()"
+                                (click)="advance(order._id, 'delivered', itemIndex)"
+                              >
+                                <app-icon name="check-check" /> Marcar servida
+                              </button>
+                            }
+                          </div>
+                        }
                       }
                       @if (order.notes) {
                         <p class="order-note">Nota: {{ order.notes }}</p>
                       }
-                      <div class="flex flex-wrap gap-3 mt-4">
-                        @if (api.role() !== 'waiter' && order.orderStatus === 'pending') {
-                          <button
-                            class="button dark"
-                            [disabled]="busy() || imageUploading()"
-                            (click)="advance(order._id, 'preparing')"
-                          >
-                            <app-icon name="chef-hat" /> Empezar preparación
-                          </button>
-                        }
-                        @if (api.role() !== 'waiter' && order.orderStatus === 'preparing') {
-                          <button
-                            class="button accent"
-                            [disabled]="busy() || imageUploading()"
-                            (click)="advance(order._id, 'ready')"
-                          >
-                            <app-icon name="circle-check" /> Marcar listo
-                          </button>
-                        }
-                        @if (api.role() !== 'kitchen' && order.orderStatus === 'ready') {
-                          <button
-                            class="button accent"
-                            [disabled]="busy() || imageUploading()"
-                            (click)="advance(order._id, 'delivered')"
-                          >
-                            <app-icon name="check-check" /> Marcar entregado
-                          </button>
-                        }
-                      </div>
                     </article>
                   } @empty {
                     <p class="muted p-6">El cliente está explorando la carta.</p>

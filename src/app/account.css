@@ -1,0 +1,152 @@
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-block: 26px;
+  border-bottom: 1px solid var(--border);
+}
+.account-header .back-link {
+  margin: 0;
+}
+.account-search {
+  padding-block: 48px 32px;
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 420px);
+  gap: 28px;
+  align-items: end;
+}
+.account-search h1 {
+  font-size: clamp(30px, 4vw, 52px);
+  margin-bottom: 16px;
+}
+.account-search-form > div {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+.account-search-form input {
+  min-width: 0;
+  width: 100%;
+}
+.account-search-form label {
+  font-size: 13px;
+  color: var(--text-warm);
+}
+.account-matches {
+  grid-column: 1 / -1;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.account-matches button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  text-align: left;
+}
+.account-matches button:hover {
+  border-color: var(--accent);
+}
+.account-matches small {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.account-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.account-summary h2 {
+  margin-bottom: 12px;
+}
+.account-orders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-block: 24px;
+}
+.guest-order {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.guest-order h3 {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.account-order-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-block: 12px;
+  border-top: 1px solid var(--border);
+}
+.account-order-line > span:first-child {
+  flex: 1;
+  min-width: 140px;
+}
+.account-order-line strong {
+  white-space: nowrap;
+  font-size: 13px;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.account-actions p {
+  flex: 1;
+}
+.account-search .alert,
+.account-search-skeleton {
+  grid-column: 1 / -1;
+}
+.account-search-skeleton span {
+  display: block;
+  height: 60px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--surface-raised);
+  animation: account-pulse 1.4s ease-in-out infinite;
+}
+@keyframes account-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (max-width: 760px) {
+  .account-search,
+  .account-orders {
+    grid-template-columns: 1fr;
+  }
+  .account-header {
+    align-items: flex-start;
+  }
+  .account-header .brand {
+    font-size: 24px;
+  }
+  .account-header .back-link {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-search-skeleton span {
+    animation: none;
+  }
+}

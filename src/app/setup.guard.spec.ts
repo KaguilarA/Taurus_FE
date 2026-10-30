@@ -22,6 +22,7 @@ describe('Initial administrator routing', () => {
       providers: [
         provideRouter([
           { path: '', pathMatch: 'full', component: Screen, canActivate: [configuredGuard] },
+          { path: 'cuenta', component: Screen, canActivate: [configuredGuard] },
           { path: 'admin', component: Screen, canActivate: [configuredGuard] },
           { path: 'setup', component: Screen, canActivate: [firstAdminGuard] },
           { path: 'start', component: Screen, canActivate: [startupGuard] },
@@ -120,5 +121,11 @@ describe('Initial administrator routing', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/start');
     expect(TestBed.inject(Router).url).toBe('/');
+  });
+  it('redirects existing table QR links into the separate account route', async () => {
+    required = false;
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/?mesa=existing-table');
+    expect(TestBed.inject(Router).url).toBe('/cuenta?mesa=existing-table');
   });
 });

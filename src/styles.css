@@ -107,10 +107,6 @@
 .public-site .alert {
   margin-top: 16px;
 }
-.table-visit .hero,
-.table-visit .ticker {
-  display: none;
-}
 .table-visit .menu-section {
   padding-top: 36px;
 }
@@ -341,17 +337,6 @@ h3 {
   border-radius: 50%;
   font-size: 21px;
 }
-.hero {
-  padding-top: 65px;
-  padding-bottom: 76px;
-}
-.hero h1 {
-  font-size: clamp(48px, 5.8vw, 78px);
-  line-height: 1.04;
-  max-width: 560px;
-  font-weight: 600;
-  letter-spacing: -0.06em;
-}
 .public-site .eyebrow {
   color: var(--accent);
 }
@@ -363,53 +348,6 @@ h3 {
   border-radius: 50%;
   margin-right: 8px;
 }
-.hero-description {
-  max-width: 400px;
-  font-size: 14px;
-  line-height: 1.9;
-  color: var(--text);
-  margin-top: 28px;
-}
-.hero-footnote {
-  display: flex;
-  gap: 30px;
-  margin-top: 50px;
-  color: var(--text-muted);
-  font-size: 8px;
-  letter-spacing: 0.15em;
-}
-.hero-art {
-  position: relative;
-  min-width: 0;
-  height: 490px;
-  border-radius: 12px;
-  isolation: isolate;
-}
-.hero-art > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-}
-.hero-sticker {
-  position: absolute;
-  right: -12px;
-  top: 28px;
-  background: var(--accent);
-  color: var(--text);
-  padding: 22px;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.1;
-  transform: rotate(7deg);
-  width: 158px;
-  border-radius: 3px;
-}
-.hero-sticker span {
-  display: block;
-  font-size: 40px;
-  margin-top: 8px;
-}
 .image-caption {
   position: absolute;
   bottom: 22px;
@@ -417,20 +355,6 @@ h3 {
   font-size: 8px;
   letter-spacing: 0.14em;
   color: var(--text);
-}
-.ticker {
-  overflow: hidden;
-  white-space: nowrap;
-  background: var(--accent);
-  color: var(--text);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  padding: 19px 0;
-  font-weight: 700;
-}
-.ticker span {
-  padding: 0 38px;
-  font-size: 18px;
 }
 .menu-section {
   padding-top: 90px;
@@ -1137,9 +1061,6 @@ input[type='color'] {
     padding-left: 30px;
     padding-right: 30px;
   }
-  .hero-art {
-    height: 440px;
-  }
   .sidebar {
     padding-left: 12px;
     padding-right: 12px;
@@ -1191,29 +1112,6 @@ input[type='color'] {
   .settings-layout {
     grid-template-columns: 1fr;
   }
-  .hero {
-    padding-top: 45px;
-  }
-  .hero-art {
-    height: 500px;
-    max-width: 650px;
-    width: 100%;
-  }
-  .hero-copy {
-    padding-bottom: 20px;
-  }
-  .hero h1 {
-    max-width: 620px;
-  }
-  .hero-description {
-    max-width: 520px;
-  }
-  .hero-footnote {
-    margin-top: 30px;
-  }
-  .hero-sticker {
-    right: 15px;
-  }
   .menu-section {
     padding-top: 60px;
     padding-bottom: 60px;
@@ -1247,28 +1145,6 @@ input[type='color'] {
     width: 28px;
     height: 28px;
     font-size: 17px;
-  }
-  .hero-art {
-    height: 360px;
-  }
-  .hero h1 {
-    font-size: 55px;
-  }
-  .hero-description {
-    font-size: 13px;
-  }
-  .hero .button {
-    padding: 13px 17px;
-    font-size: 11px;
-  }
-  .hero-footnote {
-    gap: 20px;
-    font-size: 7px;
-  }
-  .hero-sticker {
-    width: 130px;
-    padding: 18px;
-    font-size: 16px;
   }
   .promo-card > div {
     padding: 22px;
@@ -1339,9 +1215,7 @@ h3,
 .accent,
 .dark,
 .tabs .selected,
-.sidebar nav button.current,
-.hero-sticker,
-.ticker {
+.sidebar nav button.current {
   color: #21170a;
 }
 .dark {
@@ -1410,7 +1284,6 @@ h3,
 .bar-track div {
   background: var(--secondary);
 }
-.hero-description,
 .muted,
 label {
   color: var(--text-muted);
@@ -1500,29 +1373,11 @@ button[aria-label='Cerrar sesión'] {
   color: var(--text-muted);
   --icon-size: 18px;
 }
-.hero-sticker > span {
-  display: inline-flex;
-  --icon-size: 34px;
-}
 .big-star app-icon {
   --icon-size: 180px;
 }
-.ticker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.ticker span {
-  display: inline-flex;
-}
-.ticker app-icon {
-  --icon-size: 17px;
-}
 .visit-section h2 app-icon {
   --icon-size: 42px;
-}
-.hero .outline {
-  background: transparent;
 }
 button:disabled {
   cursor: not-allowed;
@@ -1554,7 +1409,6 @@ a:focus-visible {
   src: url('/fonts/texas-tango.otf') format('opentype');
 }
 .brand,
-.cantina-site .hero h1,
 .cantina-site .menu-section h2,
 .cantina-site #eventos h2,
 .cantina-site #promociones h2,
@@ -1587,35 +1441,6 @@ a:focus-visible {
   height: auto;
   padding-top: 12px;
   padding-bottom: 12px;
-}
-.cantina-site .hero {
-  padding-top: clamp(40px, 4.2vw, 80px);
-  padding-bottom: clamp(56px, 4.5vw, 86px);
-}
-.cantina-site .hero h1 {
-  max-width: 100%;
-  font-size: clamp(32px, 3.8vw, 78px);
-  line-height: 1.22;
-}
-.cantina-site .hero-description {
-  color: #d7c3ab;
-  max-width: 560px;
-  font-size: clamp(14px, 1vw, 19px);
-}
-.cantina-site .hero-art {
-  height: auto;
-  aspect-ratio: 1.14;
-  border: 1px solid #60482e;
-  border-radius: 12px;
-}
-.cantina-site .hero-art > img {
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.cantina-site .ticker {
-  border-top: 3px double #33200a;
-  border-bottom: 3px double #33200a;
 }
 .cantina-site .menu-section h2,
 .cantina-site #eventos h2,
@@ -1753,38 +1578,20 @@ a:focus-visible {
     gap: 14px;
     flex-wrap: wrap;
   }
-  .cantina-site .hero {
-    padding-top: 35px;
-  }
-  .cantina-site .hero-art {
-    max-width: 100%;
-  }
   .events-section {
     padding-top: 50px;
     padding-bottom: 55px;
-  }
-}
-
-@media (max-width: 900px) {
-  .cantina-site .hero-art {
-    height: auto;
   }
 }
 @media (max-width: 640px) {
   .cantina-site .page-width {
     width: calc(100% - 40px);
   }
-  .cantina-site .hero-art {
-    height: auto;
-  }
 }
 
 /* Fluid proportions shared by the public menu and the visual reference. */
 .cantina-site .brand {
   font-size: clamp(29px, 2vw, 40px);
-}
-.cantina-site .hero-sticker {
-  right: -10px;
 }
 .image-uploader {
   padding: 18px;
@@ -1848,18 +1655,6 @@ a:focus-visible {
 .image-uploader .alert {
   margin-top: 12px;
   margin-bottom: 0;
-}
-
-.cantina-site .hero .button {
-  font-size: clamp(13px, 0.9vw, 17px);
-  padding: clamp(14px, 1.1vw, 21px) clamp(20px, 1.5vw, 28px);
-}
-.cantina-site .hero-footnote {
-  margin-top: clamp(40px, 4vw, 76px);
-  font-size: clamp(8px, 0.55vw, 10px);
-}
-.cantina-site .ticker {
-  min-height: clamp(56px, 4.4vw, 84px);
 }
 
 /* The admin navigation stays vertical at every breakpoint. */
@@ -2115,34 +1910,6 @@ a:focus-visible {
 }
 .business-onboarding details summary {
   cursor: pointer;
-}
-
-.cantina-site .hero.hero-background {
-  display: flex;
-  align-items: center;
-  min-height: 600px;
-  padding: clamp(32px, 6vw, 88px);
-  background-size: cover;
-  background-position: center;
-  border-radius: 20px;
-  overflow: hidden;
-  margin-top: 32px;
-  margin-bottom: 48px;
-}
-.hero-background .hero-copy {
-  max-width: 760px;
-  position: relative;
-  z-index: 1;
-}
-.cantina-site .hero-background .hero-description {
-  color: #f5ead9;
-}
-@media (max-width: 600px) {
-  .cantina-site .hero.hero-background {
-    min-height: 520px;
-    padding: 28px 22px;
-    border-radius: 0;
-  }
 }
 
 .menu-price-preference {

@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./public').then((m) => m.PublicPage),
   },
   {
+    path: 'cuenta',
+    canActivate: [configuredGuard],
+    loadComponent: () => import('./account').then((m) => m.AccountPage),
+  },
+  {
     path: 'admin',
     canActivate: [configuredGuard],
     loadComponent: () => import('./admin').then((m) => m.AdminPage),

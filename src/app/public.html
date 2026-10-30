@@ -1,17 +1,11 @@
 @if (data(); as d) {
-  <div
-    class="public-site cantina-site"
-    [class.table-visit]="!!tableToken"
-    [style.--accent]="d.settings.accent"
-  >
+  <div class="public-site cantina-site" [style.--accent]="d.settings.accent">
     <header class="public-nav page-width flex items-center justify-between gap-5">
       <a class="brand" [href]="sectionLink('')"
         >{{ d.settings.name }}<span>{{ d.settings.subtitle }}</span></a
       >
       <nav class="flex items-center gap-6" aria-label="Navegación principal">
-        @if (bill()) {
-          <a [href]="sectionLink('mi-cuenta')">Mi cuenta</a>
-        }
+        <a routerLink="/cuenta">Mi cuenta</a>
         <a [href]="sectionLink('carta')">La carta</a><a [href]="sectionLink('eventos')">Eventos</a
         ><a [href]="sectionLink('promociones')">Promociones</a
         ><a class="hide-mobile" [href]="sectionLink('visitanos')">Visitanos</a
@@ -24,174 +18,31 @@
       @if (error()) {
         <p class="alert error page-width" role="alert">{{ error() }}</p>
       }
-      @if (notice()) {
-        <p class="alert success page-width" role="status">{{ notice() }}</p>
-      }
-      @if (bill(); as account) {
-        <section class="guest-account page-width" id="mi-cuenta">
-          <div class="flex flex-wrap justify-between items-center gap-4">
-            <div>
-              <p class="eyebrow">TU MESA · SIN REGISTRO</p>
-              <h2>{{ account.label }}</h2>
-              <p>
-                {{
-                  connected()
-                    ? 'Actualizaciones por socket en tiempo real'
-                    : account.status === 'paid'
-                      ? 'Cuenta cerrada'
-                      : account.orders.length
-                        ? 'Reconectando las actualizaciones'
-                        : 'Sin pedidos · conexión al confirmar una orden'
-                }}
-              </p>
-            </div>
-            <div>
-              <span>{{ account.status === 'paid' ? 'Cuenta pagada' : 'Saldo de la mesa' }}</span>
-              <strong class="account-total">{{
-                api.money(account.balance, d.settings.currency)
-              }}</strong>
-              @if (account.status === 'paid') {
-                <small
-                  >Total pagado: {{ api.money(account.total, d.settings.currency) }} ·
-                  {{
-                    account.paymentMethod === 'cash'
-                      ? 'Efectivo'
-                      : account.paymentMethod === 'sinpe'
-                        ? 'SIMPE'
-                        : 'Tarjeta'
-                  }}</small
-                >
-              }
-            </div>
-          </div>
-          <p class="mt-4">
-            La cuenta reúne los pedidos de quienes escaneen el QR de esta mesa. Pagá al mesero en
-            efectivo, SIMPE o tarjeta.
-          </p>
-          @for (order of account.orders; track order._id) {
-            <article class="guest-order">
-              <div class="flex justify-between gap-3">
-                <strong>Pedido · {{ order.createdAt | date: 'shortTime' }}</strong
-                ><span class="badge">{{ statusName(order.orderStatus) }}</span>
-              </div>
-              @for (item of order.items; track $index) {
-                <p>
-                  {{ item.quantity }} × {{ item.name }}
-                  {{ item.serving !== 'unit' ? '· ' + servingName(item.serving) : '' }}
-                  <strong>{{ api.money(item.amount, d.settings.currency) }}</strong>
-                </p>
-              }
-              @if (order.notes) {
-                <p class="muted">Nota: {{ order.notes }}</p>
-              }
-            </article>
-          } @empty {
-            <p class="mt-4">Todavía no hay pedidos. Elegí algo de la carta para empezar.</p>
-          }
-          @if (account.status === 'paid') {
-            <button class="button accent mt-4" (click)="join()">
-              Iniciar nueva visita en esta mesa
-            </button>
-          }
-          <button class="button outline mt-4" (click)="refreshBill()">
-            <app-icon name="refresh-cw" /> Actualizar cuenta
-          </button>
-        </section>
-      } @else if (!tableToken) {
-        <p class="page-width mt-4 muted">
-          Para pedir y consultar tu cuenta, escaneá el QR de tu mesa o posición en el bar.
-        </p>
-      }
       <section
-        class="hero page-width hero-background"
+        class="landing-hero"
         [style.background-image]="
-          'linear-gradient(90deg, rgba(15,10,7,.88), rgba(15,10,7,.35)), url(' +
+          'linear-gradient(180deg, rgba(15,10,7,.18), rgba(15,10,7,.86)), url(' +
           (d.settings.heroImage || '/images/hero.svg') +
           ')'
         "
+        aria-labelledby="hero-title"
       >
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="status-dot"></span> {{ d.settings.address }}</p>
-          <h1>{{ d.settings.tagline }}</h1>
-          <p class="hero-description">{{ d.settings.description }}</p>
-          <div class="flex flex-wrap gap-4 mt-8">
-            <a class="button accent" [href]="sectionLink('carta')"
-              >Explorar la carta <span><app-icon name="arrow-up-right" /></span></a
-            ><a class="button outline" [href]="sectionLink('eventos')"
-              ><app-icon name="calendar-days" /> Ver eventos</a
-            >
-          </div>
-          <div class="hero-footnote">
-            <span>COCINA CON CARÁCTER</span><span>TRAGOS SIN PRISA</span>
+        <div class="landing-hero-content page-width">
+          <p class="hero-location"><app-icon name="map-pin" /> {{ d.settings.address }}</p>
+          <h1 id="hero-title">{{ d.settings.tagline }}</h1>
+          <div class="landing-hero-bottom">
+            <p>{{ d.settings.description }}</p>
+            <div>
+              <a class="button accent" href="#carta"
+                >Explorar la carta <app-icon name="arrow-up-right" /></a
+              ><a class="hero-event-link" href="#eventos"
+                >Ver eventos <app-icon name="calendar-days"
+              /></a>
+            </div>
           </div>
         </div>
       </section>
-      <div class="ticker" aria-hidden="true">
-        BUENA COMIDA <span><app-icon name="sparkles" /></span> BUENA COMPAÑÍA
-        <span><app-icon name="sparkles" /></span> NOS VEMOS EN {{ d.settings.name }}
-        <span><app-icon name="sparkles" /></span> BUENA COMIDA
-        <span><app-icon name="sparkles" /></span> BUENA COMPAÑÍA
-      </div>
-      <app-menu
-        [settings]="d.settings"
-        [initialPage]="d.menu"
-        [canOrder]="bill()?.status === 'open'"
-        [submitting]="busy()"
-        (productAdded)="add($event.product, $event.serving)"
-      />
-      <section class="page-width">
-        @if (bill()?.status === 'open' && cart().length) {
-          <section id="tu-pedido" class="guest-account cart-panel mt-8" aria-label="Tu pedido">
-            <h2>Tu pedido</h2>
-            @for (line of cart(); track $index; let i = $index) {
-              <div class="guest-order flex flex-wrap items-center justify-between gap-3">
-                <span
-                  >{{ line.product.name }}
-                  {{ line.serving !== 'unit' ? '· ' + servingName(line.serving) : '' }}</span
-                >
-                <div class="flex items-center gap-3">
-                  <button
-                    class="button outline"
-                    [disabled]="busy()"
-                    (click)="quantity(i, -1)"
-                    aria-label="Quitar una unidad"
-                  >
-                    <app-icon name="minus" /></button
-                  ><span>{{ line.quantity }}</span
-                  ><button
-                    class="button outline"
-                    [disabled]="busy()"
-                    (click)="quantity(i, 1)"
-                    aria-label="Agregar una unidad"
-                  >
-                    <app-icon name="plus" /></button
-                  ><strong>{{ api.money(line.price * line.quantity, d.settings.currency) }}</strong>
-                </div>
-              </div>
-            }
-            <label class="mt-4"
-              >Notas para el pedido<textarea
-                [(ngModel)]="notes"
-                [disabled]="busy()"
-                maxlength="500"
-                placeholder="Ej. sin cebolla"
-              ></textarea>
-            </label>
-            <div class="flex flex-wrap justify-between items-center gap-4 mt-4">
-              <strong>Total del pedido: {{ api.money(total(), d.settings.currency) }}</strong
-              ><button class="button accent" [disabled]="busy()" (click)="sendOrder()">
-                <app-icon name="send" /> {{ busy() ? 'Enviando…' : 'Confirmar pedido' }}
-              </button>
-            </div>
-            @if (error()) {
-              <p class="alert error mt-4" role="alert">{{ error() }}</p>
-            }
-            <a [href]="sectionLink('mi-cuenta')" class="back-link"
-              >Ver la cuenta de la mesa <app-icon name="arrow-up"
-            /></a>
-          </section>
-        }
-      </section>
+      <app-menu [settings]="d.settings" [initialPage]="d.menu" />
       <section id="eventos" class="events-section page-width">
         <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
           <div>
@@ -300,21 +151,13 @@
       <span>{{ d.settings.name }} · Hecho para pasarla bien.</span
       ><a routerLink="/admin">Administración <app-icon name="arrow-up-right" /></a>
     </footer>
-    @if (bill()?.status === 'open' && cart().length) {
-      <a class="button accent guest-cart-link" [href]="sectionLink('tu-pedido')"
-        >Ver pedido · {{ api.money(total(), d.settings.currency) }} <app-icon name="arrow-down"
-      /></a>
-    }
   </div>
-} @else {
+} @else if (error()) {
   <main class="connection-state">
-    <span class="brand">La carta</span>
-    @if (error()) {
-      <h1>No pudimos cargar la carta.</h1>
-      <p>{{ error() }}</p>
-      <button class="button accent" (click)="load()">Intentar de nuevo</button>
-    } @else {
-      <p>Cargando la carta…</p>
-    }
+    <h1>No pudimos cargar la carta.</h1>
+    <p role="alert">{{ error() }}</p>
+    <button class="button accent" (click)="load()">Intentar de nuevo</button>
   </main>
+} @else {
+  <app-page-skeleton />
 }

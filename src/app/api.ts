@@ -94,7 +94,14 @@ export interface Sale {
   createdAt: string;
   billId?: string;
   paymentMethod?: PaymentMethod;
-  items: { name: string; serving: string; quantity: number; amount: number }[];
+  items: {
+    name: string;
+    category?: Product['category'];
+    fulfillmentStatus?: Order['orderStatus'];
+    serving: string;
+    quantity: number;
+    amount: number;
+  }[];
 }
 export interface Movement {
   _id: string;

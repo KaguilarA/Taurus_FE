@@ -10,6 +10,9 @@
 /admin
   Cache-Control: no-cache
 
+/cuenta
+  Cache-Control: no-cache
+
 /deployment.json
   Cache-Control: no-store
 

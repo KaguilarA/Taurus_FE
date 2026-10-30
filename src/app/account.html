@@ -1,0 +1,196 @@
+@if (data(); as d) {
+  <div class="public-site cantina-site account-site" [style.--accent]="d.settings.accent">
+    <header class="account-header page-width">
+      <a class="brand" routerLink="/">{{ d.settings.name }}<span>TU CUENTA Y TU PEDIDO</span></a
+      ><a class="back-link" routerLink="/"><app-icon name="arrow-left" /> Volver al sitio</a>
+    </header>
+    <main>
+      <section class="account-search page-width" aria-labelledby="account-title">
+        <div>
+          <p class="eyebrow">A TU NOMBRE</p>
+          <h1 id="account-title">Tu cuenta, a mano.</h1>
+          <p class="muted">Buscá una cuenta abierta o escaneá el QR de tu mesa para empezar.</p>
+        </div>
+        <form (submit)="$event.preventDefault(); searchAccounts()" class="account-search-form">
+          <label for="account-search">Nombre de la cuenta</label>
+          <div>
+            <input
+              id="account-search"
+              type="search"
+              [formControl]="search"
+              maxlength="80"
+              placeholder="Ej. Mesa 4 o nombre de la cuenta"
+            /><button
+              class="button accent"
+              [disabled]="searching() || search.value.trim().length < 2"
+            >
+              Buscar
+            </button>
+          </div>
+        </form>
+        @if (searching()) {
+          <div class="account-search-skeleton" aria-busy="true" aria-label="Buscando cuentas">
+            <span></span><span></span>
+          </div>
+        }
+        @if (searched()) {
+          <ul class="account-matches" aria-label="Cuentas encontradas">
+            @for (match of matches(); track match._id) {
+              <li>
+                <button type="button" (click)="selectAccount(match._id)" [disabled]="busy()">
+                  <span
+                    >{{ match.label
+                    }}<small>Abierta {{ match.createdAt | date: 'short' }}</small></span
+                  ><app-icon name="arrow-up-right" />
+                </button>
+              </li>
+            } @empty {
+              <li role="status">No encontramos cuentas abiertas con ese nombre.</li>
+            }
+          </ul>
+        }
+        @if (error()) {
+          <p class="alert error" role="alert">{{ error() }}</p>
+        }
+        @if (notice()) {
+          <p class="alert success" role="status">{{ notice() }}</p>
+        }
+      </section>
+      @if (changingAccount()) {
+        <app-page-skeleton variant="account" />
+      } @else if (bill(); as account) {
+        <section class="guest-account page-width" id="mi-cuenta" aria-labelledby="bill-title">
+          <div class="account-summary">
+            <div>
+              <p class="eyebrow">TU CUENTA</p>
+              <h2 id="bill-title">{{ account.label }}</h2>
+              <p class="muted">
+                {{
+                  account.status === 'paid'
+                    ? 'Cuenta pagada'
+                    : connected()
+                      ? 'Actualizaciones en tiempo real'
+                      : account.orders.length
+                        ? 'Reconectando actualizaciones'
+                        : 'Lista para tu primer pedido'
+                }}
+              </p>
+            </div>
+            <div>
+              <span>{{ account.status === 'paid' ? 'Total pagado' : 'Saldo de la cuenta' }}</span
+              ><strong class="account-total">{{
+                api.money(
+                  account.status === 'paid' ? account.total : account.balance,
+                  d.settings.currency
+                )
+              }}</strong>
+            </div>
+          </div>
+          <div class="account-orders">
+            @for (order of account.orders; track order._id) {
+              <article class="guest-order">
+                <h3>Pedido · {{ order.createdAt | date: 'shortTime' }}</h3>
+                @for (item of order.items; track $index) {
+                  <div class="account-order-line">
+                    <span
+                      >{{ item.quantity }} × {{ item.name }}
+                      {{ item.serving !== 'unit' ? '· ' + servingName(item.serving) : '' }}</span
+                    ><span class="badge">{{ statusName(item.fulfillmentStatus || 'pending') }}</span
+                    ><strong>{{ api.money(item.amount, d.settings.currency) }}</strong>
+                  </div>
+                }
+                @if (order.notes) {
+                  <p class="muted">Nota: {{ order.notes }}</p>
+                }
+              </article>
+            } @empty {
+              <p class="muted">Elegí algo del menú para enviar tu primer pedido.</p>
+            }
+          </div>
+          <div class="account-actions">
+            <p class="muted">Pagá al mesero en efectivo, SIMPE o tarjeta.</p>
+            <button class="button outline" (click)="refreshBill()">
+              <app-icon name="refresh-cw" /> Actualizar cuenta
+            </button>
+            @if (account.status === 'paid' && tableToken) {
+              <button class="button accent" (click)="join()">Iniciar nueva visita</button>
+            }
+          </div>
+        </section>
+      }
+      <app-menu
+        [settings]="d.settings"
+        [initialPage]="d.menu"
+        [canOrder]="bill()?.status === 'open'"
+        [submitting]="busy()"
+        (productAdded)="add($event.product, $event.serving)"
+      />
+      <section class="page-width">
+        @if (bill()?.status === 'open' && cart().length) {
+          <section id="tu-pedido" class="guest-account cart-panel mt-8" aria-label="Tu pedido">
+            <h2>Tu pedido</h2>
+            @for (line of cart(); track $index; let i = $index) {
+              <div class="guest-order flex flex-wrap items-center justify-between gap-3">
+                <span
+                  >{{ line.product.name }}
+                  {{ line.serving !== 'unit' ? '· ' + servingName(line.serving) : '' }}</span
+                >
+                <div class="flex items-center gap-3">
+                  <button
+                    class="button outline"
+                    [disabled]="busy()"
+                    (click)="quantity(i, -1)"
+                    aria-label="Quitar una unidad"
+                  >
+                    <app-icon name="minus" /></button
+                  ><span>{{ line.quantity }}</span
+                  ><button
+                    class="button outline"
+                    [disabled]="busy()"
+                    (click)="quantity(i, 1)"
+                    aria-label="Agregar una unidad"
+                  >
+                    <app-icon name="plus" /></button
+                  ><strong>{{ api.money(line.price * line.quantity, d.settings.currency) }}</strong>
+                </div>
+              </div>
+            }
+            <label class="mt-4"
+              >Notas para el pedido<textarea
+                [(ngModel)]="notes"
+                [disabled]="busy()"
+                maxlength="500"
+                placeholder="Ej. sin cebolla"
+              ></textarea>
+            </label>
+            <div class="flex flex-wrap justify-between items-center gap-4 mt-4">
+              <strong>Total del pedido: {{ api.money(total(), d.settings.currency) }}</strong
+              ><button class="button accent" [disabled]="busy()" (click)="sendOrder()">
+                <app-icon name="send" /> {{ busy() ? 'Enviando…' : 'Confirmar pedido' }}
+              </button>
+            </div>
+            @if (error()) {
+              <p class="alert error mt-4" role="alert">{{ error() }}</p>
+            }
+            <a [href]="sectionLink('mi-cuenta')" class="back-link"
+              >Ver la cuenta de la mesa <app-icon name="arrow-up"
+            /></a>
+          </section>
+        }
+      </section>
+    </main>
+    @if (bill()?.status === 'open' && cart().length) {
+      <a class="button accent guest-cart-link" href="#tu-pedido"
+        >Ver pedido · {{ api.money(total(), d.settings.currency) }} <app-icon name="arrow-down"
+      /></a>
+    }
+  </div>
+} @else if (error()) {
+  <main class="connection-state">
+    <h1>No pudimos abrir tu cuenta.</h1>
+    <p role="alert">{{ error() }}</p>
+    <button class="button accent" (click)="load()">Reintentar</button>
+  </main>
+} @else {
+  <app-page-skeleton variant="account" />
+}
