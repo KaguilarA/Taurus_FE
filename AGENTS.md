@@ -1,8 +1,8 @@
 # Taurus frontend rules
 
-1. **Angular ARIA primero.** Usar las directivas oficiales estables de `@angular/aria` para las interacciones que cubren, reutilizando los componentes compartidos antes de implementar teclado, foco, selección o estados ARIA manualmente. No usar APIs privadas o experimentales. Mantener HTML nativo accesible para patrones que ARIA no ofrece y comprobar la navegación por teclado antes de desplegar. Ver `docs/angular-aria.md`.
+1. **Angular ARIA first.** Use stable official `@angular/aria` directives for supported interactions, reusing shared components before implementing keyboard handling, focus management, selection or ARIA states manually. Do not use private or experimental APIs. Keep accessible native HTML for patterns ARIA does not provide, and verify keyboard navigation before deployment. See `docs/angular-aria.md`.
 
-- Hacer más con menos: reuse existing components and domain logic across the public menu and administration. Split distinct responsibilities without duplicating implementations.
+- Do more with less: reuse existing components and domain logic across the public menu and administration. Split distinct responsibilities without duplicating implementations.
 - Each component has its own folder, TypeScript file, external HTML template and `index.ts` barrel. Barrels use `export * from './file'`. Consume components through their leaf barrels, including `loadComponent` routes.
 - Use Angular signals, native control-flow blocks, lazy feature routes and `@defer` for optional components, with loading and error states.
 - Use Tailwind utilities and the central business theme. Create component CSS only when utilities cannot express the requirement cleanly.
