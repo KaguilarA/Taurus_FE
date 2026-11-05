@@ -1,5 +1,6 @@
 import { categoryName } from '../api';
-import type { MenuItem } from './menu.models';
+import type { MenuItem } from '../interfaces';
+
 const formatters = new Map<string, Intl.NumberFormat>();
 export function menuMoney(value: number, currency: string): string {
   let formatter = formatters.get(currency);

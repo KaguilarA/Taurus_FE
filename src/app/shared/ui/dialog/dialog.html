@@ -1,0 +1,23 @@
+<dialog
+	#dialog
+	class="fixed inset-0 m-auto max-h-[90dvh] w-[min(620px,calc(100%-24px))] overflow-auto rounded-xl border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-canvas/80 backdrop:backdrop-blur-sm"
+	[attr.aria-label]="title()"
+	(cancel)="cancel($event)"
+	(click)="backdrop($event)"
+>
+	<header
+		class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-surface px-6 py-5"
+	>
+		<h2 class="text-base">{{ title() }}</h2>
+		<button
+			type="button"
+			class="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-surface-raised"
+			aria-label="Cerrar"
+			[disabled]="busy()"
+			(click)="closed.emit()"
+		>
+			<app-icon name="x" />
+		</button>
+	</header>
+	<ng-content />
+</dialog>

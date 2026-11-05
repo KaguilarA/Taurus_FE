@@ -1,4 +1,3 @@
-
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
 ## TypeScript Best Practices
@@ -8,6 +7,8 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Avoid the `any` type; use `unknown` when type is uncertain
 
 ## Angular Best Practices
+
+- Rule #1: Prefer stable official `@angular/aria` directives for all supported interaction patterns. Reuse the shared ARIA components instead of implementing keyboard, focus, selection or ARIA state management manually. Use accessible native HTML for patterns ARIA does not provide. See `AGENTS.md` and `docs/angular-aria.md`.
 
 - Always use standalone components over NgModules
 - Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
@@ -28,7 +29,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Keep components small and focused on a single responsibility
 - Use `input()` and `output()` functions instead of decorators
 - Use `computed()` for derived state
-- Prefer inline templates for small components
+- Use one folder per component, with an external HTML template and an index.ts barrel using export * from './component-file'. Use Tailwind utilities; add component CSS only when it is necessary.
 - Prefer Signal Forms (`@angular/forms/signals`) for new forms. They are stable in Angular v22+ and provide signal-based state, type-safe field access, and schema-based validation
 - When not using Signal Forms, prefer Reactive forms instead of Template-driven ones
 - Do NOT use `ngClass`, use `class` bindings instead

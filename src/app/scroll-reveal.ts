@@ -1,5 +1,15 @@
 import { AnimationCallbackEvent, DestroyRef, Injectable, inject } from '@angular/core';
-
+const REVEAL_CLASSES = [
+  'scroll-reveal-pending',
+  'opacity-0',
+  '[transform:translateY(14px)]',
+  '[&:focus-within]:opacity-100',
+  '[&:focus-within]:[transform:none]',
+  '[@media(prefers-reduced-motion:_reduce)]:opacity-100!',
+  '[@media(prefers-reduced-motion:_reduce)]:[transform:none]!',
+  '[@media(print)]:opacity-100!',
+  '[@media(print)]:[transform:none]!',
+];
 @Injectable()
 export class ScrollReveal {
   private observer?: IntersectionObserver;
@@ -11,10 +21,10 @@ export class ScrollReveal {
       this.observer?.disconnect();
     });
   }
-  private reducedMotion() {
+  private reducedMotion(): boolean {
     return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   }
-  enter(event: AnimationCallbackEvent, column = 0) {
+  public enter(event: AnimationCallbackEvent, column = 0): void {
     const element = event.target as HTMLElement;
     if (
       this.reducedMotion() ||
@@ -29,7 +39,7 @@ export class ScrollReveal {
     const finish = () => {
       if (finished) return;
       finished = true;
-      element.classList.remove('scroll-reveal-pending');
+      element.classList.remove(...REVEAL_CLASSES);
       animation?.cancel();
       this.observer?.unobserve(element);
       this.pending.delete(element);
@@ -56,7 +66,7 @@ export class ScrollReveal {
             fill: 'both',
           },
         );
-        void animation.finished.then(finish, finish);
+        animation.finished.then(finish, finish);
       } catch {
         finish();
       }
@@ -71,10 +81,10 @@ export class ScrollReveal {
     this.cleanups.get(element)?.();
     this.cleanups.set(element, finish);
     this.pending.set(element, play);
-    element.classList.add('scroll-reveal-pending');
+    element.classList.add(...REVEAL_CLASSES);
     this.observer.observe(element);
   }
-  leave(event: AnimationCallbackEvent) {
+  public leave(event: AnimationCallbackEvent): void {
     this.cleanups.get(event.target)?.();
     event.animationComplete();
   }

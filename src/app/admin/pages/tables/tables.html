@@ -1,0 +1,64 @@
+<app-admin-page-heading
+	title="Mesas y códigos QR"
+	description="Administrá las mesas y sus accesos al menú."
+/>
+
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<form
+			class="panel overflow-hidden rounded-xl border border-border bg-surface form-grid grid gap-5 p-6 mb-6"
+			(ngSubmit)="createTable()"
+		>
+			<label
+				>Mesa o posición en el bar<input
+					name="tableName"
+					[ngModel]="tableName()"
+					(ngModelChange)="tableName.set($event)"
+					maxlength="100"
+					required
+					placeholder="Ej. Mesa 04 o Barra 02"
+			/></label>
+			<button appButton="primary" [disabled]="busy() || imageUploading()">
+				Crear código QR
+			</button>
+			<p class="muted text-muted">
+				Cada QR identifica el lugar y abre una cuenta compartida. Configurá FRONTEND_URL en
+				la API con la dirección pública HTTPS antes de imprimirlos.
+			</p>
+		</form>
+		<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+			@for (table of tables(); track table._id) {
+				<article
+					class="panel overflow-hidden rounded-xl border border-border bg-surface qr-card p-6"
+				>
+					<h2>{{ table.name }}</h2>
+					<span
+						class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+						>{{ table.active ? 'Activa' : 'Pausada' }}</span
+					><img
+						[src]="table.qr"
+						[alt]="'Código QR de ' + table.name"
+						width="240"
+						height="240"
+					/>
+					<div class="flex flex-wrap gap-3">
+						<a appButton="primary" [href]="table.qr" [download]="table.name + '-qr.png'"
+							><app-icon name="download" /> Descargar QR</a
+						><a appButton="outline" [href]="table.url" target="_blank" rel="noreferrer"
+							>Probar menú <app-icon name="arrow-up-right" /></a
+						><button
+							appButton="outline"
+							[disabled]="busy() || imageUploading()"
+							(click)="toggleTable(table)"
+						>
+							{{ table.active ? 'Pausar' : 'Activar' }}
+						</button>
+					</div>
+				</article>
+			}
+		</div>
+	}
+}

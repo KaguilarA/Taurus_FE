@@ -1,0 +1,88 @@
+<main
+	class="login-page flex min-h-dvh flex-col items-center justify-center bg-canvas px-5 py-10 [&_>.brand]:mb-9 setup-page"
+>
+	<div
+		class="brand font-brand text-3xl uppercase leading-none tracking-wide [&_span]:mt-2 [&_span]:block [&_span]:font-sans [&_span]:text-[8px] [&_span]:font-semibold [&_span]:tracking-[0.3em]"
+	>
+		{{ businessName() }}<span>PRIMER PASO · TU CUENTA</span>
+	</div>
+	<section
+		class="login-card w-full max-w-md rounded-xl bg-surface p-6 sm:p-11 [&_h1]:mb-3 [&_h1]:text-3xl [&_p]:text-sm"
+		aria-labelledby="setup-title"
+	>
+		<p class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+			BIENVENIDO A TU NEGOCIO
+		</p>
+		<h1 id="setup-title">Todo empieza con vos.</h1>
+		<p class="muted text-muted mb-8">
+			Creá la cuenta administradora para abrir tu panel y configurar la carta.
+		</p>
+		<form class="form-grid grid gap-5" (ngSubmit)="register()">
+			<label
+				>Tu nombre<input
+					name="name"
+					[ngModel]="name()"
+					(ngModelChange)="name.set($event)"
+					maxlength="100"
+					autocomplete="name"
+					[disabled]="busy()"
+			/></label>
+			<label
+				>Usuario<input
+					name="username"
+					[ngModel]="username()"
+					(ngModelChange)="username.set($event)"
+					required
+					minlength="3"
+					maxlength="40"
+					pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{2,39}"
+					autocomplete="username"
+					autocapitalize="none"
+					spellcheck="false"
+					[disabled]="busy()"
+			/></label>
+			<label
+				>Contraseña<input
+					name="password"
+					type="password"
+					[ngModel]="password()"
+					(ngModelChange)="password.set($event)"
+					required
+					minlength="12"
+					maxlength="200"
+					autocomplete="new-password"
+					[disabled]="busy()"
+			/></label>
+			<p class="muted text-muted upload-hint text-xs leading-[1.6] mt-[9px] text-warm">
+				Usá una contraseña única de al menos 12 caracteres.
+			</p>
+			<label
+				>Confirmar contraseña<input
+					name="passwordConfirmation"
+					type="password"
+					[ngModel]="passwordConfirmation()"
+					(ngModelChange)="passwordConfirmation.set($event)"
+					required
+					minlength="12"
+					maxlength="200"
+					autocomplete="new-password"
+					[disabled]="busy()"
+			/></label>
+			@if (error()) {
+				<p
+					class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+					role="alert"
+				>
+					{{ error() }}
+				</p>
+			}
+			<button appButton="primary" [disabled]="busy()">
+				{{ busy() ? 'Creando tu cuenta…' : 'Crear administrador' }}
+				<app-icon name="arrow-up-right" />
+			</button>
+		</form>
+		<p class="setup-note text-muted text-xs leading-[1.7] mt-6">
+			Esta configuración estará disponible únicamente hasta crear el primer administrador.
+		</p>
+	</section>
+</main>

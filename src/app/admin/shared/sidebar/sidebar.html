@@ -1,0 +1,109 @@
+<aside
+	class="fixed inset-y-0 left-0 flex h-dvh flex-col gap-3 overflow-hidden border-r border-border bg-canvas p-3 transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:w-full"
+	[class]="expanded() ? 'w-[min(280px,calc(100vw-40px))]' : 'w-22'"
+	aria-label="Menú administrativo"
+>
+	<button
+		type="button"
+		class="grid size-11 shrink-0 place-items-center rounded-lg border border-border text-warm hover:bg-surface-raised"
+		aria-controls="admin-navigation"
+		[attr.aria-expanded]="expanded()"
+		[attr.aria-label]="expanded() ? 'Contraer menú lateral' : 'Expandir menú lateral'"
+		(click)="toggled.emit()"
+	>
+		<app-icon [name]="expanded() ? 'panel-left-close' : 'panel-left-open'" />
+	</button>
+	@if (expanded()) {
+		<a
+			routerLink="/"
+			class="px-2 py-3 font-brand text-2xl uppercase"
+			animate.enter="animate-[sidebar-label-in_180ms_ease-out_both] motion-reduce:animate-none"
+		>
+			{{ businessName()
+			}}<span class="mt-2 block font-sans text-[9px] tracking-widest text-muted"
+				>Administración</span
+			>
+		</a>
+	}
+	<nav
+		id="admin-navigation"
+		class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
+		aria-label="Administración"
+	>
+		@for (group of groups(); track group.id) {
+			<section
+				class="grid gap-1 border-t border-border py-2 first:border-0"
+				[attr.aria-label]="group.label"
+			>
+				@if (expanded()) {
+					<h2 class="px-2 py-2 text-[10px] uppercase tracking-widest text-muted">
+						{{ group.label }}
+					</h2>
+				}
+				@for (item of group.items; track item.id) {
+					<a
+						class="relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-surface-raised aria-[current=page]:bg-accent aria-[current=page]:font-semibold aria-[current=page]:text-canvas"
+						[class.justify-center]="!expanded()"
+						[routerLink]="['/admin', item.id]"
+						routerLinkActive="current"
+						ariaCurrentWhenActive="page"
+						[attr.aria-label]="item.label"
+						[title]="item.label"
+						(click)="navigated.emit()"
+					>
+						<app-icon [name]="item.icon" />
+						@if (expanded()) {
+							<span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+						}
+						@let count =
+							item.id === 'service'
+								? pending()
+								: item.id === 'inventory'
+									? lowStock()
+									: 0;
+						@if (count) {
+							<small
+								class="rounded bg-surface-raised px-1.5 py-0.5 text-[9px] text-warm"
+								[class]="expanded() ? 'ml-auto' : 'absolute right-0 top-0'"
+								[attr.aria-label]="count + ' pendientes'"
+								>{{ count > 99 ? '99+' : count }}</small
+							>
+						}
+					</a>
+				}
+			</section>
+		}
+	</nav>
+	<div class="grid shrink-0 gap-2 border-t border-border pt-2">
+		<a
+			routerLink="/"
+			target="_blank"
+			class="flex min-h-11 items-center justify-center gap-2 rounded-lg text-xs text-warm hover:bg-surface-raised"
+			title="Ver página pública"
+			aria-label="Ver página pública"
+		>
+			@if (expanded()) {
+				<span>Ver página pública</span>
+			}
+			<app-icon name="arrow-up-right" />
+		</a>
+		<div class="flex items-center justify-center gap-2 border-t border-border pt-2">
+			@if (expanded()) {
+				<app-icon name="user-round" />
+				<div class="min-w-0 flex-1 text-xs">
+					<strong>{{ roleName() }}</strong
+					><small class="mt-1 block text-muted">Acceso al negocio</small>
+				</div>
+			}
+			<button
+				type="button"
+				class="grid size-11 shrink-0 place-items-center rounded-lg hover:bg-surface-raised"
+				(click)="logout.emit()"
+				aria-label="Cerrar sesión"
+				[disabled]="loggingOut()"
+			>
+				<app-icon name="log-out" />
+			</button>
+		</div>
+	</div>
+</aside>

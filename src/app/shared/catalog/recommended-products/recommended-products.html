@@ -1,0 +1,24 @@
+@if (products().length) {
+	<section class="grid gap-6" aria-label="Productos recomendados">
+		<header>
+			<p class="mb-2 text-[10px] font-bold uppercase tracking-widest text-accent">
+				Los favoritos de nuestros clientes
+			</p>
+			<h2>Entre los más pedidos</h2>
+			<p class="mt-3 text-sm text-muted">
+				Comidas, bebidas y snacks recomendados según las ventas pagadas.
+			</p>
+		</header>
+		<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+			@for (product of products(); track product._id) {
+				<app-product-card
+					[product]="product"
+					[settings]="settings()"
+					[recommended]="true"
+					[showImage]="true"
+					(detailsRequested)="open($event)"
+				/>
+			}
+		</div>
+	</section>
+}

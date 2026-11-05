@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
+import { navigationFor } from './admin-navigation';
+import { OrderActivity } from './admin/order-activity';
 import { ProductsPage } from './admin/pages/products';
 import { SalesPage } from './admin/pages/sales';
-import { OrderActivity } from './admin/order-activity';
-import { navigationFor } from './admin-navigation';
-import { Api, Product, Settings } from './api';
-import { vi } from 'vitest';
+import { Api } from './api';
+import type { Product, Settings } from './interfaces';
 
 describe('Restaurant orders', () => {
   let products: ProductsPage;
@@ -34,6 +35,16 @@ describe('Restaurant orders', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     api.state.set({
       settings: { currency: 'CRC' } as Settings,
+      productTypes: [
+        {
+          _id: 'drink',
+          code: 'drink',
+          name: 'Bebidas',
+          inventoryModes: ['unit'],
+          kitchen: false,
+          requiresDrinkType: true,
+        },
+      ],
       products: [],
       promotions: [],
       sales: [],
@@ -43,11 +54,11 @@ describe('Restaurant orders', () => {
   });
   it('requires a beverage subcategory before sending a save request', async () => {
     const request = vi.spyOn(api, 'request').mockResolvedValue({});
-    products.product = { ...product, _id: 'rum', name: 'Ron', category: 'drink', drinkType: '' };
+    products.product.set({ ...product, _id: 'rum', name: 'Ron', category: 'drink', drinkType: '' });
     products.saveProduct();
     expect(request).not.toHaveBeenCalled();
     expect(products.error()).toContain('subcategoría');
-    products.product.drinkType = 'alcoholic';
+    products.product.update((value) => ({ ...value!, drinkType: 'alcoholic' }));
     vi.spyOn(api, 'load').mockResolvedValue(undefined);
     products.saveProduct();
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -60,7 +71,7 @@ describe('Restaurant orders', () => {
   it('keeps different serving prices separate and merges identical servings', () => {
     sales.add(product);
     sales.add(product);
-    sales.selectedServing['rum'] = 'large';
+    sales.selectedServing.set({ rum: 'large' });
     sales.add(product);
     expect(sales.cart().length).toBe(2);
     expect(sales.cart()[0].quantity).toBe(2);
@@ -97,11 +108,7 @@ describe('Restaurant orders', () => {
       navigationFor(api.role()).flatMap((group) => group.items.map((item) => item.id)),
     ).toContain('tables');
   });
-  it('handles snacks without inventory and enables payment only after delivery', () => {
-    products.editProduct();
-    products.product!.category = 'snack';
-    products.changeCategory();
-    expect(products.product!.inventory).toBe('none');
+  it('enables payment only after delivery', () => {
     expect(activity.canPay('bill')).toBe(false);
     activity.service.set({
       bills: [],

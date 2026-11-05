@@ -8,34 +8,35 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
-import { PageSkeleton } from './page-skeleton';
+import { Feedback, PageSkeleton } from './shared/ui';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, PageSkeleton],
-  template: `@if (navigating()) {
-      <app-page-skeleton
-        [variant]="
-          destination().startsWith('/admin')
-            ? 'admin'
-            : destination().startsWith('/cuenta')
-              ? 'account'
-              : 'landing'
-        "
-      />
-    }
-    <div [hidden]="navigating()"><router-outlet /></div>`,
+  imports: [RouterOutlet, PageSkeleton, Feedback],
+  templateUrl: './app.html',
 })
 export class App {
-  readonly navigating = signal(true);
-  readonly destination = signal(location.pathname);
+  protected readonly router = inject(Router);
+  public readonly navigating = signal(true);
+  public readonly initial = signal(true);
+  public readonly navigationError = signal('');
+  public readonly destination = signal(location.pathname);
+
   constructor() {
-    const router = inject(Router);
-    router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.destination.set(event.url);
-        this.navigating.set(!router.navigated);
+        this.navigating.set(true);
+        this.navigationError.set('');
       }
+
+      if (event instanceof NavigationEnd) this.initial.set(false);
+
+      if (event instanceof NavigationError)
+        this.navigationError.set(
+          'No pudimos abrir la página. Revisá tu conexión y volvé a intentar.',
+        );
+
       if (
         event instanceof NavigationEnd ||
         event instanceof NavigationCancel ||

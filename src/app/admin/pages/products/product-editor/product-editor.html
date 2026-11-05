@@ -1,0 +1,141 @@
+@let p = product();
+<form class="form-grid grid gap-5 p-6" (ngSubmit)="save.emit(product())" #productForm="ngForm">
+	<label
+		>Nombre<input
+			name="name"
+			[ngModel]="p.name"
+			(ngModelChange)="updateField(product, ['name'], $event)"
+			required
+			maxlength="150" /></label
+	><label
+		>Descripción<textarea
+			name="description"
+			[ngModel]="p.description"
+			(ngModelChange)="updateField(product, ['description'], $event)"
+			maxlength="500"
+		></textarea></label
+	><app-image-upload
+		[value]="p.image"
+		(valueChange)="updateField(product, ['image'], $event)"
+		purpose="product"
+		label="Imagen del producto"
+		[disabled]="busy()"
+		(pending)="imageUploading.set($event); pending.emit($event)"
+	/>
+	<div class="grid gap-4 sm:grid-cols-2">
+		<div class="grid gap-2 text-sm">
+			Tipo de producto<app-select
+				label="Tipo de producto"
+				[options]="categoryOptions()"
+				[value]="p.category"
+				(valueChange)="changeCategory($event)"
+				[disabled]="!!p._id || busy()"
+			/>
+		</div>
+		<div class="grid gap-2 text-sm">
+			Inventario<app-select
+				label="Modo de inventario"
+				[options]="inventoryOptions()"
+				[value]="p.inventory"
+				(valueChange)="updateField(product, ['inventory'], $event)"
+				[disabled]="!!p._id || busy() || inventoryOptions().length <= 1"
+			/>
+		</div>
+	</div>
+	@if (selectedType()?.requiresDrinkType) {
+		<div class="grid gap-2 text-sm">
+			Subcategoría de bebida (obligatoria)<app-select
+				label="Subcategoría de bebida"
+				[options]="drinkOptions"
+				[value]="p.drinkType ?? ''"
+				(valueChange)="updateField(product, ['drinkType'], $event)"
+				[disabled]="busy()"
+			/>
+		</div>
+		@if (!p.drinkType) {
+			<p class="text-sm text-muted">
+				Seleccioná si la bebida contiene alcohol antes de guardar.
+			</p>
+		}
+	}
+	@if (p.inventory === 'ml') {
+		<div class="grid sm:grid-cols-3 gap-4">
+			@for (size of sizes; track size.key) {
+				<label
+					>Precio {{ size.name
+					}}<input
+						type="number"
+						[name]="size.key"
+						[ngModel]="p.prices[size.key]"
+						(ngModelChange)="updateField(product, ['prices', size.key], $event)"
+						min="0"
+						step="0.01"
+						required
+				/></label>
+			}
+		</div>
+		<label
+			>Capacidad de una botella (litros)<input
+				type="number"
+				name="bottle"
+				[ngModel]="p.bottleMl / 1000"
+				(ngModelChange)="setBottleLiters($event)"
+				min="0.001"
+				max="100"
+				step="0.001"
+				required
+		/></label>
+	} @else {
+		<label
+			>Precio de venta<input
+				type="number"
+				name="price"
+				[ngModel]="p.price"
+				(ngModelChange)="updateField(product, ['price'], $event)"
+				min="0"
+				step="0.01"
+				required
+		/></label>
+	}
+	@if (p.inventory !== 'none') {
+		<label
+			>Alerta de mínimo ({{ p.inventory === 'ml' ? 'ml' : 'unidades' }})<input
+				type="number"
+				name="minimum"
+				[ngModel]="p.minimum"
+				(ngModelChange)="updateField(product, ['minimum'], $event)"
+				min="0"
+				step="1"
+				required
+		/></label>
+		<p class="muted text-muted">
+			Las existencias se cargan y ajustan desde Inventario para conservar el historial.
+		</p>
+	}
+	<label class="checkbox flex items-center gap-3 [&_input]:m-0 [&_input]:size-4"
+		><input
+			type="checkbox"
+			name="active"
+			[ngModel]="p.active"
+			(ngModelChange)="updateField(product, ['active'], $event)"
+		/>Visible en la carta y disponible para venta</label
+	><label class="checkbox flex items-center gap-3 [&_input]:m-0 [&_input]:size-4"
+		><input
+			type="checkbox"
+			name="featured"
+			[ngModel]="p.featured"
+			(ngModelChange)="updateField(product, ['featured'], $event)"
+		/>Destacar como especialidad de la casa</label
+	>
+	@if (error()) {
+		<p
+			class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+			role="alert"
+		>
+			{{ error() }}
+		</p>
+	}
+	<button appButton="primary" [disabled]="busy() || imageUploading() || productForm.invalid">
+		<app-icon name="save" /> Guardar producto
+	</button>
+</form>

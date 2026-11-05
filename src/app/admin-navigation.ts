@@ -1,18 +1,4 @@
-import { Role } from './api';
-import { IconName } from './icon-names';
-
-interface NavigationItem {
-  readonly id: string;
-  readonly icon: IconName;
-  readonly label: string;
-}
-
-interface NavigationGroup {
-  readonly id: string;
-  readonly label: string;
-  readonly adminOnly?: boolean;
-  readonly items: readonly NavigationItem[];
-}
+import type { NavigationGroup, Role } from './interfaces';
 
 const navigation: readonly NavigationGroup[] = [
   {

@@ -1,0 +1,204 @@
+<app-admin-page-heading
+	title="Inventario"
+	description="Botellas, medidas y movimientos. Todo en un solo lugar."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		@if (low().length) {
+			<div
+				class="alert mb-5 rounded-lg px-5 py-3 text-sm stock-alert bg-accent-soft text-warm"
+			>
+				<app-icon name="circle-alert" /> {{ low().length }} productos llegaron a su mínimo.
+				Es un buen momento para reponer.
+			</div>
+		}
+		<app-catalog-filters
+			[search]="catalog.search()"
+			[category]="catalog.category()"
+			[drinkType]="catalog.drinkType()"
+			(searchChanged)="catalog.setSearch($event)"
+			(categoryChanged)="catalog.setCategory($event)"
+			(drinkTypeChanged)="catalog.setDrinkType($event)"
+		/>
+		<section class="panel overflow-hidden rounded-xl border border-border bg-surface">
+			<div
+				class="panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 [&_h2]:text-base [&_button]:text-xs"
+			>
+				<h2>Existencias de la barra</h2>
+				<span class="muted text-muted">{{ stock().length }} productos</span>
+			</div>
+			<div class="table-scroll overflow-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>Producto</th>
+							<th>Disponible</th>
+							<th>Rendimiento</th>
+							<th>Estado</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (p of catalog.items(); track p._id) {
+							<tr>
+								<td>
+									<strong>{{ p.name }}</strong
+									><small>{{
+										p.inventory === 'ml'
+											? 'Botella de ' + p.bottleMl + ' ml'
+											: 'Inventario por unidad'
+									}}</small>
+								</td>
+								<td>
+									<strong
+										>{{ p.stock }}
+										{{ p.inventory === 'ml' ? 'ml' : 'uds.' }}</strong
+									>
+									@if (p.inventory === 'ml') {
+										<small
+											>{{ (p.stock / p.bottleMl).toFixed(2) }} botellas
+											equivalentes</small
+										>
+									}
+								</td>
+								<td>
+									{{
+										p.inventory === 'ml'
+											? availableShots(p) +
+												' shots de ' +
+												state.settings.servings.shot +
+												' ml'
+											: p.stock + ' servicios'
+									}}
+								</td>
+								<td>
+									<span
+										class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+										[class.warning]="p.stock <= p.minimum"
+										>{{ p.stock <= p.minimum ? 'Reponer' : 'Disponible' }}</span
+									><small>Mínimo: {{ p.minimum }}</small>
+								</td>
+								<td>
+									<button
+										appButton="secondary"
+										class="small min-h-9 px-3 py-2 text-xs"
+										(click)="openStock(p)"
+									>
+										Ajustar <app-icon name="arrow-up-right" />
+									</button>
+								</td>
+							</tr>
+						} @empty {
+							<tr>
+								<td colspan="5">
+									Agregá una bebida para comenzar a llevar inventario.
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		<app-pagination
+			[page]="catalog.page()"
+			[total]="catalog.total()"
+			[pageSize]="catalog.pageSize"
+			(pageChanged)="catalog.goToPage($event)"
+		/>
+		<section class="panel overflow-hidden rounded-xl border border-border bg-surface mt-6">
+			<div
+				class="panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 [&_h2]:text-base [&_button]:text-xs"
+			>
+				<h2>Historial de movimientos</h2>
+				<span class="muted text-muted">100 más recientes</span>
+			</div>
+			<div class="table-scroll overflow-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>Fecha</th>
+							<th>Producto</th>
+							<th>Motivo</th>
+							<th>Movimiento</th>
+							<th>Saldo</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (m of state.movements; track m._id) {
+							<tr>
+								<td>{{ m.createdAt | date: 'dd MMM, HH:mm' }}</td>
+								<td>{{ m.productName }}</td>
+								<td>{{ m.reason }}</td>
+								<td [class.text-accent]="m.delta > 0">
+									{{ m.delta > 0 ? '+' : '' }}{{ m.delta }}
+									{{ m.unit === 'ml' ? 'ml' : 'uds.' }}
+								</td>
+								<td>{{ m.balance }}</td>
+							</tr>
+						} @empty {
+							<tr>
+								<td colspan="5">No hay movimientos registrados.</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		@if (selectedStock(); as p) {
+			<app-dialog
+				title="Ajustar {{ p.name }}"
+				[busy]="busy() || imageUploading()"
+				(closed)="selectedStock.set(null)"
+			>
+				<form class="form-grid grid gap-5 p-6" (ngSubmit)="saveStock()">
+					<p class="muted text-muted">
+						Saldo actual: {{ p.stock }} {{ p.inventory === 'ml' ? 'ml' : 'unidades' }}
+					</p>
+					@if (p.inventory === 'ml') {
+						<label
+							>Registrar en<select
+								name="mode"
+								[ngModel]="stockMode()"
+								(ngModelChange)="stockMode.set($event)"
+							>
+								<option value="bottles">Botellas de {{ p.bottleMl }} ml</option>
+								<option value="ml">Mililitros</option>
+							</select></label
+						>
+					}
+					<label
+						>Cantidad (negativa para merma o salida)<input
+							name="quantity"
+							type="number"
+							step="1"
+							[ngModel]="stockQuantity()"
+							(ngModelChange)="stockQuantity.set($event)"
+							required /></label
+					><label
+						>Motivo<input
+							name="reason"
+							[ngModel]="stockReason()"
+							(ngModelChange)="stockReason.set($event)"
+							required
+							maxlength="250"
+							placeholder="Ej. Compra, merma, conteo físico"
+					/></label>
+					@if (error()) {
+						<p
+							class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+							role="alert"
+						>
+							{{ error() }}
+						</p>
+					}
+					<button appButton="primary" [disabled]="busy() || imageUploading()">
+						Registrar movimiento
+					</button>
+				</form>
+			</app-dialog>
+		}
+	}
+}

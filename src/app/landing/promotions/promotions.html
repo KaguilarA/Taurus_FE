@@ -1,0 +1,29 @@
+<section id="promociones" class="page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 pb-20">
+	<p class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+		EXCUSAS PARA VOLVER
+	</p>
+	<h2 class="mb-8">El plan se pone mejor.</h2>
+	<div class="grid md:grid-cols-2 gap-6">
+		@for (promo of promotions(); track promo._id) {
+			<article
+				class="promo-card rounded-[10px] bg-accent-soft text-warm grid grid-cols-[1.3fr_1fr] min-h-[285px] overflow-hidden"
+				(animate.enter)="reveal.enter($event, $index)"
+				(animate.leave)="reveal.leave($event)"
+			>
+				<div>
+					<span class="promo-label text-[8px] tracking-[0.13em] font-bold"
+						>PROMOCIÓN ESPECIAL</span
+					>
+					<h3>{{ promo.title }}</h3>
+					<p>{{ promo.description }}</p>
+					<a [href]="'/#visitanos'">Te esperamos <app-icon name="arrow-up-right" /></a>
+				</div>
+				<img [src]="promo.image || '/images/rum.svg'" [alt]="promo.title" loading="lazy" />
+			</article>
+		} @empty {
+			<p class="muted text-muted">
+				Estamos preparando nuestras próximas promociones. Consultá en el local.
+			</p>
+		}
+	</div>
+</section>

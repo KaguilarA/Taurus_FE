@@ -2,6 +2,12 @@
 
 Angular 22, TypeScript 6 y Tailwind CSS 4. La aplicación se conecta a la API Express del repositorio `../taurus-api`; no simula ventas ni guarda el inventario en localStorage.
 
+## Angular ARIA como regla número uno
+
+La prioridad está escrita en [AGENTS.md](AGENTS.md). Usamos la versión estable `@angular/aria` 22.2.5 en filtros, selectores, acordeones, paginación y pestañas de reportes, mediante componentes compartidos. La [guía de Angular ARIA del proyecto](docs/angular-aria.md) explica las directivas, su conexión con signals y cómo probarlas con teclado.
+
+HTML usa tabulaciones de ancho 4; CSS, JavaScript y TypeScript usan espacios de 2. EditorConfig, Prettier y los ajustes de VS Code mantienen las mismas reglas.
+
 ## Inicio
 
 Requiere Node.js 24 y npm 12.
@@ -34,7 +40,7 @@ En una base nueva se registra al administrador en `/setup` y luego se completa e
 
 Personalizá el negocio desde el panel. Las ilustraciones iniciales están en `public/images/` y son recursos vectoriales locales. Reemplazalas conservando sus nombres, o cambiá cada ruta por una imagen local o URL HTTPS desde el panel. Para fotografías JPG/WebP, poné los archivos en `public/images/` y guardá su nueva ruta (ej. `/images/burger.webp`). No es necesario modificar componentes. `scripts/generate-art.mjs` regenera únicamente las ilustraciones iniciales; no ejecutarlo sobre imágenes personalizadas con esos mismos nombres.
 
-Las medidas son globales para cada negocio; el contenido de botella y los precios son por producto. Cambiar medidas afecta las próximas ventas, no las ventas históricas. Las comidas y snacks no descuentan inventario. El servidor valida las existencias y calcula los precios finales.
+Las medidas son globales para cada negocio; el contenido de botella y los precios son por producto. Cambiar medidas afecta las próximas ventas, no las ventas históricas. Las comidas no descuentan inventario; bebidas y snacks usan unidades y las botellas de licor, mililitros. El servidor valida las existencias y calcula los precios finales.
 
 Para el servicio por QR, configurá `FRONTEND_URL` en el backend con el origen público HTTPS accesible desde los celulares y luego generá los QR en **Mesas y códigos QR**. El parámetro `?mesa=...` identifica el lugar; el servidor asigna una cuenta de visita con un identificador aleatorio. Se recuerda ese identificador en localStorage para recuperar la cuenta al recargar; precios, pedidos y pagos siempre residen en MongoDB. Todos los que escanean el mismo QR comparten el saldo de esa mesa. Tras pagar, el cliente puede iniciar otra visita desde el mismo QR, sin heredar consumos anteriores.
 

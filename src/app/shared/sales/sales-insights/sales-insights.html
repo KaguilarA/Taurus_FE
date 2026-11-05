@@ -1,0 +1,70 @@
+<app-panel title="Qué se está vendiendo">
+	<div class="grid gap-6 p-6">
+		@if (ranking().length) {
+			<app-choice-list
+				label="Categorías de ventas"
+				[options]="categories"
+				[(value)]="category"
+			/>
+			<div ngTabs>
+				<div
+					ngTabList
+					selectedTab="products"
+					class="mb-5 flex flex-wrap gap-2"
+					aria-label="Vista del reporte"
+				>
+					<button
+						type="button"
+						ngTab
+						value="products"
+						class="rounded-lg border border-border px-4 py-2 text-sm aria-selected:bg-accent aria-selected:text-canvas focus-visible:outline-2 focus-visible:outline-accent"
+					>
+						Productos más vendidos
+					</button>
+					<button
+						type="button"
+						ngTab
+						value="categories"
+						class="rounded-lg border border-border px-4 py-2 text-sm aria-selected:bg-accent aria-selected:text-canvas focus-visible:outline-2 focus-visible:outline-accent"
+					>
+						Por categoría
+					</button>
+				</div>
+				<div
+					ngTabPanel
+					value="products"
+					#productsPanel="ngTabPanel"
+					[hidden]="!productsPanel.visible()"
+				>
+					<ng-template ngTabContent>
+						@if (products().labels.length) {
+							<app-sales-chart [title]="barTitle()" [series]="products()" />
+						} @else {
+							<app-empty-state
+								message="No hay ventas de esta categoría en el período."
+							/>
+						}
+					</ng-template>
+				</div>
+				<div
+					ngTabPanel
+					value="categories"
+					#categoriesPanel="ngTabPanel"
+					[hidden]="!categoriesPanel.visible()"
+				>
+					<ng-template ngTabContent
+						><app-sales-chart
+							title="Participación por categoría"
+							type="pie"
+							[series]="categoriesSeries()"
+					/></ng-template>
+				</div>
+			</div>
+			<p class="text-xs text-muted">
+				Unidades de ventas pagadas. Las anulaciones y cuentas abiertas no se incluyen.
+			</p>
+		} @else {
+			<app-empty-state message="Registrá ventas pagadas para ver tus gráficos." />
+		}
+	</div>
+</app-panel>

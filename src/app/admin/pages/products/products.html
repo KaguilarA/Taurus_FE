@@ -1,0 +1,65 @@
+<app-admin-page-heading title="Productos" description="Administrá los productos de tu carta."
+	><button appButton="primary" (click)="editProduct()">
+		<app-icon name="plus" /> Nuevo producto
+	</button></app-admin-page-heading
+>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<app-catalog-filters
+			[search]="catalog.search()"
+			[category]="catalog.category()"
+			[drinkType]="catalog.drinkType()"
+			(searchChanged)="catalog.setSearch($event)"
+			(categoryChanged)="catalog.setCategory($event)"
+			(drinkTypeChanged)="catalog.setDrinkType($event)"
+		/>
+		<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+			@for (p of catalog.items(); track p._id) {
+				<app-product-card
+					[product]="p"
+					[settings]="state.settings"
+					[canEdit]="true"
+					[showDetails]="false"
+					[showImage]="true"
+					[forcePrices]="true"
+					(editRequested)="editProduct(p)"
+				/>
+			} @empty {
+				<app-empty-state message="No hay productos que coincidan con estos filtros." />
+			}
+		</div>
+		<app-pagination
+			[page]="catalog.page()"
+			[total]="catalog.total()"
+			[pageSize]="catalog.pageSize"
+			(pageChanged)="catalog.goToPage($event)"
+		/>
+		@if (product(); as draft) {
+			<app-dialog
+				[title]="draft._id ? 'Editar producto' : 'Nuevo producto'"
+				[busy]="busy() || imageUploading()"
+				(closed)="product.set(null)"
+			>
+				@defer (when product()) {
+					<app-product-editor
+						[product]="draft"
+						(productChange)="product.set($event)"
+						[busy]="busy()"
+						[error]="error()"
+						(pending)="imageUploading.set($event)"
+						(save)="saveProduct()"
+					/>
+				} @placeholder {
+					<app-page-skeleton variant="section" />
+				} @loading (after 100ms; minimum 200ms) {
+					<app-page-skeleton variant="section" />
+				} @error {
+					<app-deferred-error section="el editor de productos" />
+				}
+			</app-dialog>
+		}
+	}
+}

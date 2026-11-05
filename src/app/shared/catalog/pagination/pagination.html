@@ -1,0 +1,49 @@
+@if (pageCount() > 1) {
+	<nav
+		class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5 text-xs"
+		[attr.aria-label]="label()"
+	>
+		<p class="text-muted">{{ first() }}–{{ last() }} de {{ total() }}</p>
+		<div
+			ngToolbar
+			[softDisabled]="false"
+			[disabled]="busy()"
+			[attr.aria-label]="label()"
+			class="flex flex-wrap gap-1.5"
+		>
+			<button
+				ngToolbarWidget
+				type="button"
+				class="grid size-10 place-items-center rounded-lg border border-border hover:bg-surface-raised"
+				aria-label="Página anterior"
+				[disabled]="busy() || current() <= 1"
+				(click)="pageChanged.emit(current() - 1)"
+			>
+				←
+			</button>
+			@for (number of numbers(); track number) {
+				<button
+					ngToolbarWidget
+					type="button"
+					class="grid size-10 place-items-center rounded-lg border border-border hover:bg-surface-raised aria-[current=page]:bg-accent aria-[current=page]:text-canvas"
+					[attr.aria-label]="'Página ' + number"
+					[attr.aria-current]="number === current() ? 'page' : null"
+					[disabled]="busy()"
+					(click)="pageChanged.emit(number)"
+				>
+					{{ number }}
+				</button>
+			}
+			<button
+				ngToolbarWidget
+				type="button"
+				class="grid size-10 place-items-center rounded-lg border border-border hover:bg-surface-raised"
+				aria-label="Página siguiente"
+				[disabled]="busy() || current() >= pageCount()"
+				(click)="pageChanged.emit(current() + 1)"
+			>
+				→
+			</button>
+		</div>
+	</nav>
+}

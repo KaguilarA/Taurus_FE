@@ -1,14 +1,15 @@
+import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
-import { Component, inject } from '@angular/core';
 import { OrderActivity } from './admin/order-activity';
+import { Api } from './api';
+import type { ServiceState, Settings } from './interfaces';
 
 @Component({ template: '', providers: [OrderActivity] })
 class SocketOwner {
   readonly activity = inject(OrderActivity);
 }
-import { Api, ServiceState, Settings } from './api';
 
 it('discovers the first staff order without subscribing while idle and cleans up on navigation', async () => {
   vi.useFakeTimers();

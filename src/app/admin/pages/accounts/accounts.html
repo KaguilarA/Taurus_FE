@@ -1,0 +1,119 @@
+<app-admin-page-heading
+	title="Equipo y roles"
+	description="Administrá los accesos y solicitudes del equipo."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<section class="panel overflow-hidden rounded-xl border border-border bg-surface p-6 mb-6">
+			<h2>Recuperación de contraseñas</h2>
+			<p>
+				Verificá la identidad de la persona antes de aprobar. La aprobación le permite
+				elegir una contraseña en el navegador donde inició su solicitud.
+			</p>
+			<button appButton="outline" class="mt-4" (click)="loadResets()" [disabled]="busy()">
+				Consultar solicitudes pendientes
+			</button>
+			@for (request of resetRequests(); track request._id) {
+				<article class="mt-4">
+					<strong>{{ request.account?.name }} · {{ request.account?.username }}</strong>
+					<p>{{ request.createdAt | date: 'short' }}</p>
+					<button
+						appButton="primary"
+						(click)="decideReset(request._id, 'approved')"
+						[disabled]="busy()"
+					>
+						Aprobar
+					</button>
+					<button
+						appButton="outline"
+						(click)="decideReset(request._id, 'rejected')"
+						[disabled]="busy()"
+					>
+						Rechazar
+					</button>
+				</article>
+			} @empty {
+				<p class="mt-4">Consultá para ver las solicitudes pendientes.</p>
+			}
+		</section>
+		<div class="grid lg:grid-cols-2 gap-6">
+			<form
+				class="panel overflow-hidden rounded-xl border border-border bg-surface form-grid grid gap-5 p-6"
+				(ngSubmit)="createAccount()"
+			>
+				<h2>Crear acceso</h2>
+				<label
+					>Nombre<input
+						name="staffName"
+						[ngModel]="staff().name"
+						(ngModelChange)="updateField(staff, ['name'], $event)"
+						required
+						maxlength="100"
+				/></label>
+				<label
+					>Usuario<input
+						name="staffUsername"
+						type="text"
+						[ngModel]="staff().username"
+						(ngModelChange)="updateField(staff, ['username'], $event)"
+						required
+						minlength="3"
+						maxlength="40"
+						autocapitalize="none"
+						spellcheck="false"
+				/></label>
+				<label
+					>Contraseña<input
+						name="staffPassword"
+						type="password"
+						[ngModel]="staff().password"
+						(ngModelChange)="updateField(staff, ['password'], $event)"
+						required
+						minlength="8"
+						maxlength="200"
+						autocomplete="new-password"
+				/></label>
+				<label
+					>Rol<select
+						name="staffRole"
+						[ngModel]="staff().role"
+						(ngModelChange)="updateField(staff, ['role'], $event)"
+					>
+						<option value="admin">Administrador</option>
+						<option value="kitchen">Cocina</option>
+						<option value="waiter">Mesero</option>
+					</select></label
+				>
+				<p class="muted text-muted">
+					Cocina prepara los pedidos. El mesero marca entregas y registra pagos. El
+					administrador tiene acceso a toda la configuración.
+				</p>
+				<button appButton="primary" [disabled]="busy() || imageUploading()">
+					Crear acceso
+				</button>
+			</form>
+			<section class="panel overflow-hidden rounded-xl border border-border bg-surface p-6">
+				<h2>Equipo</h2>
+				@for (account of accounts(); track account._id) {
+					<article class="guest-order border-t border-border mt-4 px-0 py-4.5">
+						<strong>{{ account.name || account.username }}</strong>
+						<p>{{ account.username }}</p>
+						<span
+							class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+							>{{
+								account.role === 'admin'
+									? 'Administrador'
+									: account.role === 'kitchen'
+										? 'Cocina'
+										: 'Mesero'
+							}}</span
+						>
+					</article>
+				}
+			</section>
+		</div>
+	}
+}

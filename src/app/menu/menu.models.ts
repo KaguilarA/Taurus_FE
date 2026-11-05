@@ -1,40 +1,5 @@
-import type { Product, Serving } from '../api';
+import type { DrinkFilter, MenuCategory, MenuQuery, Serving } from '../interfaces';
 
-export type MenuCategory = Product['category'] | 'all';
-export type DrinkFilter = 'all' | 'alcoholic' | 'non_alcoholic';
-export type MenuItem = Readonly<
-  Pick<
-    Product,
-    | '_id'
-    | 'name'
-    | 'description'
-    | 'image'
-    | 'category'
-    | 'drinkType'
-    | 'inventory'
-    | 'price'
-    | 'prices'
-    | 'featured'
-  >
->;
-export interface MenuQuery {
-  readonly q: string;
-  readonly category: MenuCategory;
-  readonly drinkType: DrinkFilter;
-  readonly page: number;
-  readonly pageSize: number;
-}
-export interface MenuPage {
-  readonly items: readonly MenuItem[];
-  readonly total: number;
-  readonly page: number;
-  readonly pageSize: number;
-  readonly pageCount: number;
-}
-export interface MenuSelection {
-  readonly product: MenuItem;
-  readonly serving: Serving | 'unit';
-}
 export const DEFAULT_MENU_QUERY: MenuQuery = {
   q: '',
   category: 'all',

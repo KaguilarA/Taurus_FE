@@ -1,7 +1,6 @@
-import { adminSessionGuard, adminRoleGuard } from './admin/admin.guards';
 import { Routes } from '@angular/router';
-import { firstAdminGuard, configuredGuard, businessSetupGuard, startupGuard } from './setup.guard';
-
+import { adminRoleGuard, adminSessionGuard } from './admin/guards/admin.guards';
+import { businessSetupGuard, configuredGuard, firstAdminGuard, startupGuard } from './setup.guard';
 export const routes: Routes = [
   {
     path: 'start',
@@ -45,7 +44,7 @@ export const routes: Routes = [
   {
     path: 'admin/login',
     canActivate: [configuredGuard],
-    loadComponent: () => import('./admin/login/login').then((m) => m.LoginPage),
+    loadComponent: () => import('./admin/login').then((m) => m.LoginPage),
   },
   {
     path: 'admin',

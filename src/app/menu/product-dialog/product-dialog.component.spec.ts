@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { ProductDialogComponent } from './product-dialog.component';
+import { ProductDialogComponent } from '.';
+import type { MenuItem, Settings } from '../../interfaces';
+
 import { MenuApi } from '../menu-api.service';
-import type { Settings } from '../../api';
-import type { MenuItem } from '../menu.models';
+
 const product = {
   _id: 'soda',
   name: 'Refresco',

@@ -1,0 +1,32 @@
+@if (showSearch()) {
+	<label
+		class="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 focus-within:ring-2 focus-within:ring-accent"
+	>
+		<app-icon name="search" /><span class="sr-only">{{ searchLabel() }}</span>
+		<input
+			class="m-0 min-w-0 border-0 bg-transparent shadow-none focus:ring-0"
+			type="search"
+			maxlength="100"
+			[placeholder]="searchLabel()"
+			[value]="search()"
+			(input)="searchInput($event)"
+		/>
+	</label>
+}
+@if (showCategories()) {
+	<app-choice-list
+		label="Categorías del menú"
+		[options]="categories()"
+		[value]="category()"
+		(valueChange)="categoryChanged.emit($event)"
+	/>
+}
+@if (showDrinkTypes() && needsDrinkType()) {
+	<app-choice-list
+		label="Tipos de bebidas"
+		[options]="drinkFilters"
+		[value]="drinkType()"
+		(valueChange)="drinkTypeChanged.emit($event)"
+	/>
+}
+<ng-content />

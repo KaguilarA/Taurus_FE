@@ -1,0 +1,85 @@
+/* Business identity. Change this palette and font selection to reuse the frontend. */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Texas Tango';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/texas-tango.otf') format('opentype');
+}
+
+@theme inline {
+  --font-sans: var(--business-font-body, 'Space Grotesk'), sans-serif;
+  --font-display: var(--business-font-display, 'Bricolage Grotesque'), sans-serif;
+  --font-brand: var(--business-font-brand, 'Texas Tango'), serif;
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-warm: var(--text-warm);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --background-image-business-texture: var(--business-texture);
+  --background-image-business-poster: var(--business-poster-background);
+}
+
+:root {
+  color-scheme: dark;
+  --business-font-body: 'Space Grotesk';
+  --business-font-display: 'Bricolage Grotesque';
+  --business-font-brand: 'Texas Tango';
+  --accent: #f5a623;
+  --primary: var(--accent);
+  --secondary: color-mix(in srgb, var(--accent) 85%, #fff);
+  --tertiary: color-mix(in srgb, var(--accent) 65%, #945338);
+  --canvas: #121110;
+  --surface: #22211f;
+  --surface-raised: #2c2a27;
+  --border: #403a32;
+  --text: #e9e5e0;
+  --text-muted: #ada399;
+  --muted: var(--text-muted);
+  --text-warm: #d7c3ab;
+  --accent-soft: color-mix(in srgb, var(--accent) 15%, var(--canvas));
+  --danger: #ffb4ab;
+  --danger-soft: #432825;
+  --scroll-thumb: var(--border);
+  --scroll-track: var(--canvas);
+  --business-texture:
+    linear-gradient(90deg, var(--canvas), transparent, var(--canvas)),
+    repeating-linear-gradient(
+      0deg,
+      var(--surface) 0px,
+      var(--surface) 88px,
+      var(--canvas) 89px,
+      var(--border) 92px
+    );
+  --business-poster-background: repeating-linear-gradient(
+    0deg,
+    var(--surface-raised) 0,
+    var(--surface-raised) 58px,
+    var(--canvas) 60px,
+    var(--surface) 63px
+  );
+}

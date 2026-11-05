@@ -1,0 +1,76 @@
+<div
+	class="image-uploader border border-border rounded-[10px] bg-surface p-4.5"
+	[attr.aria-busy]="uploading()"
+>
+	<span class="image-upload-label block font-[650] text-foreground mb-3.5">{{ label() }}</span>
+	@if (value()) {
+		<img
+			class="upload-preview w-full max-h-57.5 object-contain bg-canvas rounded-md mb-4"
+			[src]="value()"
+			alt="Vista previa de la imagen seleccionada"
+		/>
+	}
+	<label class="image-file-label grid gap-2 text-foreground">
+		{{
+			uploading()
+				? 'Optimizando y subiendo…'
+				: value()
+					? 'Cambiar imagen'
+					: 'Seleccionar imagen'
+		}}
+		<input
+			type="file"
+			accept="image/jpeg,image/png,image/webp"
+			[disabled]="disabled() || uploading()"
+			(change)="select($event)"
+			[attr.aria-label]="label()"
+		/>
+	</label>
+	<p class="upload-hint text-xs leading-[1.6] mt-[9px] text-warm">
+		JPG, PNG o WebP · Máximo 5 MB · Optimización automática
+	</p>
+	@if (error()) {
+		<p
+			class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+			role="alert"
+		>
+			{{ error() }}
+		</p>
+	}
+	@if (notice()) {
+		<p class="upload-notice text-xs leading-[1.6] mt-[9px] text-warm" role="status">
+			{{ notice() }}
+		</p>
+	}
+	<div ngAccordionGroup>
+		<h3>
+			<button
+				type="button"
+				ngAccordionTrigger
+				[panel]="advancedPanel"
+				#advancedTrigger="ngAccordionTrigger"
+				class="flex min-h-11 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-warm focus-visible:outline-2 focus-visible:outline-accent"
+			>
+				Usar una dirección de imagen
+				<span aria-hidden="true">{{ advancedTrigger.expanded() ? '−' : '+' }}</span>
+			</button>
+		</h3>
+		<div
+			ngAccordionPanel
+			#advancedPanel="ngAccordionPanel"
+			[preserveContent]="true"
+			[hidden]="!advancedPanel.visible()"
+		>
+			<ng-template ngAccordionContent>
+				<input
+					type="text"
+					[value]="value()"
+					[disabled]="disabled() || uploading()"
+					(input)="setUrl($event)"
+					aria-label="Dirección de la imagen"
+					placeholder="https://… o /images/…"
+				/>
+			</ng-template>
+		</div>
+	</div>
+</div>

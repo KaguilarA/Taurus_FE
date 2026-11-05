@@ -1,14 +1,15 @@
-import { DestroyRef, Injectable, inject, signal, computed, effect } from '@angular/core';
-import { Api, ServiceState } from '../api';
-import { OrderSubscription } from '../order-socket';
+import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Api } from '../api';
+import type { Order, OrderSubscription, ServiceState } from '../interfaces';
 @Injectable()
 export class OrderActivity {
-  readonly api = inject(Api);
-  readonly error = signal('');
-  readonly notice = signal('');
-  readonly service = signal<ServiceState>({ bills: [], orders: [] });
-  readonly connected = signal(false);
-  readonly pending = computed(
+  private readonly api = inject(Api);
+  private readonly destroyRef = inject(DestroyRef);
+  public readonly error = signal('');
+  public readonly notice = signal('');
+  public readonly service = signal<ServiceState>({ bills: [], orders: [] });
+  public readonly connected = signal(false);
+  public readonly pending = computed(
     () => this.service().orders.filter((order) => order.orderStatus !== 'delivered').length,
   );
   private orderSubscription?: OrderSubscription;
@@ -17,8 +18,7 @@ export class OrderActivity {
   private serviceVersion = 0;
   private serviceLoaded = false;
   private startVersion = 0;
-  private readonly destroyRef = inject(DestroyRef);
-  stopWatching() {
+  public stopWatching(): void {
     this.startVersion++;
     this.serviceVersion++;
     this.orderSubscription?.close();
@@ -27,7 +27,7 @@ export class OrderActivity {
     clearInterval(this.refreshTimer);
     this.refreshTimer = undefined;
   }
-  private syncOrderSubscription() {
+  private syncOrderSubscription(): void {
     if (this.destroyRef.destroyed) return;
     const active =
       this.api.authenticated() &&
@@ -49,16 +49,18 @@ export class OrderActivity {
     this.orderSubscription = this.api.orderSocket(
       { kind: 'staff' },
       () => {
-        void this.refreshService();
+        this.refreshService();
       },
       (connected) => this.connected.set(connected),
     );
   }
-  private async discoverOrders() {
+  private async discoverOrders(): Promise<void> {
     if (this.discovering || this.destroyRef.destroyed || !this.api.authenticated()) return;
     this.discovering = true;
     try {
-      const activity = await this.api.request<{ hasOrders: boolean }>('/admin/order-activity');
+      const activity = await this.api.request<{
+        hasOrders: boolean;
+      }>('/admin/order-activity');
       if (activity.hasOrders || this.service().orders.length) await this.loadService();
     } catch {
       this.connected.set(false);
@@ -67,7 +69,7 @@ export class OrderActivity {
       this.discovering = false;
     }
   }
-  private async refreshService() {
+  private async refreshService(): Promise<void> {
     try {
       await this.loadService();
     } catch {
@@ -75,7 +77,7 @@ export class OrderActivity {
       if (!this.api.authenticated()) this.stopWatching();
     }
   }
-  async loadService() {
+  public async loadService(): Promise<void> {
     const version = ++this.serviceVersion;
     const before = this.service().orders;
     const state = await this.api.request<ServiceState>('/admin/service');
@@ -95,10 +97,10 @@ export class OrderActivity {
     this.serviceLoaded = true;
     this.syncOrderSubscription();
   }
-  ordersFor(billId: string) {
+  public ordersFor(billId: string): Order[] {
     return this.service().orders.filter((order) => order.billId === billId);
   }
-  canPay(billId: string) {
+  public canPay(billId: string): boolean {
     const orders = this.ordersFor(billId);
     return orders.length > 0 && orders.every((order) => order.orderStatus === 'delivered');
   }
@@ -112,11 +114,11 @@ export class OrderActivity {
       this.stopWatching();
       this.service.set({ bills: [], orders: [] });
       this.serviceLoaded = false;
-      if (this.api.authenticated()) void this.start();
+      if (this.api.authenticated()) this.start();
     });
-    void this.start();
+    this.start();
   }
-  private async start() {
+  private async start(): Promise<void> {
     const version = ++this.startVersion;
     try {
       await this.loadService();
@@ -125,7 +127,7 @@ export class OrderActivity {
     } finally {
       if (!this.destroyRef.destroyed && this.api.authenticated() && version === this.startVersion) {
         this.refreshTimer = setInterval(() => {
-          if (!this.connected()) void this.discoverOrders();
+          if (!this.connected()) this.discoverOrders();
         }, 5000);
       }
     }

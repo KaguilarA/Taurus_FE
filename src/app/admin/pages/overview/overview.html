@@ -1,0 +1,169 @@
+<app-admin-page-heading
+	title="Resumen de ventas"
+	description="Una mirada a lo que pasa en tu restaurante."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+			<app-stat-card
+				label="Ventas acumuladas"
+				[value]="api.money(report().revenue)"
+				[description]="
+					from() || to()
+						? 'Período seleccionado en Reportes'
+						: 'Ventas pagadas · todos los períodos'
+				"
+			/>
+			<app-stat-card
+				label="Órdenes registradas"
+				[value]="report().count"
+				description="Sin incluir anulaciones"
+			/>
+			<app-stat-card
+				label="Productos en la carta"
+				[value]="state.products.length"
+				description="Comidas y bebidas"
+			/>
+			<app-stat-card
+				label="Atención al inventario"
+				[value]="low().length"
+				description="Productos en su mínimo"
+				[attention]="true"
+				><a class="text-xs text-accent" routerLink="/admin/inventory"
+					>Revisar existencias <app-icon name="arrow-up-right" /></a
+			></app-stat-card>
+		</div>
+		<div class="mb-6">
+			@defer (on viewport) {
+				<app-sales-insights [ranking]="report().ranking" />
+			} @placeholder {
+				<app-page-skeleton variant="section" [count]="2" />
+			} @loading (after 100ms; minimum 200ms) {
+				<app-page-skeleton variant="section" [count]="2" />
+			} @error {
+				<app-deferred-error section="los gráficos de ventas" />
+			}
+		</div>
+		@if (state.recommendations?.length) {
+			<div class="my-8">
+				@defer (on viewport) {
+					<app-recommended-products
+						[products]="state.recommendations ?? []"
+						[settings]="state.settings"
+					/>
+				} @placeholder {
+					<app-page-skeleton variant="section" />
+				} @loading (after 100ms; minimum 200ms) {
+					<app-page-skeleton variant="section" />
+				} @error {
+					<app-deferred-error section="las recomendaciones" />
+				}
+			</div>
+		}
+		<section class="panel overflow-hidden rounded-xl border border-border bg-surface mt-6">
+			<div
+				class="panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 [&_h2]:text-base [&_button]:text-xs"
+			>
+				<h2>Últimas ventas</h2>
+				<span class="muted text-muted">100 más recientes</span>
+			</div>
+			<div class="table-scroll overflow-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>Cuenta</th>
+							<th>Fecha</th>
+							<th>Estado</th>
+							<th>Total</th>
+							<th>Acción</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (sale of state.sales; track sale._id) {
+							<tr>
+								<td>
+									<strong>{{ sale.label }}</strong
+									><small
+										>{{ sale.items.length }} líneas ·
+										{{ sale._id.slice(-6) }}</small
+									>
+								</td>
+								<td>{{ sale.createdAt | date: 'dd MMM, HH:mm' }}</td>
+								<td>
+									<span
+										class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+										[class.warning]="sale.status === 'void'"
+										>{{
+											sale.status === 'paid'
+												? 'Pagada'
+												: sale.status === 'open'
+													? 'Pendiente de pago'
+													: 'Anulada'
+										}}</span
+									>
+								</td>
+								<td>{{ api.money(sale.total) }}</td>
+								<td>
+									@if (sale.paymentMethod) {
+										<small>{{
+											sale.paymentMethod === 'cash'
+												? 'Efectivo'
+												: sale.paymentMethod === 'sinpe'
+													? 'SIMPE'
+													: 'Tarjeta'
+										}}</small>
+									}
+									@if (sale.status === 'paid' && !sale.billId) {
+										<button
+											class="text-button inline-flex items-center gap-2 text-xs font-semibold text-accent"
+											(click)="voidId.set(sale._id)"
+										>
+											<app-icon name="x" /> Anular
+										</button>
+									}
+								</td>
+							</tr>
+						} @empty {
+							<tr>
+								<td colspan="5">Todavía no hay ventas.</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		@if (voidId()) {
+			<app-dialog
+				title="Anular venta"
+				[busy]="busy() || imageUploading()"
+				(closed)="voidId.set('')"
+			>
+				<form class="form-grid grid gap-5 p-6" (ngSubmit)="voidSale()">
+					<p>La venta saldrá de los reportes y las bebidas volverán al inventario.</p>
+					<label
+						>Motivo<input
+							name="reason"
+							[ngModel]="voidReason()"
+							(ngModelChange)="voidReason.set($event)"
+							required
+							maxlength="250"
+					/></label>
+					@if (error()) {
+						<p
+							class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+							role="alert"
+						>
+							{{ error() }}
+						</p>
+					}
+					<button appButton="primary" [disabled]="busy() || imageUploading()">
+						Confirmar anulación
+					</button>
+				</form>
+			</app-dialog>
+		}
+	}
+}

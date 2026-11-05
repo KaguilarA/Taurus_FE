@@ -1,0 +1,52 @@
+<app-admin-page-heading
+	title="Reportes de ventas"
+	description="Consultá las ventas y los productos más pedidos."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<form
+			class="report-filters max-sm:[&_label]:[flex:1] max-sm:[&_label]:min-w-32.5 flex flex-wrap items-end gap-4 mb-6"
+			(ngSubmit)="refreshReport()"
+		>
+			<label
+				>Desde<input
+					type="date"
+					name="from"
+					[ngModel]="from()"
+					(ngModelChange)="from.set($event)" /></label
+			><label
+				>Hasta (inclusive)<input
+					type="date"
+					name="to"
+					[ngModel]="to()"
+					(ngModelChange)="to.set($event)" /></label
+			><button appButton="primary" [disabled]="busy() || imageUploading()">
+				Aplicar período</button
+			><button type="button" appButton="secondary" (click)="exportCsv()">
+				<app-icon name="download" /> Descargar CSV
+			</button>
+		</form>
+		<div class="grid sm:grid-cols-2 gap-5 mb-6">
+			<app-stat-card label="Ingresos del período" [value]="api.money(report().revenue)" />
+			<app-stat-card label="Ventas pagadas" [value]="report().count" />
+		</div>
+		<div class="mb-6">
+			@defer (on viewport) {
+				<app-sales-insights [ranking]="report().ranking" />
+			} @placeholder {
+				<app-page-skeleton variant="section" [count]="2" />
+			} @loading (after 100ms; minimum 200ms) {
+				<app-page-skeleton variant="section" [count]="2" />
+			} @error {
+				<app-deferred-error section="los gráficos de ventas" />
+			}
+		</div>
+		<p class="muted text-muted text-sm mt-5">
+			Ordenado por cantidad de servicios vendidos. Las anulaciones no se incluyen. Las ventas
+			conservan el precio y nombre del momento de la compra.
+		</p>
+	}
+}

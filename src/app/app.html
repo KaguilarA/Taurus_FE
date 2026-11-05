@@ -1,0 +1,21 @@
+@if (navigating() && initial()) {
+	<app-page-skeleton
+		[variant]="
+			destination().startsWith('/admin')
+				? 'admin'
+				: destination().startsWith('/cuenta')
+					? 'account'
+					: 'landing'
+		"
+	/>
+}
+@if (navigating() && !initial()) {
+	<div
+		class="fixed inset-x-0 top-0 z-50 h-1 animate-pulse bg-accent motion-reduce:animate-none"
+		role="status"
+	>
+		<span class="sr-only">Abriendo página</span>
+	</div>
+}
+<app-feedback [error]="navigationError()" />
+<div [hidden]="navigating() && initial()"><router-outlet /></div>

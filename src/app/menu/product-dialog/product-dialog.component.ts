@@ -9,47 +9,53 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { Serving, Settings } from '../../api';
 import { Icon } from '../../icon';
+import type { MenuItem, MenuSelection, Serving, Settings } from '../../interfaces';
+import { Button } from '../../shared/ui';
+import { Select } from '../../shared/ui/select';
 import { MenuApi } from '../menu-api.service';
 import { menuCategory, menuMoney } from '../menu-format';
-import { isServing, SERVING_OPTIONS, type MenuItem, type MenuSelection } from '../menu.models';
+import { SERVING_OPTIONS } from '../menu.models';
 @Component({
+  host: { class: 'contents' },
   selector: 'app-product-dialog',
-  imports: [Icon],
+  imports: [Select, Button, Icon],
   templateUrl: './product-dialog.component.html',
-  styleUrl: './product-dialog.component.css',
 })
 export class ProductDialogComponent {
-  readonly settings = input.required<Settings>();
-  readonly canOrder = input(false);
-  readonly submitting = input(false);
-  readonly routed = input(false);
-  readonly closed = output<void>();
-  readonly productAdded = output<MenuSelection>();
-  readonly product = signal<MenuItem | null>(null);
-  readonly loading = signal(false);
-  readonly error = signal('');
-  readonly imageFailed = signal(false);
-  readonly serving = signal<Serving>('shot');
-  readonly servings = SERVING_OPTIONS;
-  readonly showPrices = computed(() => this.settings().showMenuPrices !== false);
-  readonly category = computed(() => {
+  private readonly api = inject(MenuApi);
+  private readonly destroyRef = inject(DestroyRef);
+  public readonly settings = input.required<Settings>();
+  public readonly canOrder = input(false);
+  public readonly submitting = input(false);
+  public readonly routed = input(false);
+  public readonly closed = output<void>();
+  public readonly productAdded = output<MenuSelection>();
+  public readonly product = signal<MenuItem | null>(null);
+  public readonly loading = signal(false);
+  public readonly error = signal('');
+  public readonly imageFailed = signal(false);
+  public readonly serving = signal<Serving>('shot');
+  public readonly servings = SERVING_OPTIONS;
+  public readonly servingChoices = SERVING_OPTIONS.map((option) => ({
+    value: option.key,
+    label: option.label,
+  }));
+  public readonly showPrices = computed(() => this.settings().showMenuPrices !== false);
+  public readonly category = computed(() => {
     const product = this.product();
     return product ? menuCategory(product) : '';
   });
-  readonly image = computed(() => (this.imageFailed() ? '' : (this.product()?.image ?? '')));
-  readonly money = (value: number) => menuMoney(value, this.settings().currency);
+  public readonly image = computed(() => (this.imageFailed() ? '' : (this.product()?.image ?? '')));
+  public readonly money = (value: number): string => menuMoney(value, this.settings().currency);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-  private readonly api = inject(MenuApi);
-  private readonly destroyRef = inject(DestroyRef);
   private request?: AbortController;
   private requestVersion = 0;
   private selectedId = '';
   constructor() {
     this.destroyRef.onDestroy(() => this.request?.abort());
   }
-  open(selection: MenuSelection) {
+  public open(selection: MenuSelection): void {
     this.selectedId = selection.product._id;
     this.product.set(selection.product);
     this.error.set('');
@@ -57,9 +63,9 @@ export class ProductDialogComponent {
     this.serving.set(selection.serving === 'unit' ? 'shot' : selection.serving);
     const dialog = this.dialog().nativeElement;
     if (!dialog.open) dialog.showModal();
-    void this.loadDetails(selection.product._id);
+    this.loadDetails(selection.product._id);
   }
-  openById(id: string, serving: Serving = 'shot') {
+  public openById(id: string, serving: Serving = 'shot'): void {
     this.selectedId = id;
     this.product.set(null);
     this.error.set('');
@@ -67,9 +73,9 @@ export class ProductDialogComponent {
     this.serving.set(serving);
     const dialog = this.dialog().nativeElement;
     if (!dialog.open) dialog.showModal();
-    void this.loadDetails(id);
+    this.loadDetails(id);
   }
-  close() {
+  public close(): void {
     if (this.routed()) {
       this.closed.emit();
       return;
@@ -79,7 +85,7 @@ export class ProductDialogComponent {
     this.dialog().nativeElement.close();
     this.product.set(null);
   }
-  handleClosed() {
+  public handleClosed(): void {
     if (!this.dialog().nativeElement.open) {
       this.request?.abort();
       this.requestVersion++;
@@ -87,11 +93,11 @@ export class ProductDialogComponent {
       if (this.routed()) this.closed.emit();
     }
   }
-  handleCancel(event: Event) {
+  public handleCancel(event: Event): void {
     event.preventDefault();
     this.close();
   }
-  handleBackdrop(event: MouseEvent) {
+  public handleBackdrop(event: MouseEvent): void {
     const dialog = this.dialog().nativeElement;
     if (event.target !== dialog) return;
     const bounds = dialog.getBoundingClientRect();
@@ -103,14 +109,10 @@ export class ProductDialogComponent {
     )
       this.close();
   }
-  chooseServing(event: Event) {
-    if (event.target instanceof HTMLSelectElement && isServing(event.target.value))
-      this.serving.set(event.target.value);
+  public retry(): void {
+    if (this.selectedId) this.loadDetails(this.selectedId);
   }
-  retry() {
-    if (this.selectedId) void this.loadDetails(this.selectedId);
-  }
-  addToOrder() {
+  public addToOrder(): void {
     const product = this.product();
     if (!product || !this.canOrder() || this.submitting() || this.loading() || this.error()) return;
     this.productAdded.emit({
@@ -119,7 +121,7 @@ export class ProductDialogComponent {
     });
     this.close();
   }
-  private async loadDetails(id: string) {
+  private async loadDetails(id: string): Promise<void> {
     this.request?.abort();
     const request = new AbortController();
     this.request = request;

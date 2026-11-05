@@ -1,98 +1,148 @@
 <dialog
-  #dialog
-  class="product-dialog"
-  aria-labelledby="menu-product-title"
-  (cancel)="handleCancel($event)"
-  (close)="handleClosed()"
-  (click)="handleBackdrop($event)"
+	#dialog
+	class="product-dialog fixed w-[min(820px,_calc(100vw_-_32px))] max-h-[min(88dvh,_900px)] overflow-auto [border:1px_solid_var(--border)] rounded-[18px] bg-surface text-foreground [box-shadow:0_28px_100px_#0009] backdrop:[background:#080604cf] backdrop:[backdrop-filter:blur(6px)] max-sm:w-[calc(100vw_-_24px)] max-sm:max-h-[92dvh] max-sm:rounded-[14px] p-0 m-auto inset-0"
+	aria-labelledby="menu-product-title"
+	(cancel)="handleCancel($event)"
+	(close)="handleClosed()"
+	(click)="handleBackdrop($event)"
 >
-  <button
-    type="button"
-    class="dialog-close"
-    aria-label="Cerrar detalles del producto"
-    (click)="close()"
-  >
-    <app-icon name="x" />
-  </button>
-  @if (product(); as item) {
-    <article class="product-detail" animate.enter="detail-enter">
-      <div class="product-visual">
-        @if (image()) {
-          <img [src]="image()" [alt]="item.name" (error)="imageFailed.set(true)" />
-        } @else {
-          <div class="product-image-placeholder">
-            <app-icon name="utensils" /><span>Imagen por agregar</span>
-          </div>
-        }
-      </div>
-      <div class="product-information">
-        <p class="detail-category">{{ category() }}</p>
-        <h2 id="menu-product-title">{{ item.name }}</h2>
-        @if (item.featured) {
-          <span class="detail-featured">Especialidad de la casa</span>
-        }
-        <p class="detail-description">
-          {{ item.description || 'Consultá al personal para conocer más sobre este producto.' }}
-        </p>
-        @if (item.inventory === 'ml') {
-          <div class="detail-servings" aria-label="Presentaciones disponibles">
-            @for (size of servings; track size.key) {
-              <div>
-                <span
-                  >{{ size.label }} <small>{{ settings().servings[size.key] }} ml</small></span
-                >
-                @if (showPrices()) {
-                  <strong>{{ money(item.prices[size.key]) }}</strong>
-                }
-              </div>
-            }
-          </div>
-        } @else if (showPrices()) {
-          <p class="detail-price">{{ money(item.price) }}</p>
-        }
-        @if (loading()) {
-          <p class="detail-status" role="status">Actualizando detalles…</p>
-        }
-        @if (error()) {
-          <div class="detail-error" role="alert">
-            <p>{{ error() }}</p>
-            <button type="button" class="button outline" (click)="retry()">Reintentar</button>
-          </div>
-        }
-        @if (canOrder()) {
-          <div class="detail-order">
-            @if (item.inventory === 'ml') {
-              <label
-                >Presentación<select [value]="serving()" (change)="chooseServing($event)">
-                  @for (size of servings; track size.key) {
-                    <option [value]="size.key">{{ size.label }}</option>
-                  }
-                </select></label
-              >
-            }
-            <button
-              class="button accent"
-              type="button"
-              [disabled]="loading() || !!error() || submitting()"
-              (click)="addToOrder()"
-            >
-              <app-icon name="plus" /> Agregar al pedido
-            </button>
-          </div>
-        }
-      </div>
-    </article>
-  } @else {
-    <div class="product-loading" [attr.aria-busy]="loading()">
-      <h2 id="menu-product-title">Detalles del producto</h2>
-      @if (error()) {
-        <p role="alert">{{ error() }}</p>
-        <button class="button outline" (click)="retry()">Reintentar</button>
-      } @else {
-        <div class="detail-skeleton" role="status" aria-label="Cargando detalles">
-          <span></span><span></span><span></span>
-        </div>
-      }
-    </div>
-  }
+	<button
+		type="button"
+		class="dialog-close absolute z-[1] right-3.5 top-3.5 w-9.5 h-9.5 grid place-items-center [border:1px_solid_var(--border)] rounded-full [background:#17110ee8] text-foreground cursor-pointer focus-visible:[outline:2px_solid_var(--accent)] focus-visible:[outline-offset:3px]"
+		aria-label="Cerrar detalles del producto"
+		(click)="close()"
+	>
+		<app-icon name="x" />
+	</button>
+	@if (product(); as item) {
+		<article
+			class="product-detail grid grid-cols-[45%_minmax(0,_1fr)] min-h-97.5 max-sm:grid-cols-1"
+			animate.enter="detail-enter animate-[detail-appear_0.18s_ease-out] [@media(prefers-reduced-motion:_reduce)]:animate-none"
+		>
+			<div
+				class="product-visual flex items-center justify-center min-h-90 [background:radial-gradient(ellipse_at_center,_var(--surface-raised),_var(--canvas))] overflow-hidden [&_img]:block [&_img]:w-full [&_img]:h-full [&_img]:max-h-162.5 [&_img]:object-contain max-sm:min-h-50 max-sm:max-h-72.5 max-sm:[&_img]:max-h-72.5"
+			>
+				@if (image()) {
+					<img [src]="image()" [alt]="item.name" (error)="imageFailed.set(true)" />
+				} @else {
+					<div
+						class="product-image-placeholder flex items-center flex-col gap-4.5 text-muted text-xs [&_app-icon]:w-10.5 [&_app-icon]:h-10.5 [&_app-icon]:opacity-55.00000000000001 p-9"
+					>
+						<app-icon name="utensils" /><span>Imagen por agregar</span>
+					</div>
+				}
+			</div>
+			<div
+				class="product-information pt-[45px] pb-7.5 min-w-0 [&_h2]:font-sans [&_h2]:text-3xl [&_h2]:leading-[1.15] [&_h2]:tracking-[-0.035em] [&_h2]:wrap-anywhere max-sm:pt-[25px] max-sm:pb-7 max-sm:[&_h2]:text-[27px] px-7.5 max-sm:px-6 [&_h2]:m-0"
+			>
+				<p
+					class="detail-category text-muted text-[10px] tracking-[0.09em] uppercase mt-0 mb-3 mx-0"
+				>
+					{{ category() }}
+				</p>
+				<h2 id="menu-product-title">{{ item.name }}</h2>
+				@if (item.featured) {
+					<span class="detail-featured inline-block text-accent text-[10px] mt-3"
+						>Especialidad de la casa</span
+					>
+				}
+				<p
+					class="detail-description whitespace-pre-wrap text-sm leading-[1.8] text-warm mx-0 my-5.5 max-sm:mx-0 max-sm:my-4.5"
+				>
+					{{
+						item.description ||
+							'Consultá al personal para conocer más sobre este producto.'
+					}}
+				</p>
+				@if (item.inventory === 'ml') {
+					<div
+						class="detail-servings border-t border-border [&_>_div]:flex [&_>_div]:justify-between [&_>_div]:items-center [&_>_div]:gap-5 [&_>_div]:border-b [&_>_div]:border-border [&_>_div]:text-[13px] [&_small]:block [&_small]:text-muted [&_small]:text-[10px] [&_small]:mt-[3px] [&_strong]:text-warm [&_strong]:whitespace-nowrap [&_>_div]:px-0 [&_>_div]:py-[13px]"
+						aria-label="Presentaciones disponibles"
+					>
+						@for (size of servings; track size.key) {
+							<div>
+								<span
+									>{{ size.label }}
+									<small>{{ settings().servings[size.key] }} ml</small></span
+								>
+								@if (showPrices()) {
+									<strong>{{ money(item.prices[size.key]) }}</strong>
+								}
+							</div>
+						}
+					</div>
+				} @else if (showPrices()) {
+					<p class="detail-price text-[23px] text-warm font-semibold tabular-nums mt-6">
+						{{ money(item.price) }}
+					</p>
+				}
+				@if (loading()) {
+					<p class="detail-status text-[11px] text-muted mt-4" role="status">
+						Actualizando detalles…
+					</p>
+				}
+				@if (error()) {
+					<div class="detail-error text-danger text-xs mt-4.5 [&_p]:mb-2.5" role="alert">
+						<p>{{ error() }}</p>
+						<button
+							type="button"
+							appButton="outline"
+							class="[.detail-order_&]:justify-center [.detail-order_&]:min-h-11 [.detail-order_&]:text-[13px]"
+							(click)="retry()"
+						>
+							Reintentar
+						</button>
+					</div>
+				}
+				@if (canOrder()) {
+					<div class="detail-order flex flex-col gap-3.5 mt-[25px] [&_label]:text-xs">
+						@if (item.inventory === 'ml') {
+							<div class="grid gap-2 text-xs">
+								Presentación<app-select
+									[label]="'Medida de ' + item.name"
+									[options]="servingChoices"
+									[(value)]="serving"
+									[disabled]="submitting()"
+								/>
+							</div>
+						}
+						<button
+							appButton="primary"
+							class="[.detail-order_&]:justify-center [.detail-order_&]:min-h-11 [.detail-order_&]:text-[13px]"
+							type="button"
+							[disabled]="loading() || !!error() || submitting()"
+							(click)="addToOrder()"
+						>
+							<app-icon name="plus" /> Agregar al pedido
+						</button>
+					</div>
+				}
+			</div>
+		</article>
+	} @else {
+		<div
+			class="product-loading min-h-80 pt-14 pb-8 [&_h2]:text-2xl [&_h2]:mb-7 px-8"
+			[attr.aria-busy]="loading()"
+		>
+			<h2 id="menu-product-title">Detalles del producto</h2>
+			@if (error()) {
+				<p role="alert">{{ error() }}</p>
+				<button
+					appButton="outline"
+					class="[.detail-order_&]:justify-center [.detail-order_&]:min-h-11 [.detail-order_&]:text-[13px]"
+					(click)="retry()"
+				>
+					Reintentar
+				</button>
+			} @else {
+				<div
+					class="detail-skeleton grid gap-4.5 [&_span]:block [&_span]:h-5 [&_span]:rounded-md [&_span]:bg-border [&_span]:animate-[detail-pulse_1.4s_ease-in-out_infinite] [&_span:first-child]:h-27.5 [&_span:last-child]:w-[60%] motion-reduce:[&_span]:animate-none"
+					role="status"
+					aria-label="Cargando detalles"
+				>
+					<span></span><span></span><span></span>
+				</div>
+			}
+		</div>
+	}
 </dialog>

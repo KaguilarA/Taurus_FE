@@ -1,0 +1,139 @@
+<app-admin-page-heading
+	title="Punto de venta"
+	description="Registrá ventas y actualizá las existencias."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<div class="pos-layout grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+			<section>
+				<app-catalog-filters
+					[search]="catalog.search()"
+					[category]="catalog.category()"
+					[drinkType]="catalog.drinkType()"
+					(searchChanged)="catalog.setSearch($event)"
+					(categoryChanged)="catalog.setCategory($event)"
+					(drinkTypeChanged)="catalog.setDrinkType($event)"
+				/>
+				<div class="grid gap-4 sm:grid-cols-2">
+					@for (p of catalog.items(); track p._id) {
+						<app-product-card
+							[product]="p"
+							[settings]="state.settings"
+							[canOrder]="true"
+							[showDetails]="false"
+							[showImage]="true"
+							[showStock]="true"
+							[forcePrices]="true"
+							[submitting]="busy()"
+							(productAdded)="add(p, $event.serving)"
+						/>
+					} @empty {
+						<p class="p-6 text-sm text-muted">No hay productos que coincidan.</p>
+					}
+				</div>
+				<app-pagination
+					[page]="catalog.page()"
+					[total]="catalog.total()"
+					[pageSize]="catalog.pageSize"
+					(pageChanged)="catalog.goToPage($event)"
+				/>
+			</section>
+			<aside
+				class="order-panel h-fit rounded-xl border border-border bg-surface p-5 lg:sticky lg:top-5"
+			>
+				<div
+					class="panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 [&_h2]:text-base [&_button]:text-xs"
+				>
+					<h2>Orden actual</h2>
+					<span
+						class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+						>{{ cart().length }}</span
+					>
+				</div>
+				<label
+					>Nombre de cuenta o mesa<input
+						[ngModel]="label()"
+						(ngModelChange)="label.set($event)"
+						placeholder="Ej. Mesa 04"
+						[disabled]="busy() || imageUploading()"
+				/></label>
+				<div class="order-lines max-h-100 overflow-auto">
+					@for (line of cart(); track $index; let i = $index) {
+						<div
+							class="order-line flex justify-between items-center gap-2 border-b border-border text-[11px] px-0 py-5"
+						>
+							<div>
+								<strong>{{ line.product.name }}</strong
+								><small
+									>{{
+										line.serving === 'unit'
+											? 'Unidad'
+											: line.serving === 'large'
+												? 'Grande'
+												: line.serving === 'small'
+													? 'Pequeño'
+													: 'Shot'
+									}}
+									· {{ api.money(line.price) }}</small
+								>
+							</div>
+							<div
+								class="quantity flex items-center gap-[9px] bg-surface-raised rounded-[5px] p-1"
+							>
+								<button
+									(click)="quantity(i, -1)"
+									[disabled]="busy() || imageUploading()"
+									[attr.aria-label]="'Quitar ' + line.product.name"
+								>
+									<app-icon name="minus" /></button
+								><span>{{ line.quantity }}</span
+								><button
+									(click)="quantity(i, 1)"
+									[disabled]="busy() || imageUploading()"
+									[attr.aria-label]="'Agregar ' + line.product.name"
+								>
+									<app-icon name="plus" />
+								</button>
+							</div>
+						</div>
+					} @empty {
+						<div
+							class="empty-state px-6 py-12 text-center text-sm leading-8 text-muted"
+						>
+							La mesa está lista.<br />Agregá productos para comenzar.
+						</div>
+					}
+				</div>
+				<div class="order-total flex justify-between items-center mt-[25px] text-[13px]">
+					<span>Total</span><strong>{{ api.money(total()) }}</strong>
+				</div>
+				<label
+					>Medio de pago<select
+						[ngModel]="paymentMethod()"
+						(ngModelChange)="paymentMethod.set($event)"
+						[disabled]="busy() || imageUploading()"
+					>
+						<option value="cash">Efectivo</option>
+						<option value="sinpe">SIMPE</option>
+						<option value="card">Tarjeta</option>
+					</select></label
+				>
+				<p class="muted text-muted my-4">
+					Los precios incluyen los impuestos que hayas incorporado al precio del producto.
+					No procesa pagos electrónicos.
+				</p>
+				<button
+					appButton="primary"
+					(click)="checkout()"
+					[disabled]="busy() || !cart().length"
+				>
+					{{ busy() ? 'Registrando…' : 'Confirmar venta'
+					}}<app-icon name="circle-check" />
+				</button>
+			</aside>
+		</div>
+	}
+}

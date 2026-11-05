@@ -1,12 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import type { DrinkFilter, MenuCategory, MenuPage, MenuQuery } from '../interfaces';
 import { MenuApi } from './menu-api.service';
-import {
-  DEFAULT_MENU_QUERY,
-  type DrinkFilter,
-  type MenuCategory,
-  type MenuPage,
-  type MenuQuery,
-} from './menu.models';
+import { DEFAULT_MENU_QUERY } from './menu.models';
 @Injectable()
 export class MenuStore {
   private readonly api = inject(MenuApi);
@@ -19,12 +14,12 @@ export class MenuStore {
   private readonly loadingState = signal(false);
   private readonly errorState = signal('');
   private readonly searchState = signal('');
-  readonly query = this.queryState.asReadonly();
-  readonly page = this.pageState.asReadonly();
-  readonly loading = this.loadingState.asReadonly();
-  readonly error = this.errorState.asReadonly();
-  readonly search = this.searchState.asReadonly();
-  readonly pageNumbers = computed(() => {
+  public readonly query = this.queryState.asReadonly();
+  public readonly page = this.pageState.asReadonly();
+  public readonly loading = this.loadingState.asReadonly();
+  public readonly error = this.errorState.asReadonly();
+  public readonly search = this.searchState.asReadonly();
+  public readonly pageNumbers = computed(() => {
     const result = this.page();
     if (!result) return [];
     const start = Math.max(1, Math.min(result.page - 2, result.pageCount - 4));
@@ -36,40 +31,40 @@ export class MenuStore {
       this.activeRequest?.abort();
     });
   }
-  initialize(initialPage?: MenuPage) {
+  public initialize(initialPage?: MenuPage): void {
     if (initialPage) this.pageState.set(initialPage);
-    else void this.load();
+    else this.load();
   }
-  setSearch(value: string) {
+  public setSearch(value: string): void {
     this.searchState.set(value);
     clearTimeout(this.searchTimer);
     this.searchTimer = setTimeout(() => this.changeQuery({ page: 1 }), 250);
   }
-  setCategory(category: MenuCategory) {
+  public setCategory(category: MenuCategory): void {
     this.changeQuery({ category, drinkType: 'all', page: 1 });
   }
-  setDrinkType(drinkType: DrinkFilter) {
+  public setDrinkType(drinkType: DrinkFilter): void {
     this.changeQuery({ drinkType, page: 1 });
   }
-  goToPage(page: number) {
+  public goToPage(page: number): void {
     if (page < 1 || page > (this.page()?.pageCount ?? 0) || this.loading()) return;
     this.changeQuery({ page });
   }
-  clear() {
+  public clear(): void {
     this.searchState.set('');
     this.changeQuery(DEFAULT_MENU_QUERY);
   }
-  retry() {
-    void this.load();
+  public retry(): void {
+    this.load();
   }
-  private changeQuery(patch: Partial<MenuQuery>) {
+  private changeQuery(patch: Partial<MenuQuery>): void {
     clearTimeout(this.searchTimer);
     const q = this.search().trim();
     const page = q === this.query().q ? (patch.page ?? 1) : 1;
     this.queryState.update((current) => ({ ...current, ...patch, q, page }));
-    void this.load();
+    this.load();
   }
-  private async load() {
+  private async load(): Promise<void> {
     this.activeRequest?.abort();
     const request = new AbortController();
     this.activeRequest = request;

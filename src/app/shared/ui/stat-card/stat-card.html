@@ -1,0 +1,11 @@
+<article
+	class="flex h-full flex-col gap-4 rounded-xl border border-border bg-surface p-5"
+	[class.bg-accent-soft]="attention()"
+>
+	<span class="text-xs text-muted">{{ label() }}</span>
+	<strong class="font-display text-3xl font-semibold tracking-tight">{{ value() }}</strong>
+	@if (description()) {
+		<small class="text-xs text-muted">{{ description() }}</small>
+	}
+	<ng-content />
+</article>

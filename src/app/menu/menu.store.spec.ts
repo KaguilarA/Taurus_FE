@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+import type { MenuItem, MenuPage } from '../interfaces';
 import { MenuApi } from './menu-api.service';
+
 import { MenuStore } from './menu.store';
-import type { MenuItem, MenuPage } from './menu.models';
 const product = {
   _id: 'product',
   name: 'Pilsen',

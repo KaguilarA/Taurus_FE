@@ -1,0 +1,183 @@
+<app-admin-page-heading
+	title="Pedidos en vivo"
+	description="Gestioná las entregas y los pedidos de cada mesa."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<div class="flex flex-wrap justify-between gap-4 mb-6">
+			<p role="status">
+				<span
+					class="status-dot inline-block w-1.5 h-1.5 bg-accent rounded-full mr-2"
+					[class.offline]="!activity.connected()"
+				></span>
+				{{
+					activity.connected()
+						? 'Conectado por socket en tiempo real'
+						: activity.service().orders.length
+							? 'Reconectando las actualizaciones'
+							: 'Sin órdenes activas · verificando nuevos pedidos'
+				}}
+				· {{ activity.service().bills.length }} cuentas abiertas
+			</p>
+			<button
+				appButton="outline"
+				class="[.service-line_&]:shrink-0 [.service-line_&]:text-xs [.service-line_&]:px-3.5 [.service-line_&]:py-2.5"
+				[disabled]="busy() || imageUploading()"
+				(click)="refreshOrders()"
+			>
+				Actualizar pedidos
+			</button>
+		</div>
+		<div class="grid xl:grid-cols-2 gap-6">
+			@for (bill of activity.service().bills; track bill._id) {
+				<section
+					class="panel overflow-hidden rounded-xl border border-border bg-surface service-card"
+				>
+					<div
+						class="panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 [&_h2]:text-base [&_button]:text-xs"
+					>
+						<h2>{{ bill.label }}</h2>
+						<strong>{{ api.money(bill.total) }}</strong>
+					</div>
+					@for (order of activity.ordersFor(bill._id); track order._id) {
+						<article
+							class="service-order border-b border-border p-5.5"
+							[class.order-ready]="order.orderStatus === 'ready'"
+							[class]="[
+								order.orderStatus === 'ready'
+									? '[background:var(--accent-soft)] [border-left:3px_solid_var(--secondary)]'
+									: '',
+							]"
+						>
+							<div class="flex justify-between items-center gap-3">
+								<strong>{{ order.createdAt | date: 'shortTime' }}</strong
+								><span
+									class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+									>Pedido</span
+								>
+							</div>
+							@for (item of order.items; track $index; let itemIndex = $index) {
+								@if (
+									api.role() !== 'kitchen' ||
+									(item.kitchen ?? item.category === 'food')
+								) {
+									<div
+										class="service-line flex items-center justify-between gap-4 border-t border-border mt-3 [&_>_div]:min-w-0 [&_p]:mb-2 max-[600px]:flex-wrap py-4"
+									>
+										<div>
+											<p>
+												{{ item.quantity }} × {{ item.name }}
+												{{
+													item.serving !== 'unit'
+														? '· ' + servingName(item.serving)
+														: ''
+												}}
+											</p>
+											<span
+												class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+												>{{
+													statusName(item.fulfillmentStatus || 'pending')
+												}}</span
+											>
+										</div>
+										@if (
+											(item.kitchen ?? item.category === 'food') &&
+											item.fulfillmentStatus === 'preparing' &&
+											api.role() !== 'waiter'
+										) {
+											<button
+												appButton="outline"
+												class="[.service-line_&]:shrink-0 [.service-line_&]:text-xs [.service-line_&]:px-3.5 [.service-line_&]:py-2.5"
+												[disabled]="busy()"
+												(click)="advance(order._id, 'ready', itemIndex)"
+											>
+												Por servir
+											</button>
+										}
+										@if (
+											api.role() !== 'kitchen' &&
+											(((item.kitchen ?? item.category === 'food') &&
+												item.fulfillmentStatus === 'ready') ||
+												(!(item.kitchen ?? item.category === 'food') &&
+													item.fulfillmentStatus === 'pending'))
+										) {
+											<button
+												appButton="primary"
+												class="[.service-line_&]:shrink-0 [.service-line_&]:text-xs [.service-line_&]:px-3.5 [.service-line_&]:py-2.5"
+												[disabled]="busy()"
+												(click)="advance(order._id, 'delivered', itemIndex)"
+											>
+												<app-icon name="check-check" /> Marcar servida
+											</button>
+										}
+									</div>
+								}
+							}
+							@if (order.notes) {
+								<p class="order-note rounded-lg bg-accent-soft text-warm p-3">
+									Nota: {{ order.notes }}
+								</p>
+							}
+						</article>
+					} @empty {
+						<p class="muted text-muted p-6">El cliente está explorando la carta.</p>
+					}
+					@if (api.role() !== 'kitchen') {
+						<form
+							class="bill-payment form-grid grid gap-5 p-5.5"
+							(ngSubmit)="payBill(bill._id)"
+						>
+							<label
+								>Medio de pago<select
+									[name]="'method-' + bill._id"
+									[ngModel]="billMethods()[bill._id] || 'cash'"
+									(ngModelChange)="updateField(billMethods, [bill._id], $event)"
+									[disabled]="busy() || imageUploading()"
+								>
+									<option value="cash">Efectivo</option>
+									<option value="sinpe">SIMPE</option>
+									<option value="card">Tarjeta</option>
+								</select></label
+							>
+							<label
+								>Referencia (opcional)<input
+									[name]="'ref-' + bill._id"
+									[ngModel]="billReferences()[bill._id]"
+									(ngModelChange)="
+										updateField(billReferences, [bill._id], $event)
+									"
+									maxlength="150"
+									[disabled]="busy() || imageUploading()"
+									placeholder="Referencia o comprobante"
+							/></label>
+							<p class="muted text-muted">
+								Registrá el pago después de verificar que fue recibido. El sistema
+								no ejecuta el cobro.
+							</p>
+							<button
+								appButton="primary"
+								class="[.service-line_&]:shrink-0 [.service-line_&]:text-xs [.service-line_&]:px-3.5 [.service-line_&]:py-2.5"
+								[disabled]="busy() || !activity.canPay(bill._id)"
+							>
+								<app-icon name="banknote" /> Registrar pago ·
+								{{ api.money(bill.total) }}
+							</button>
+							@if (!activity.canPay(bill._id)) {
+								<small>Se habilita al entregar todos los pedidos.</small>
+							}
+						</form>
+					}
+				</section>
+			} @empty {
+				<section
+					class="panel overflow-hidden rounded-xl border border-border bg-surface empty-state px-6 py-12 text-center text-sm leading-8 text-muted"
+				>
+					Sin cuentas abiertas. Los pedidos de los QR aparecerán aquí.
+				</section>
+			}
+		</div>
+	}
+}

@@ -4,7 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { Api } from './api';
-import { configuredGuard, firstAdminGuard, businessSetupGuard, startupGuard } from './setup.guard';
+import { businessSetupGuard, configuredGuard, firstAdminGuard, startupGuard } from './setup.guard';
 
 @Component({ template: '' })
 class Screen {}

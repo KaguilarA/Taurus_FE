@@ -1,0 +1,160 @@
+<app-admin-page-heading title="Eventos" description="Organizá los próximos eventos.">
+	<button appButton="primary" (click)="editEvent()"><app-icon name="plus" /> Nuevo evento</button>
+</app-admin-page-heading>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+			@for (event of state.events ?? []; track event._id) {
+				<article
+					class="panel overflow-hidden rounded-xl border border-border bg-surface admin-event [&_h2]:text-2xl p-6"
+				>
+					<div class="flex flex-wrap gap-2 mb-4">
+						<span
+							class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
+							>{{ event.active ? 'Publicado' : 'Pausado' }}</span
+						>
+						@if (event.isSample) {
+							<span
+								class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent warning text-warm"
+								>Evento de muestra</span
+							>
+						}
+					</div>
+					<h2>{{ event.title }}</h2>
+					<p class="muted text-muted mt-3">{{ event.description }}</p>
+					<p class="mt-4">
+						{{
+							event.starts
+								? (event.starts | date: 'dd/MM/yyyy HH:mm')
+								: 'Fecha por confirmar'
+						}}
+					</p>
+					<p class="muted text-muted mt-2">{{ event.location }}</p>
+					<button appButton="secondary" class="mt-5" (click)="editEvent(event)">
+						<app-icon name="pencil" /> Editar evento
+					</button>
+				</article>
+			} @empty {
+				<section
+					class="panel overflow-hidden rounded-xl border border-border bg-surface empty-state px-6 py-12 text-center text-sm leading-8 text-muted"
+				>
+					Creá tu primer evento para promocionarlo en la página pública.
+				</section>
+			}
+		</div>
+		@if (event(); as e) {
+			<app-dialog
+				[title]="e._id ? 'Editar evento' : 'Nuevo evento'"
+				[busy]="busy() || imageUploading()"
+				(closed)="event.set(null)"
+			>
+				<form class="form-grid grid gap-5 p-6" (ngSubmit)="saveEvent()">
+					<label
+						>Título<input
+							name="eventTitle"
+							[ngModel]="e.title"
+							(ngModelChange)="updateField(event, ['title'], $event)"
+							required
+							maxlength="150"
+					/></label>
+					<label
+						>Tipo<select
+							name="eventKind"
+							[ngModel]="e.kind"
+							(ngModelChange)="updateField(event, ['kind'], $event)"
+						>
+							<option value="music">Música en vivo</option>
+							<option value="karaoke">Karaoke</option>
+							<option value="sports">Deportes</option>
+							<option value="other">Otro evento</option>
+						</select></label
+					>
+					<label
+						>Descripción<textarea
+							name="eventDescription"
+							[ngModel]="e.description"
+							(ngModelChange)="updateField(event, ['description'], $event)"
+							maxlength="1000"
+							rows="3"
+						></textarea>
+					</label>
+					<app-image-upload
+						[value]="e.image"
+						(valueChange)="updateField(event, ['image'], $event)"
+						purpose="event"
+						label="Imagen del evento"
+						[disabled]="busy()"
+						(pending)="imageUploading.set($event)"
+					/>
+					<div class="grid sm:grid-cols-2 gap-4">
+						<label
+							>Inicio<input
+								name="eventStarts"
+								type="datetime-local"
+								[ngModel]="e.starts"
+								(ngModelChange)="updateField(event, ['starts'], $event)" /></label
+						><label
+							>Fin<input
+								name="eventEnds"
+								type="datetime-local"
+								[ngModel]="e.ends"
+								(ngModelChange)="updateField(event, ['ends'], $event)"
+								[required]="!!e.starts"
+						/></label>
+					</div>
+					<p class="muted text-muted">
+						Las horas usan la zona horaria de tu navegador. Para una fecha por
+						confirmar, dejá inicio y fin vacíos.
+					</p>
+					<label
+						>Lugar<input
+							name="eventLocation"
+							[ngModel]="e.location"
+							(ngModelChange)="updateField(event, ['location'], $event)"
+							maxlength="200"
+					/></label>
+					<label
+						>Información de entrada<input
+							name="eventAdmission"
+							[ngModel]="e.admission"
+							(ngModelChange)="updateField(event, ['admission'], $event)"
+							maxlength="100"
+							placeholder="Ej. Entrada libre o consultar condiciones"
+					/></label>
+					<label class="checkbox flex items-center gap-3 [&_input]:m-0 [&_input]:size-4"
+						><input
+							name="eventActive"
+							type="checkbox"
+							[ngModel]="e.active"
+							(ngModelChange)="updateField(event, ['active'], $event)"
+						/>
+						Publicar en la agenda</label
+					>
+					<label class="checkbox flex items-center gap-3 [&_input]:m-0 [&_input]:size-4"
+						><input
+							name="eventSample"
+							type="checkbox"
+							[ngModel]="e.isSample"
+							(ngModelChange)="updateField(event, ['isSample'], $event)"
+						/>
+						Identificar como evento de muestra</label
+					>
+					@if (error()) {
+						<p
+							class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+							role="alert"
+						>
+							{{ error() }}
+						</p>
+					}
+					<button appButton="primary" [disabled]="busy() || imageUploading()">
+						<app-icon name="save" /> Guardar evento
+					</button>
+				</form>
+			</app-dialog>
+		}
+	}
+}

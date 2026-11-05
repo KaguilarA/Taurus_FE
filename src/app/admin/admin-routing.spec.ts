@@ -2,15 +2,16 @@ import { Location } from '@angular/common';
 import { provideLocationMocks } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, provideRouter, Router } from '@angular/router';
-import { filter, firstValueFrom, take } from 'rxjs';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { filter, firstValueFrom, take } from 'rxjs';
 import { vi } from 'vitest';
-import { Api, Role, State } from '../api';
+import { Api } from '../api';
 import { routes } from '../app.routes';
-import { adminReturnUrl } from './admin.guards';
-import { adminRoutes } from './admin.routes';
+import type { Role, State } from '../interfaces';
 import { AdminShell } from './admin-shell';
-import { LoginPage } from './login/login';
+import { adminRoutes } from './admin.routes';
+import { adminReturnUrl } from './guards/admin.guards';
+import { LoginPage } from './login';
 import { OrderActivity } from './order-activity';
 
 describe('Dashboard child routes and access control', () => {
@@ -160,8 +161,8 @@ describe('Dashboard child routes and access control', () => {
       api.authenticated.set(true);
       api.role.set(role);
     });
-    page.username = 'owner';
-    page.password = 'test-only-password';
+    page.username.set('owner');
+    page.password.set('test-only-password');
     await page.login();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/admin/products');

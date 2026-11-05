@@ -1,0 +1,9 @@
+@if (title()) {
+	<header
+		class="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5"
+	>
+		<h2 class="text-base font-semibold">{{ title() }}</h2>
+		<ng-content select="[panelActions]" />
+	</header>
+}
+<ng-content />

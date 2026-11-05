@@ -1,0 +1,172 @@
+@if (data(); as d) {
+	<div
+		class="public-site bg-canvas text-foreground cantina-site bg-business-texture"
+		[style.--accent]="d.settings.accent"
+	>
+		<header
+			class="public-nav h-28.5 border-b border-border page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 flex items-center justify-between gap-5"
+		>
+			<a
+				class="brand font-brand text-3xl uppercase leading-none tracking-wide [&_span]:mt-2 [&_span]:block [&_span]:font-sans [&_span]:text-[8px] [&_span]:font-semibold [&_span]:tracking-[0.3em]"
+				[href]="sectionLink('')"
+				>{{ d.settings.name }}<span>{{ d.settings.subtitle }}</span></a
+			>
+			<nav class="flex items-center gap-6" aria-label="Navegación principal">
+				<a routerLink="/cuenta">Mi cuenta</a>
+				<a [href]="sectionLink('carta')">La carta</a
+				><a [href]="sectionLink('eventos')">Eventos</a
+				><a [href]="sectionLink('promociones')">Promociones</a
+				><a class="hide-mobile max-sm:hidden" [href]="sectionLink('visitanos')">Visitanos</a
+				><a
+					class="nav-arrow grid place-items-center border border-border w-9 h-9 rounded-full text-[21px]"
+					routerLink="/admin"
+					aria-label="Abrir administración"
+					><app-icon name="arrow-up-right"
+				/></a>
+			</nav>
+		</header>
+		<main>
+			@if (error()) {
+				<p
+					class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger page-width mx-auto max-w-7xl md:px-8 xl:px-11"
+					role="alert"
+				>
+					{{ error() }}
+				</p>
+			}
+			<section
+				class="landing-hero min-h-[min(760px,_82svh)] [background-position:center] [background-size:cover] border-y border-border flex items-end relative isolate before:[content:''] before:absolute before:z-[-1] before:[background:linear-gradient(90deg,_#100b08aa,_transparent_80%)] [&_h1]:text-[clamp(42px,_6.4vw,_108px)] [&_h1]:leading-[1.08] [&_h1]:max-w-262.5 [&_h1]:text-balance max-[760px]:min-h-155 [&_h1]:m-0 before:inset-0"
+				[style.background-image]="
+					'linear-gradient(180deg, rgba(15,10,7,.18), rgba(15,10,7,.86)), url(' +
+					(d.settings.heroImage || '/images/hero.svg') +
+					')'
+				"
+				aria-labelledby="hero-title"
+			>
+				<div
+					class="landing-hero-content [padding-block:clamp(48px,_7vw,_96px)] page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11"
+				>
+					<p
+						class="hero-location flex items-center gap-2.5 text-xs tracking-[0.12em] text-warm mb-8 max-[760px]:mb-6"
+					>
+						<app-icon name="map-pin" /> {{ d.settings.address }}
+					</p>
+					<h1 id="hero-title">{{ d.settings.tagline }}</h1>
+					<div
+						class="landing-hero-bottom flex justify-between items-end gap-10 mt-9 border-t border-border pt-7 [&_p]:max-w-125 [&_p]:text-[clamp(15px,_1.3vw,_19px)] [&_p]:leading-[1.7] [&_p]:text-warm [&_>_div]:flex [&_>_div]:items-center [&_>_div]:gap-6 [&_>_div]:shrink-0 max-[760px]:flex-col max-[760px]:items-start max-[760px]:gap-6 max-[760px]:[&_>_div]:flex-wrap max-[760px]:[&_>_div]:gap-5"
+					>
+						<p>{{ d.settings.description }}</p>
+						<div>
+							<a appButton="primary" href="#carta"
+								>Explorar la carta <app-icon name="arrow-up-right" /></a
+							><a
+								class="hero-event-link inline-flex items-center gap-2.5 text-sm hover:underline hover:underline-offset-4 py-3.5"
+								href="#eventos"
+								>Ver eventos <app-icon name="calendar-days"
+							/></a>
+						</div>
+					</div>
+				</div>
+			</section>
+			@if (d.recommendations?.length) {
+				<div class="mx-auto max-w-7xl px-5 py-16 md:px-8 xl:px-11">
+					@defer (on viewport) {
+						<app-recommended-products
+							[products]="d.recommendations ?? []"
+							[settings]="d.settings"
+						/>
+					} @placeholder {
+						<app-page-skeleton variant="section" />
+					} @loading (after 100ms; minimum 200ms) {
+						<app-page-skeleton variant="section" />
+					} @error {
+						<app-deferred-error section="las recomendaciones" />
+					}
+				</div>
+			}
+			@defer (on viewport) {
+				<app-menu [settings]="d.settings" [initialPage]="d.menu" />
+			} @placeholder {
+				<app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+			} @loading (after 100ms; minimum 150ms) {
+				<app-section-skeleton id="carta" label="Cargando menú" [count]="9" />
+			} @error {
+				<app-deferred-error id="carta" section="el menú" />
+			}
+
+			@defer (on viewport) {
+				<app-public-events [settings]="d.settings" [events]="d.events ?? []" />
+			} @placeholder {
+				<app-section-skeleton id="eventos" label="Cargando eventos" />
+			} @loading (after 100ms; minimum 150ms) {
+				<app-section-skeleton id="eventos" label="Cargando eventos" />
+			} @error {
+				<app-deferred-error id="eventos" section="los eventos" />
+			}
+			@defer (on viewport) {
+				<app-public-promotions [promotions]="d.promotions" />
+			} @placeholder {
+				<app-section-skeleton id="promociones" label="Cargando promociones" [count]="2" />
+			} @loading (after 100ms; minimum 150ms) {
+				<app-section-skeleton id="promociones" label="Cargando promociones" [count]="2" />
+			} @error {
+				<app-deferred-error id="promociones" section="las promociones" />
+			}
+			<section
+				id="visitanos"
+				class="visit-section border-t border-border bg-surface-raised px-0 py-[65px]"
+			>
+				<div
+					class="page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 grid md:grid-cols-2 gap-10"
+				>
+					<div>
+						<p
+							class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted"
+						>
+							SIEMPRE HAY UNA MESA
+						</p>
+						<h2>
+							Nos vemos<br />por aquí. <span><app-icon name="arrow-up-right" /></span>
+						</h2>
+					</div>
+					<div class="visit-details pt-2.5">
+						<p
+							class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted"
+						>
+							ENCONTRANOS
+						</p>
+						<p>{{ d.settings.address }}</p>
+						@if (d.settings.hours) {
+							<p
+								class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted mt-7"
+							>
+								EL HORARIO
+							</p>
+							<p>{{ d.settings.hours }}</p>
+						}
+						@if (d.settings.phone) {
+							<p class="mt-6">Reservas y consultas · {{ d.settings.phone }}</p>
+						}
+					</div>
+				</div>
+			</section>
+		</main>
+		<footer
+			class="page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 flex flex-wrap gap-4 justify-between"
+		>
+			<span>{{ d.settings.name }} · Hecho para pasarla bien.</span
+			><a routerLink="/admin">Administración <app-icon name="arrow-up-right" /></a>
+		</footer>
+		<router-outlet [routerOutletData]="{ settings: d.settings }" />
+	</div>
+} @else if (error()) {
+	<main
+		class="connection-state min-h-[100vh] flex flex-col justify-center items-center gap-6 text-center p-[25px]"
+	>
+		<h1>No pudimos cargar la carta.</h1>
+		<p role="alert">{{ error() }}</p>
+		<button appButton="primary" (click)="load()">Intentar de nuevo</button>
+	</main>
+} @else {
+	<app-page-skeleton />
+}

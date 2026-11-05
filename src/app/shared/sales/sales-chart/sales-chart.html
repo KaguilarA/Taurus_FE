@@ -1,0 +1,25 @@
+<figure class="grid gap-4">
+	<figcaption class="text-sm font-semibold">{{ title() }}</figcaption>
+	<div class="relative h-72 min-w-0">
+		<canvas #canvas role="img" [attr.aria-label]="title()"></canvas>
+	</div>
+	<details class="text-xs text-muted">
+		<summary class="cursor-pointer">Ver datos del gráfico</summary>
+		<table class="mt-3">
+			<thead>
+				<tr>
+					<th>Producto o categoría</th>
+					<th>{{ metric() }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				@for (label of series().labels; track $index) {
+					<tr>
+						<td>{{ label }}</td>
+						<td>{{ series().values[$index] }}</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</details>
+</figure>

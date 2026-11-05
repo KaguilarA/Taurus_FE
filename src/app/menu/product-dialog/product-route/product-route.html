@@ -1,0 +1,8 @@
+<app-product-dialog
+	[settings]="context().settings"
+	[canOrder]="context().canOrder ?? false"
+	[submitting]="context().submitting ?? false"
+	[routed]="true"
+	(closed)="close()"
+	(productAdded)="add($event)"
+/>

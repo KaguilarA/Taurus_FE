@@ -1,0 +1,4 @@
+import fs from 'node:fs';
+let p='src/app/setup.ts';let s=fs.readFileSync(p,'utf8').replace("this.password.set(this.passwordConfirmation.set(''));","this.password.set('');\nthis.passwordConfirmation.set('');");fs.writeFileSync(p,s);
+p='src/app/admin/pages/products.ts';s=fs.readFileSync(p,'utf8').replace(/if \(this.product\(\)\)\s*this.product\(\).inventory = this.product\(\).category === 'drink' \? 'unit' : 'none';/,"this.product.update(product => product ? { ...product, inventory: product.category === 'drink' ? 'unit' : 'none' } : null);");fs.writeFileSync(p,s);
+p='src/app/admin/pages/products.html';s=fs.readFileSync(p,'utf8').replace(/\(ngModelChange\)="updateField\(product, \['category'\], \$event\)"\s*\(ngModelChange\)="changeCategory\(\)"/,`(ngModelChange)="updateField(product, ['category'], $event); changeCategory()"`);fs.writeFileSync(p,s);

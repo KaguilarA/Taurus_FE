@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ProductCardComponent } from './product-card.component';
-import type { Settings } from '../../api';
-import type { MenuItem } from '../menu.models';
+import { ProductCardComponent } from '.';
+import type { MenuItem, Settings } from '../../interfaces';
+
 describe('ProductCardComponent', () => {
   it('renders a compact card without a photo or starburst and respects price visibility', () => {
     const fixture = TestBed.createComponent(ProductCardComponent);

@@ -1,10 +1,5 @@
 import type { Socket } from 'socket.io-client';
-
-export type OrderScope = { kind: 'staff' } | { kind: 'bill'; token: string };
-export interface OrderSubscription {
-  close(): void;
-  retry(): void;
-}
+import type { OrderScope, OrderSubscription } from './interfaces';
 
 // Load the socket client only when there is an actual order to follow.
 export function openOrderSocket(
@@ -22,7 +17,7 @@ export function openOrderSocket(
       return;
     }
     importing = true;
-    void import('socket.io-client')
+    import('socket.io-client')
       .then(({ io }) => {
         if (closed) return;
         socket = io({

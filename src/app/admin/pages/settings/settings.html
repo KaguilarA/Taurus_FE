@@ -1,0 +1,161 @@
+<app-admin-page-heading
+	title="Configuración del negocio"
+	description="Cambiá imágenes, textos y medidas sin tocar el código."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	@if (api.state(); as state) {
+		@if (settings(); as draft) {
+			<form (ngSubmit)="saveSettings()" class="settings-layout grid gap-6 lg:grid-cols-2">
+				<div>
+					<section
+						class="panel overflow-hidden rounded-xl border border-border bg-surface p-6 form-grid grid gap-5"
+					>
+						<h2>La identidad de tu negocio</h2>
+						<label
+							>Nombre<input
+								name="name"
+								[ngModel]="draft.name"
+								(ngModelChange)="updateField(settings, ['name'], $event)"
+								required
+								maxlength="150" /></label
+						><label
+							>Tipo de negocio<input
+								name="subtitle"
+								[ngModel]="draft.subtitle"
+								(ngModelChange)="updateField(settings, ['subtitle'], $event)"
+								maxlength="150"
+						/></label>
+						<label
+							>Frase principal<input
+								name="tagline"
+								[ngModel]="draft.tagline"
+								(ngModelChange)="updateField(settings, ['tagline'], $event)"
+								maxlength="200" /></label
+						><label
+							>Descripción<textarea
+								name="description"
+								[ngModel]="draft.description"
+								(ngModelChange)="updateField(settings, ['description'], $event)"
+								rows="3"
+								maxlength="500"
+							></textarea></label
+						><app-image-upload
+							[value]="draft.heroImage"
+							(valueChange)="updateField(settings, ['heroImage'], $event)"
+							purpose="branding"
+							label="Imagen principal de la carta"
+							[disabled]="busy()"
+							(pending)="imageUploading.set($event)"
+						/>
+						<div class="grid sm:grid-cols-2 gap-4">
+							<label
+								>Color de marca<input
+									type="color"
+									name="accent"
+									[ngModel]="draft.accent"
+									(ngModelChange)="
+										updateField(settings, ['accent'], $event)
+									" /></label
+							><label
+								>Moneda (ISO)<input
+									name="currency"
+									[ngModel]="draft.currency"
+									(ngModelChange)="updateField(settings, ['currency'], $event)"
+									maxlength="3"
+									pattern="[A-Z]{3}"
+									required
+							/></label>
+						</div>
+						<div
+							class="menu-price-preference border border-border rounded-[10px] bg-surface p-4.5"
+						>
+							<label
+								class="checkbox flex items-center gap-3 [&_input]:m-0 [&_input]:size-4"
+								><input
+									type="checkbox"
+									name="showMenuPrices"
+									[ngModel]="draft.showMenuPrices"
+									(ngModelChange)="
+										updateField(settings, ['showMenuPrices'], $event)
+									"
+								/>Mostrar precios en la carta pública</label
+							>
+							<p>
+								Se aplica a las tarjetas y a los detalles de productos. Los pedidos
+								y las cuentas siempre muestran sus importes.
+							</p>
+						</div>
+						<label
+							>Dirección<input
+								name="address"
+								[ngModel]="draft.address"
+								(ngModelChange)="
+									updateField(settings, ['address'], $event)
+								" /></label
+						><label
+							>Horario<input
+								name="hours"
+								[ngModel]="draft.hours"
+								(ngModelChange)="updateField(settings, ['hours'], $event)" /></label
+						><label
+							>Teléfono de contacto<input
+								name="phone"
+								[ngModel]="draft.phone"
+								(ngModelChange)="updateField(settings, ['phone'], $event)"
+						/></label>
+					</section>
+				</div>
+				<div>
+					<section
+						class="panel overflow-hidden rounded-xl border border-border bg-surface p-6 form-grid grid gap-5"
+					>
+						<p
+							class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted"
+						>
+							A LA MEDIDA DE TU BARRA
+						</p>
+						<h2>Cada mililitro cuenta.</h2>
+						<p class="muted text-muted text-sm">
+							Definí cuánto se sirve en cada tamaño. Estas medidas aplican a todas las
+							bebidas por mililitros y a las próximas ventas.
+						</p>
+						@for (size of sizes; track size.key) {
+							<label
+								>{{ size.name }} (ml)<input
+									type="number"
+									[name]="size.key"
+									[ngModel]="draft.servings[size.key]"
+									(ngModelChange)="
+										updateField(settings, ['servings', size.key], $event)
+									"
+									min="1"
+									max="10000"
+									step="1"
+									required
+							/></label>
+						}
+						<p class="muted text-muted">
+							Ejemplo: botella de 1000 ml ÷ shot de {{ draft.servings.shot }} ml =
+							{{ MathFloor(1000 / draft.servings.shot) }} shots completos.
+						</p>
+						<button appButton="primary" [disabled]="busy() || imageUploading()">
+							<app-icon name="save" /> Guardar y publicar
+						</button>
+					</section>
+					<section
+						class="panel overflow-hidden rounded-xl border border-border bg-surface p-6 mt-5"
+					>
+						<h3>Un cambio de imagen, sin complicaciones.</h3>
+						<p class="muted text-muted text-sm mt-3">
+							Subí una imagen desde tu equipo y revisá la vista previa. Guardá los
+							cambios cuando esté lista para aparecer en la carta.
+						</p>
+					</section>
+				</div>
+			</form>
+		}
+	}
+}

@@ -1,0 +1,176 @@
+<main class="business-onboarding w-[min(920px,_calc(100%_-_40px))] mx-auto my-12">
+	<header>
+		<p class="eyebrow mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+			SEGUNDO PASO · TU NEGOCIO
+		</p>
+		<h1>Ahora, hacelo tuyo.</h1>
+		<p class="muted text-muted">
+			Tu cuenta ya está lista. Completá la información que aparecerá en tu carta.
+		</p>
+	</header>
+	<form
+		class="panel overflow-hidden rounded-xl border border-border bg-surface form-grid grid gap-5 p-6"
+		(ngSubmit)="save()"
+	>
+		<div class="grid sm:grid-cols-2 gap-4">
+			<label
+				>Nombre del negocio<input
+					name="businessName"
+					[ngModel]="business().name"
+					(ngModelChange)="updateField(business, ['name'], $event)"
+					required
+					maxlength="150"
+					autocomplete="organization"
+			/></label>
+			<label
+				>Tipo de negocio<input
+					name="subtitle"
+					[ngModel]="business().subtitle"
+					(ngModelChange)="updateField(business, ['subtitle'], $event)"
+					maxlength="150"
+					placeholder="Ej. Restaurante, bar y pub"
+			/></label>
+		</div>
+		<label
+			>Eslogan<input
+				name="tagline"
+				[ngModel]="business().tagline"
+				(ngModelChange)="updateField(business, ['tagline'], $event)"
+				maxlength="200"
+		/></label>
+		<label
+			>Descripción<textarea
+				name="description"
+				[ngModel]="business().description"
+				(ngModelChange)="updateField(business, ['description'], $event)"
+				maxlength="500"
+				rows="3"
+			></textarea>
+		</label>
+		<div class="grid sm:grid-cols-2 gap-4">
+			<label
+				>Dirección<input
+					name="address"
+					[ngModel]="business().address"
+					(ngModelChange)="updateField(business, ['address'], $event)"
+					maxlength="500"
+					autocomplete="street-address"
+			/></label>
+			<label
+				>Teléfono<input
+					name="phone"
+					[ngModel]="business().phone"
+					(ngModelChange)="updateField(business, ['phone'], $event)"
+					maxlength="50"
+					autocomplete="tel"
+			/></label>
+		</div>
+		<label
+			>Horario<input
+				name="hours"
+				[ngModel]="business().hours"
+				(ngModelChange)="updateField(business, ['hours'], $event)"
+				maxlength="500"
+		/></label>
+		<app-image-upload
+			[value]="business().heroImage"
+			(valueChange)="updateField(business, ['heroImage'], $event)"
+			purpose="branding"
+			label="Imagen principal de la carta"
+			[disabled]="busy()"
+			(pending)="uploading.set($event)"
+		/>
+		<div class="grid sm:grid-cols-2 gap-4">
+			<label
+				>Moneda (código ISO)<input
+					name="currency"
+					[ngModel]="business().currency"
+					(ngModelChange)="updateField(business, ['currency'], $event)"
+					required
+					pattern="[A-Z]{3}"
+					maxlength="3"
+			/></label>
+			<label
+				>Color de marca<input
+					name="accent"
+					type="color"
+					[ngModel]="business().accent"
+					(ngModelChange)="updateField(business, ['accent'], $event)"
+					required
+			/></label>
+		</div>
+		<div ngAccordionGroup>
+			<h3>
+				<button
+					type="button"
+					ngAccordionTrigger
+					[panel]="advancedPanel"
+					#advancedTrigger="ngAccordionTrigger"
+					class="flex min-h-11 w-full items-center justify-between gap-3 text-left text-sm font-semibold text-warm focus-visible:outline-2 focus-visible:outline-accent"
+				>
+					Medidas de las bebidas
+					<span aria-hidden="true">{{ advancedTrigger.expanded() ? '−' : '+' }}</span>
+				</button>
+			</h3>
+			<div
+				ngAccordionPanel
+				#advancedPanel="ngAccordionPanel"
+				[preserveContent]="true"
+				[hidden]="!advancedPanel.visible()"
+			>
+				<ng-template ngAccordionContent>
+					<div class="grid sm:grid-cols-3 gap-4 mt-4">
+						<label
+							>Shot (ml)<input
+								name="shot"
+								type="number"
+								[ngModel]="business().servings.shot"
+								(ngModelChange)="
+									updateField(business, ['servings', 'shot'], $event)
+								"
+								required
+								min="1"
+								max="10000"
+						/></label>
+						<label
+							>Pequeño (ml)<input
+								name="small"
+								type="number"
+								[ngModel]="business().servings.small"
+								(ngModelChange)="
+									updateField(business, ['servings', 'small'], $event)
+								"
+								required
+								min="1"
+								max="10000"
+						/></label>
+						<label
+							>Grande (ml)<input
+								name="large"
+								type="number"
+								[ngModel]="business().servings.large"
+								(ngModelChange)="
+									updateField(business, ['servings', 'large'], $event)
+								"
+								required
+								min="1"
+								max="10000"
+						/></label>
+					</div>
+				</ng-template>
+			</div>
+		</div>
+		@if (error()) {
+			<p
+				class="alert mb-5 rounded-lg px-5 py-3 text-sm error bg-danger-soft text-danger"
+				role="alert"
+			>
+				{{ error() }}
+			</p>
+		}
+		<button appButton="primary" [disabled]="busy() || uploading()">
+			{{ busy() ? 'Guardando…' : 'Guardar negocio y entrar al panel' }}
+			<app-icon name="arrow-up-right" />
+		</button>
+	</form>
+</main>

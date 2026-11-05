@@ -1,0 +1,22 @@
+<div
+	ngListbox
+	orientation="horizontal"
+	selectionMode="explicit"
+	[wrap]="true"
+	[value]="[value()]"
+	(valueChange)="select($event)"
+	[disabled]="disabled()"
+	[attr.aria-label]="label()"
+	class="flex flex-wrap gap-2"
+>
+	@for (option of options(); track option.value) {
+		<div
+			ngOption
+			[value]="option.value"
+			[label]="option.label"
+			class="cursor-pointer rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-raised aria-selected:bg-accent aria-selected:text-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-disabled:opacity-50"
+		>
+			{{ option.label }}
+		</div>
+	}
+</div>

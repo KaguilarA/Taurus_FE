@@ -1,0 +1,46 @@
+<div
+	class="grid min-h-dvh grid-cols-[88px_minmax(0,1fr)] bg-canvas text-foreground transition-[grid-template-columns] duration-200 motion-reduce:transition-none"
+	[class]="sidebarExpanded() ? 'lg:grid-cols-[248px_minmax(0,1fr)]' : ''"
+	[style.--accent]="api.state()?.settings?.accent"
+	(keydown.escape)="sidebarExpanded.set(false)"
+>
+	@if (sidebarExpanded()) {
+		<button
+			type="button"
+			class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+			aria-label="Cerrar menú lateral"
+			(click)="sidebarExpanded.set(false)"
+		></button>
+	}
+	<app-admin-sidebar
+		[expanded]="sidebarExpanded()"
+		[businessName]="api.state()?.settings?.name || 'Administración'"
+		[roleName]="roleName()"
+		[groups]="navigation()"
+		[pending]="activity.pending()"
+		[lowStock]="low().length"
+		[loggingOut]="loggingOut()"
+		(toggled)="sidebarExpanded.set(!sidebarExpanded())"
+		(navigated)="closeOnMobile()"
+		(logout)="logout()"
+	/>
+	<main class="col-start-2 min-w-0">
+		<header
+			class="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-surface px-4 text-xs md:px-8"
+		>
+			<span class="min-w-0 truncate"
+				>{{ api.state()?.settings?.name }}
+				<span class="text-muted">/ {{ sectionLabel() }}</span></span
+			>
+			<a
+				routerLink="/"
+				class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2"
+				>Página pública <app-icon name="arrow-up-right"
+			/></a>
+		</header>
+		<div class="mx-auto max-w-[1600px] px-4 py-6 md:p-8 xl:p-9">
+			<app-feedback [error]="activity.error()" [notice]="activity.notice()" />
+			<router-outlet />
+		</div>
+	</main>
+</div>
