@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /cuenta
+Disallow: /setup
+Disallow: /start
+Disallow: /business/
+
+Sitemap: https://felos-bar.pages.dev/sitemap.xml

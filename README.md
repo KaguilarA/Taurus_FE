@@ -112,3 +112,7 @@ Configurar la variable de repositorio `DEPLOYMENT_URL` con el origen HTTPS publi
 Cloudflare Pages debe observar `production`, sin comando de build y con directorio de salida `.`. Angular se compila en Actions. Mantener `BACKEND_ORIGIN` y `PUBLIC_FRONTEND_URL` en las variables de produccion de Pages. `DEPLOYMENT_URL` en GitHub apunta al dominio publico del frontend.
 
 La portada consulta la configuracion antes de activarse. Sin administrador abre `/setup`; con administrador y sin Business abre el inicio `/start`, que conduce al login o a `/business/setup`. Si la API no responde, `/start` muestra un error recuperable y la portada permanece bloqueada.
+
+## Sitemap
+
+`public/sitemap.xml` lists the public landing page at the current production origin. `public/robots.txt` advertises the sitemap and excludes account, setup, API and administration routes from crawling. Landing sections use fragments, so they share the same canonical page. Product overlays are not listed separately. Update both files when changing the production domain. Angular copies these files into the published build.
