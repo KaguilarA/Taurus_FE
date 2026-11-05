@@ -1,5 +1,6 @@
 import { Toolbar, ToolbarWidget } from '@angular/aria/toolbar';
 import { Component, computed, input, output } from '@angular/core';
+
 @Component({
   selector: 'app-pagination',
   imports: [Toolbar, ToolbarWidget],
@@ -13,6 +14,7 @@ export class Pagination {
   public readonly busy = input(false);
   public readonly label = input('Páginas del catálogo');
   public readonly pageChanged = output<number>();
+
   public readonly pageCount = computed(() =>
     Math.ceil(Math.max(0, this.total()) / Math.max(1, this.pageSize())),
   );

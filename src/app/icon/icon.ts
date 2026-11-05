@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import type { IconName } from '../interfaces';
+
 @Component({
   selector: 'app-icon',
   host: {

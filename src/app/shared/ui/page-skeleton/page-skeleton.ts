@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+
 @Component({
   selector: 'app-page-skeleton',
   host: { class: 'block' },
@@ -7,5 +8,7 @@ import { Component, computed, input } from '@angular/core';
 export class PageSkeleton {
   public readonly variant = input<'landing' | 'account' | 'admin' | 'section'>('landing');
   public readonly count = input(6);
-  public readonly cards = computed(() => Array.from({ length: this.count() }, (_, i) => i));
+  public readonly cards = computed(() =>
+    Array.from({ length: this.count() }, (_, i) => i)
+  );
 }

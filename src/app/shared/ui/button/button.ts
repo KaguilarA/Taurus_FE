@@ -1,9 +1,11 @@
 import { computed, Directive, input } from '@angular/core';
+
 const variants = {
   primary: 'border-transparent bg-accent text-canvas hover:enabled:brightness-110',
   secondary: 'border-border bg-surface-raised text-warm hover:enabled:brightness-110',
   outline: 'border-border bg-transparent text-warm hover:enabled:bg-surface-raised',
 };
+
 @Directive({
   selector: 'button[appButton], a[appButton]',
   host: {

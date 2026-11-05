@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { PageSkeleton } from '../ui/page-skeleton';
+
 @Component({
   selector: 'app-section-skeleton',
   imports: [PageSkeleton],
