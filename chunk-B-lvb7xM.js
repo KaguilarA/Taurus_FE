@@ -1,0 +1,1 @@
+var e=[{key:`large`,name:`Grande`},{key:`small`,name:`Pequeño`},{key:`shot`,name:`Shot`}];export{e as t};

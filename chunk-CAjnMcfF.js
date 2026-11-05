@@ -1,0 +1,1 @@
+import{n as l,t as k}from"./chunk-KOOFp351.js";function s(a,r,i){let e=(n,o)=>{if(o===r.length)return i;let l$1=n??{};return l(k({},l$1),{[r[o]]:e(l$1[r[o]],o+1)})};a.update(n=>n==null?n:e(n,0))}export{s as t};
