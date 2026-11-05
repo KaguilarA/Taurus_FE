@@ -11,10 +11,12 @@ import { RecommendedProducts } from '../shared/catalog';
 import { DeferredError } from '../shared/deferred-error';
 import { SectionSkeleton } from '../shared/section-skeleton';
 import { Button } from '../shared/ui';
+import { Dialog } from '../shared/ui/dialog';
 import { PageSkeleton } from '../shared/ui/page-skeleton';
 @Component({
   selector: 'app-public',
   imports: [
+    Dialog,
     RecommendedProducts,
     Button,
     RouterLink,
@@ -35,6 +37,7 @@ export class PublicPage {
   private readonly meta = inject(Meta);
   public readonly data = signal<PublicState | null>(null);
   public readonly error = signal('');
+  public readonly navigationOpen = signal(false);
   public sectionLink(section: string): string {
     return '/#' + section;
   }

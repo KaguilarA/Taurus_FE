@@ -1,6 +1,11 @@
 <dialog
 	#dialog
-	class="fixed inset-0 m-auto max-h-[90dvh] w-[min(620px,calc(100%-24px))] overflow-auto rounded-xl border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-canvas/80 backdrop:backdrop-blur-sm"
+	class="fixed overflow-y-auto overflow-x-hidden border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-canvas/80 backdrop:backdrop-blur-sm"
+	[class]="
+		placement() === 'sidebar'
+			? 'inset-y-0 left-auto right-0 m-0 h-dvh max-h-dvh w-[min(340px,100%)] max-w-full rounded-none'
+			: 'inset-0 m-auto max-h-[90dvh] w-[min(620px,calc(100%-24px))] rounded-xl'
+	"
 	[attr.aria-label]="title()"
 	(cancel)="cancel($event)"
 	(click)="backdrop($event)"

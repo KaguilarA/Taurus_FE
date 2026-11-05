@@ -21,6 +21,7 @@ export class Dialog {
 
   public readonly title = input.required<string>();
   public readonly busy = input(false);
+  public readonly placement = input<'center' | 'sidebar'>('center');
   public readonly closed = output<void>();
 
   constructor() {

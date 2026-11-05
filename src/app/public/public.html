@@ -1,17 +1,20 @@
 @if (data(); as d) {
 	<div
-		class="public-site bg-canvas text-foreground cantina-site bg-business-texture"
+		class="public-site min-w-0 overflow-x-clip break-words bg-canvas text-foreground cantina-site bg-business-texture"
 		[style.--accent]="d.settings.accent"
 	>
 		<header
-			class="public-nav h-28.5 border-b border-border page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 flex items-center justify-between gap-5"
+			class="public-nav min-w-0 h-24 lg:h-28.5 border-b border-border page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11 flex items-center justify-between gap-5"
 		>
 			<a
-				class="brand font-brand text-3xl uppercase leading-none tracking-wide [&_span]:mt-2 [&_span]:block [&_span]:font-sans [&_span]:text-[8px] [&_span]:font-semibold [&_span]:tracking-[0.3em]"
+				class="brand min-w-0 [overflow-wrap:anywhere] font-brand text-2xl sm:text-3xl uppercase leading-none tracking-wide [&_span]:mt-2 [&_span]:block [&_span]:font-sans [&_span]:text-[8px] [&_span]:font-semibold [&_span]:tracking-[0.3em]"
 				[href]="sectionLink('')"
 				>{{ d.settings.name }}<span>{{ d.settings.subtitle }}</span></a
 			>
-			<nav class="flex items-center gap-6" aria-label="Navegación principal">
+			<nav
+				class="hidden lg:flex shrink-0 items-center gap-6"
+				aria-label="Navegación principal"
+			>
 				<a routerLink="/cuenta">Mi cuenta</a>
 				<a [href]="sectionLink('carta')">La carta</a
 				><a [href]="sectionLink('eventos')">Eventos</a
@@ -24,7 +27,37 @@
 					><app-icon name="arrow-up-right"
 				/></a>
 			</nav>
+			<button
+				type="button"
+				class="grid size-11 shrink-0 place-items-center rounded-lg border border-border lg:hidden"
+				aria-label="Abrir menú"
+				aria-haspopup="dialog"
+				[attr.aria-expanded]="navigationOpen()"
+				(click)="navigationOpen.set(true)"
+			>
+				<app-icon name="panel-left-open" />
+			</button>
 		</header>
+		@if (navigationOpen()) {
+			<app-dialog
+				title="Menú principal"
+				placement="sidebar"
+				(closed)="navigationOpen.set(false)"
+			>
+				<nav
+					class="flex min-w-0 flex-col gap-2 p-5 [&_a]:rounded-lg [&_a]:px-4 [&_a]:py-4 [&_a:hover]:bg-surface-raised"
+					aria-label="Navegación móvil"
+					(click)="navigationOpen.set(false)"
+				>
+					<a routerLink="/cuenta">Mi cuenta</a>
+					<a [href]="sectionLink('carta')">La carta</a>
+					<a [href]="sectionLink('eventos')">Eventos</a>
+					<a [href]="sectionLink('promociones')">Promociones</a>
+					<a [href]="sectionLink('visitanos')">Visitanos</a>
+					<a routerLink="/admin">Administración</a>
+				</nav>
+			</app-dialog>
+		}
 		<main>
 			@if (error()) {
 				<p
@@ -44,7 +77,7 @@
 				aria-labelledby="hero-title"
 			>
 				<div
-					class="landing-hero-content [padding-block:clamp(48px,_7vw,_96px)] page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11"
+					class="landing-hero-content w-full min-w-0 [overflow-wrap:anywhere] [padding-block:clamp(48px,_7vw,_96px)] page-width mx-auto max-w-7xl px-5 md:px-8 xl:px-11"
 				>
 					<p
 						class="hero-location flex items-center gap-2.5 text-xs tracking-[0.12em] text-warm mb-8 max-[760px]:mb-6"
@@ -53,7 +86,7 @@
 					</p>
 					<h1 id="hero-title">{{ d.settings.tagline }}</h1>
 					<div
-						class="landing-hero-bottom flex justify-between items-end gap-10 mt-9 border-t border-border pt-7 [&_p]:max-w-125 [&_p]:text-[clamp(15px,_1.3vw,_19px)] [&_p]:leading-[1.7] [&_p]:text-warm [&_>_div]:flex [&_>_div]:items-center [&_>_div]:gap-6 [&_>_div]:shrink-0 max-[760px]:flex-col max-[760px]:items-start max-[760px]:gap-6 max-[760px]:[&_>_div]:flex-wrap max-[760px]:[&_>_div]:gap-5"
+						class="landing-hero-bottom flex justify-between items-end gap-10 mt-9 border-t border-border pt-7 [&_p]:max-w-125 [&_p]:text-[clamp(15px,_1.3vw,_19px)] [&_p]:leading-[1.7] [&_p]:text-warm [&_>_div]:flex [&_>_div]:items-center [&_>_div]:gap-6 [&_>_div]:min-w-0 [&_>_div]:max-w-full [&_>_div]:shrink-0 max-[760px]:flex-col max-[760px]:items-start max-[760px]:gap-6 max-[760px]:[&_>_div]:flex-wrap max-[760px]:[&_>_div]:gap-5"
 					>
 						<p>{{ d.settings.description }}</p>
 						<div>

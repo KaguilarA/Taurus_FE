@@ -5,7 +5,7 @@
 /* Native element defaults stay below feature utilities in Tailwind's cascade. */
 @layer base {
   html {
-    @apply scroll-smooth scroll-pt-8;
+    @apply scroll-smooth scroll-pt-8 overflow-x-clip;
   }
   body {
     @apply m-0 bg-canvas font-sans text-foreground antialiased;
