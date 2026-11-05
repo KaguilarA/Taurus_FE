@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink, RouterOutlet } from '@angular/router';
@@ -7,13 +8,14 @@ import type { PublicState } from '../interfaces';
 import { PublicEvents } from '../landing/events';
 import { PublicPromotions } from '../landing/promotions';
 import { MenuComponent } from '../menu';
-import { RecommendedProducts } from '../shared/catalog';
+import { RecommendedProducts } from '../shared/catalog/recommended-products';
 import { DeferredError } from '../shared/deferred-error';
 import { SectionSkeleton } from '../shared/section-skeleton';
-import { Button } from '../shared/ui';
+import { Button } from '../shared/ui/button';
 import { Dialog } from '../shared/ui/dialog';
 import { PageSkeleton } from '../shared/ui/page-skeleton';
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-public',
   imports: [
     Dialog,

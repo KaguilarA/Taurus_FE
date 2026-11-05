@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { Icon } from '../../icon';
 import type { MenuItem, MenuSelection, Product, Serving, Settings } from '../../interfaces';
@@ -5,6 +6,7 @@ import { Select } from '../../shared/ui/select';
 import { menuCategory, menuMoney } from '../menu-format';
 import { SERVING_OPTIONS } from '../menu.models';
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block min-w-0 h-full' },
   selector: 'app-product-card',
   imports: [Select, Icon],

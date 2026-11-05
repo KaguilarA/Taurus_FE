@@ -3,6 +3,7 @@
 >
 	@if (showImage()) {
 		<img
+			decoding="async"
 			class="h-44 w-full rounded-t-xl object-cover"
 			[src]="product().image || '/images/hero.svg'"
 			[alt]="product().name"

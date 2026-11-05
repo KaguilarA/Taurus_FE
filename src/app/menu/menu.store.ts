@@ -61,7 +61,18 @@ export class MenuStore {
     clearTimeout(this.searchTimer);
     const q = this.search().trim();
     const page = q === this.query().q ? (patch.page ?? 1) : 1;
-    this.queryState.update((current) => ({ ...current, ...patch, q, page }));
+    const next = { ...this.query(), ...patch, q, page };
+    const current = this.query();
+    if (
+      this.page() &&
+      !this.error() &&
+      next.q === current.q &&
+      next.category === current.category &&
+      next.drinkType === current.drinkType &&
+      next.page === current.page
+    )
+      return;
+    this.queryState.set(next);
     this.load();
   }
   private async load(): Promise<void> {

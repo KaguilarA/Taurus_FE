@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, ElementRef, inject, input, OnInit, output, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Icon } from '../icon';
@@ -9,6 +10,7 @@ import { DRINK_FILTERS, MENU_CATEGORIES } from './menu.models';
 import { MenuStore } from './menu.store';
 import { ProductCardComponent } from './product-card';
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   selector: 'app-menu',
   imports: [CatalogFilters, Pagination, Button, Icon, ProductCardComponent],

@@ -10,9 +10,36 @@
 		<base href="/" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="referrer" content="no-referrer" />
+		<link
+			rel="preload"
+			href="/fonts/space-grotesk-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 	</head>
 	<body>
-		<app-root></app-root>
+		<app-root>
+			<div
+				role="status"
+				aria-label="Cargando contenido"
+				aria-busy="true"
+				class="min-h-dvh bg-canvas px-5 py-8"
+			>
+				<div
+					aria-hidden="true"
+					class="mx-auto max-w-7xl animate-pulse motion-reduce:animate-none"
+				>
+					<div class="mb-12 h-10 w-44 rounded-lg bg-surface-raised"></div>
+					<div
+						class="grid min-h-80 content-end gap-6 rounded-xl border border-border p-6"
+					>
+						<div class="h-12 w-3/4 rounded-lg bg-surface-raised"></div>
+						<div class="h-4 w-1/2 rounded bg-surface-raised"></div>
+					</div>
+				</div>
+			</div>
+		</app-root>
 	</body>
 </html>

@@ -5,6 +5,7 @@
 	<span class="image-upload-label block font-[650] text-foreground mb-3.5">{{ label() }}</span>
 	@if (value()) {
 		<img
+			decoding="async"
 			class="upload-preview w-full max-h-57.5 object-contain bg-canvas rounded-md mb-4"
 			[src]="value()"
 			alt="Vista previa de la imagen seleccionada"

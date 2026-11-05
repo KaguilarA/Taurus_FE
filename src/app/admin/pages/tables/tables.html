@@ -39,6 +39,7 @@
 						class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
 						>{{ table.active ? 'Activa' : 'Pausada' }}</span
 					><img
+						decoding="async"
 						[src]="table.qr"
 						[alt]="'Código QR de ' + table.name"
 						width="240"

@@ -116,3 +116,9 @@ La portada consulta la configuracion antes de activarse. Sin administrador abre 
 ## Sitemap
 
 `public/sitemap.xml` lists the public landing page at the current production origin. `public/robots.txt` advertises the sitemap and excludes account, setup, API and administration routes from crawling. Landing sections use fragments, so they share the same canonical page. Product overlays are not listed separately. Update both files when changing the production domain. Angular copies these files into the published build.
+
+## Performance checks
+
+Performance is the first project rule, alongside accessible interactions and correct data. Keep `npm run build`, `npm test -- --watch=false` and the proxy tests green. The initial bundle budget warns at 360 kB and fails at 400 kB. The optimized build is 351.58 kB raw / 94.48 kB estimated transfer, compared with 391.95 kB / 103.81 kB before this pass. These are build measurements, not device load-time guarantees.
+
+Initial HTML supplies a skeleton before Angular starts. Route/data skeletons and deferred sections continue it; signal-driven presentation components use OnPush. Concurrent identical GET requests share only the pending promise, never a stored response; abortable requests stay independent and mutations invalidate pending sharing. Repeated unchanged menu filters avoid another request; retries always fetch. Images decode asynchronously, optional sections remain lazy, and the main text font is preloaded. Verify mobile layout, keyboard use and slow-network recovery before release.

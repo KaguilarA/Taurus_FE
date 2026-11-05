@@ -25,7 +25,12 @@
 					class="event-poster relative isolate min-h-77.5 flex flex-col items-center text-center bg-business-poster px-6 py-7"
 				>
 					@if (event.image) {
-						<img [src]="event.image" [alt]="event.title" loading="lazy" />
+						<img
+							decoding="async"
+							[src]="event.image"
+							[alt]="event.title"
+							loading="lazy"
+						/>
 					}
 					<span
 						class="event-brand font-brand font-normal uppercase tracking-[0.025em] text-foreground text-[21px] border-b border-border pb-3 w-full"

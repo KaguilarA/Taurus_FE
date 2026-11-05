@@ -18,7 +18,12 @@
 					<p>{{ promo.description }}</p>
 					<a [href]="'/#visitanos'">Te esperamos <app-icon name="arrow-up-right" /></a>
 				</div>
-				<img [src]="promo.image || '/images/rum.svg'" [alt]="promo.title" loading="lazy" />
+				<img
+					decoding="async"
+					[src]="promo.image || '/images/rum.svg'"
+					[alt]="promo.title"
+					loading="lazy"
+				/>
 			</article>
 		} @empty {
 			<p class="muted text-muted">

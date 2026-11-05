@@ -1,9 +1,11 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, inject, input } from '@angular/core';
 import { Icon } from '../../icon';
 import type { CalendarEvent, IconName, Settings } from '../../interfaces';
 import { ScrollReveal } from '../../scroll-reveal';
 import { Button } from '../../shared/ui';
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   selector: 'app-public-events',
   imports: [Button, Icon],

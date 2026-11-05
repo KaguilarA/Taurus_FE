@@ -10,6 +10,7 @@ export const servingName = (serving: string) =>
   ({ large: 'Grande', small: 'Pequeño', shot: 'Shot', unit: '' })[serving] ?? serving;
 @Injectable({ providedIn: 'root' })
 export class Api {
+  private readonly pendingReads = new Map<string, Promise<unknown>>();
   public readonly state = signal<State | null>(null);
   public readonly productTypes = signal<ProductType[]>([]);
   public readonly authenticated = signal(false);
@@ -21,6 +22,23 @@ export class Api {
     options: {
       signal?: AbortSignal;
     } = {},
+  ): Promise<T> {
+    if (method !== 'GET') this.pendingReads.clear();
+    if (method !== 'GET' || body !== undefined || options.signal)
+      return this.performRequest<T>(path, method, body, options);
+    const pending = this.pendingReads.get(path);
+    if (pending) return pending as Promise<T>;
+    const request = this.performRequest<T>(path, method, body, options).finally(() => {
+      if (this.pendingReads.get(path) === request) this.pendingReads.delete(path);
+    });
+    this.pendingReads.set(path, request);
+    return request;
+  }
+  private async performRequest<T>(
+    path: string,
+    method: string,
+    body: unknown,
+    options: { signal?: AbortSignal },
   ): Promise<T> {
     const multipart = body instanceof FormData;
     let response: Response;

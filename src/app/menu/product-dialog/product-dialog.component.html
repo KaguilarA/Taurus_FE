@@ -23,7 +23,12 @@
 				class="product-visual flex items-center justify-center min-h-90 [background:radial-gradient(ellipse_at_center,_var(--surface-raised),_var(--canvas))] overflow-hidden [&_img]:block [&_img]:w-full [&_img]:h-full [&_img]:max-h-162.5 [&_img]:object-contain max-sm:min-h-50 max-sm:max-h-72.5 max-sm:[&_img]:max-h-72.5"
 			>
 				@if (image()) {
-					<img [src]="image()" [alt]="item.name" (error)="imageFailed.set(true)" />
+					<img
+						decoding="async"
+						[src]="image()"
+						[alt]="item.name"
+						(error)="imageFailed.set(true)"
+					/>
 				} @else {
 					<div
 						class="product-image-placeholder flex items-center flex-col gap-4.5 text-muted text-xs [&_app-icon]:w-10.5 [&_app-icon]:h-10.5 [&_app-icon]:opacity-55.00000000000001 p-9"

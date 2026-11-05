@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -8,9 +9,11 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
-import { Feedback, PageSkeleton } from './shared/ui';
+import { Feedback } from './shared/ui/feedback';
+import { PageSkeleton } from './shared/ui/page-skeleton';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   imports: [RouterOutlet, PageSkeleton, Feedback],
   templateUrl: './app.html',
