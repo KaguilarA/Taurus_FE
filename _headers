@@ -38,3 +38,9 @@
 
 /cuenta/*
   Cache-Control: no-cache
+
+/startup.js
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache

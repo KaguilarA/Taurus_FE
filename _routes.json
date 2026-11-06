@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/api", "/api/*", "/main-*", "/chunk-*", "/styles-*"],
+  "include": ["/api", "/api/*", "/main-*", "/chunk-*", "/styles-*", "/startup.js"],
   "exclude": []
 }
