@@ -11,6 +11,7 @@ export interface Product {
   drinkType?: 'non_alcoholic' | 'alcoholic' | '';
   inventory: 'none' | 'unit' | 'ml';
   price: number;
+  purchasePrice?: number;
   prices: Record<Serving, number>;
   bottleMl: number;
   stock: number;

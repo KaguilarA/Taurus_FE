@@ -99,6 +99,17 @@
 	}
 	@if (p.inventory !== 'none') {
 		<label
+			>Precio de compra neto por {{ p.inventory === 'ml' ? 'botella' : 'unidad' }} (sin IVA)
+			<input
+				type="number"
+				name="purchasePrice"
+				min="0"
+				step="0.0001"
+				[ngModel]="p.purchasePrice"
+				(ngModelChange)="updateField(product, ['purchasePrice'], $event)"
+			/>
+		</label>
+		<label
 			>Alerta de mínimo ({{ p.inventory === 'ml' ? 'ml' : 'unidades' }})<input
 				type="number"
 				name="minimum"

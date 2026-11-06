@@ -1,0 +1,241 @@
+<section
+	class="panel mb-6 rounded-xl border border-border bg-surface p-6"
+	aria-labelledby="invoice-heading"
+>
+	<div class="mb-4 flex items-center justify-between gap-4">
+		<h2 id="invoice-heading">Ingresar compra desde factura</h2>
+		<button appButton="secondary" type="button" [disabled]="busy()" (click)="closed.emit()">
+			Cerrar
+		</button>
+	</div>
+	<p class="mb-4 text-sm text-muted">
+		Subí el PDF o una foto de la factura de Quimar. Revisá productos, paquetes y costos antes de
+		sumar existencias. Solo se actualizan productos existentes.
+	</p>
+	<app-feedback [error]="error()" [notice]="notice()" />
+	@if (!confirmed()) {
+		<div class="flex flex-wrap items-end gap-4">
+			<label
+				>Factura (PDF, JPG, PNG o WebP; hasta 10 MB)<input
+					type="file"
+					accept="application/pdf,image/jpeg,image/png,image/webp"
+					[disabled]="busy()"
+					(change)="chooseFile($event)"
+			/></label>
+			<button
+				appButton="primary"
+				type="button"
+				[disabled]="busy() || !file()"
+				(click)="read()"
+			>
+				{{ busy() ? 'Procesando…' : 'Leer factura' }}
+			</button>
+		</div>
+		<p class="mt-3 text-sm text-muted">
+			Los PDF digitales de Quimar se leen en el servidor. Las fotos y documentos escaneados se
+			envían a OpenAI para su lectura.
+		</p>
+		@if (busy()) {
+			<p role="status" class="mt-4">Procesando la factura. Esto puede tardar un momento.</p>
+		}
+		@if (invoice(); as invoice) {
+			<form class="mt-6 grid gap-5" (ngSubmit)="confirm()">
+				<fieldset [disabled]="busy()" class="grid min-w-0 gap-5">
+					<div class="grid gap-4 sm:grid-cols-2">
+						<label
+							>Proveedor<input
+								name="supplier"
+								maxlength="150"
+								required
+								[ngModel]="invoice.supplier"
+								(ngModelChange)="updateHeader('supplier', $event)"
+						/></label>
+						<label
+							>Número de factura<input
+								name="invoiceNumber"
+								maxlength="80"
+								required
+								[ngModel]="invoice.invoiceNumber"
+								(ngModelChange)="updateHeader('invoiceNumber', $event)"
+						/></label>
+					</div>
+					<p class="text-sm text-muted">
+						Revisá cada coincidencia. “Cantidad” corresponde a paquetes facturados;
+						“Unidades por paquete” convierte, por ejemplo, 4 × 12 en 48 unidades. Excluí
+						los renglones que no correspondan al inventario.
+					</p>
+					@for (line of invoice.lines; track line.lineIndex) {
+						<section class="grid gap-4 rounded-lg border border-border p-4">
+							<label class="flex items-center gap-3"
+								><input
+									type="checkbox"
+									class="size-4"
+									[name]="'include-' + line.lineIndex"
+									[ngModel]="line.included"
+									(ngModelChange)="updateLine(line.lineIndex, 'included', $event)"
+								/><strong>{{ line.description }}</strong></label
+							>
+							@if (line.included) {
+								@if (line.matchSource === 'saved') {
+									<p class="text-sm text-accent">
+										Nombre de proveedor ya vinculado. Verificá la presentación y
+										cantidad.
+									</p>
+								} @else if (line.productId) {
+									<p class="text-sm text-muted">
+										Coincidencia sugerida por nombre. Confirmá que corresponde
+										al mismo producto.
+									</p>
+								} @else {
+									<p class="text-sm text-muted">
+										Seleccioná el producto de Felos que corresponde a este
+										nombre de la factura.
+									</p>
+								}
+								<app-select
+									[label]="'Producto del renglón ' + (line.lineIndex + 1)"
+									[options]="productOptions()"
+									[value]="line.productId"
+									(valueChange)="updateLine(line.lineIndex, 'productId', $event)"
+									[disabled]="busy()"
+								/>
+								<div class="grid gap-4 sm:grid-cols-3">
+									<label
+										>Cantidad<input
+											type="number"
+											min="1"
+											max="1000000"
+											step="1"
+											[name]="'qty-' + line.lineIndex"
+											[ngModel]="line.quantity"
+											(ngModelChange)="
+												updateLine(line.lineIndex, 'quantity', $event)
+											"
+											required
+									/></label>
+									<label
+										>Unidades por paquete<input
+											type="number"
+											min="1"
+											max="10000"
+											step="1"
+											[name]="'pack-' + line.lineIndex"
+											[ngModel]="line.unitsPerPack"
+											(ngModelChange)="
+												updateLine(line.lineIndex, 'unitsPerPack', $event)
+											"
+											required
+									/></label>
+									<div class="grid gap-2 text-sm">
+										Presentación<app-select
+											[label]="
+												'Presentación del renglón ' + (line.lineIndex + 1)
+											"
+											[options]="modes"
+											[value]="line.mode"
+											(valueChange)="
+												updateLine(line.lineIndex, 'mode', $event)
+											"
+											[disabled]="busy()"
+										/>
+									</div>
+								</div>
+								<div class="grid gap-4 sm:grid-cols-2">
+									<label
+										>Precio por paquete antes de descuento e IVA ({{
+											invoice.currency || 'moneda no detectada'
+										}})<input
+											type="number"
+											min="0"
+											step="0.0001"
+											[name]="'cost-' + line.lineIndex"
+											[ngModel]="line.packPrice"
+											(ngModelChange)="
+												updateLine(line.lineIndex, 'packPrice', $event)
+											"
+									/></label>
+									<label
+										>Descuento (%)<input
+											type="number"
+											min="0"
+											max="100"
+											step="0.01"
+											[name]="'discount-' + line.lineIndex"
+											[ngModel]="line.discountPercent"
+											(ngModelChange)="
+												updateLine(
+													line.lineIndex,
+													'discountPercent',
+													$event
+												)
+											"
+									/></label>
+								</div>
+								@if (delta(line); as delta) {
+									<p class="font-semibold text-accent">
+										Entrada: +{{ delta }} {{ unit(line) }}
+									</p>
+								} @else {
+									<p class="text-sm text-danger">
+										Seleccioná un producto compatible y revisá cantidades y
+										presentación.
+									</p>
+								}
+								@if (cost(line) !== null) {
+									<p class="text-sm">
+										Costo neto: {{ money(cost(line)!) }} por
+										{{ line.mode === 'bottles' ? 'botella' : 'unidad' }}, sin
+										IVA. IVA leído: {{ line.taxPercent ?? 'no detectado' }} %.
+									</p>
+								} @else {
+									<p class="text-sm text-muted">
+										Sin costo calculado: completá precio, descuento y
+										presentación. El costo actual se conserva si faltan datos.
+									</p>
+								}
+							}
+						</section>
+					}
+					<label class="flex items-center gap-3"
+						><input
+							type="checkbox"
+							class="size-4"
+							name="rememberMatches"
+							[ngModel]="rememberMatches()"
+							(ngModelChange)="rememberMatches.set($event)"
+						/>Recordar la relación entre los nombres del proveedor y nuestros productos
+						para futuras facturas.</label
+					>
+					<label class="flex items-center gap-3"
+						><input
+							type="checkbox"
+							class="size-4"
+							name="updateCosts"
+							[ngModel]="updatePurchasePrices()"
+							(ngModelChange)="updatePurchasePrices.set($event)"
+						/>Actualizar también el precio de compra (después de descuento, sin IVA) de
+						los renglones con costo calculado.</label
+					>
+					<p class="text-sm text-muted">
+						Se sumará esta compra al saldo actual. El número de factura evita que otro
+						administrador registre la misma compra dos veces. Los precios de venta se
+						conservan.
+					</p>
+					<button appButton="primary" [disabled]="busy() || !valid()">
+						Confirmar entrada de {{ included().length }} renglones
+					</button>
+				</fieldset>
+			</form>
+		}
+	} @else {
+		<p class="mt-4">
+			Esta factura ya quedó registrada. Podés cerrar este panel o cargar otra factura al
+			abrirlo de nuevo.
+		</p>
+		@if (error()) {
+			<button appButton="secondary" type="button" [disabled]="busy()" (click)="refresh()">
+				Actualizar vista de inventario
+			</button>
+		}
+	}
+</section>

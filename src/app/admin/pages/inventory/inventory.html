@@ -3,6 +3,22 @@
 	description="Botellas, medidas y movimientos. Todo en un solo lugar."
 />
 <app-feedback [error]="error()" [notice]="notice()" />
+<div class="mb-5">
+	<button appButton="primary" type="button" (click)="showInvoice.set(true)">
+		Cargar factura de compra
+	</button>
+</div>
+@if (showInvoice()) {
+	@defer (on immediate) {
+		<app-invoice-import (closed)="showInvoice.set(false)" />
+	} @loading {
+		<app-page-skeleton variant="section" />
+	} @error {
+		<p role="alert">
+			No se pudo abrir la carga de facturas. Recargá la página para intentar de nuevo.
+		</p>
+	}
+}
 @if (loading()) {
 	<app-page-skeleton variant="section" />
 } @else {
@@ -36,6 +52,7 @@
 						<tr>
 							<th>Producto</th>
 							<th>Disponible</th>
+							<th>Costo de compra</th>
 							<th>Rendimiento</th>
 							<th>Estado</th>
 							<th></th>
@@ -62,6 +79,17 @@
 											>{{ (p.stock / p.bottleMl).toFixed(2) }} botellas
 											equivalentes</small
 										>
+									}
+								</td>
+								<td>
+									@if (p.purchasePrice !== undefined) {
+										<strong>{{ api.money(p.purchasePrice) }}</strong
+										><small
+											>Por {{ p.inventory === 'ml' ? 'botella' : 'unidad' }},
+											sin IVA</small
+										>
+									} @else {
+										<span class="text-muted">Sin registrar</span>
 									}
 								</td>
 								<td>
@@ -93,7 +121,7 @@
 							</tr>
 						} @empty {
 							<tr>
-								<td colspan="5">
+								<td colspan="6">
 									Agregá una bebida para comenzar a llevar inventario.
 								</td>
 							</tr>

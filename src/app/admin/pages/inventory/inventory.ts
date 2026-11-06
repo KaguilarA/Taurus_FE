@@ -8,9 +8,11 @@ import { Button, Dialog, Feedback } from '../../../shared/ui';
 import { PageSkeleton } from '../../../shared/ui/page-skeleton';
 import { AdminTask } from '../../shared/admin-task';
 import { AdminPageHeading } from '../../shared/page-heading';
+import { InvoiceImport } from './invoice-import';
 @Component({
   selector: 'app-admin-inventory',
   imports: [
+    InvoiceImport,
     CatalogFilters,
     Pagination,
     Dialog,
@@ -25,6 +27,7 @@ import { AdminPageHeading } from '../../shared/page-heading';
   templateUrl: './inventory.html',
 })
 export class InventoryPage extends AdminTask {
+  public readonly showInvoice = signal(false);
   public readonly stock = computed(
     () => this.api.state()?.products.filter((p) => p.inventory !== 'none') ?? [],
   );
