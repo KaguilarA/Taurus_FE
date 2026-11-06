@@ -7,14 +7,20 @@ const env = { BACKEND_ORIGIN: 'https://api.example', PUBLIC_FRONTEND_URL: 'https
 test('los módulos ausentes devuelven 404 y nunca el HTML del fallback SPA', async () => {
   for (const path of ['/chunk-OLD.js', '/main-OLD.js', '/styles-OLD.css']) {
     const response = await worker.fetch(new Request(`https://bar.example${path}`), {
-      ASSETS: { fetch: () => new Response('<html>Angular</html>', { headers: { 'Content-Type': 'text/html' } }) },
+      ASSETS: {
+        fetch: () =>
+          new Response('<html>Angular</html>', { headers: { 'Content-Type': 'text/html' } }),
+      },
     });
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.doesNotMatch(response.headers.get('content-type'), /html/);
   }
   const response = await worker.fetch(new Request('https://bar.example/chunk-CURRENT.js'), {
-    ASSETS: { fetch: () => new Response('export{}', { headers: { 'Content-Type': 'application/javascript' } }) },
+    ASSETS: {
+      fetch: () =>
+        new Response('export{}', { headers: { 'Content-Type': 'application/javascript' } }),
+    },
   });
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'export{}');
@@ -115,4 +121,35 @@ test('el fallo del backend es recuperable y las rutas Angular se sirven desde Pa
     ASSETS: { fetch: () => new Response('Angular') },
   });
   assert.equal(await response.text(), 'Angular');
+});
+
+test('el HTML de arranque y los bloqueos del proveedor nunca se aceptan como datos de API', async () => {
+  for (const upstream of [
+    new Response('<html>Starting</html>', { headers: { 'Content-Type': 'text/html' } }),
+    new Response('<html>Challenge</html>', {
+      status: 429,
+      headers: { 'Content-Type': 'text/html', 'cf-mitigated': 'challenge' },
+    }),
+    new Response('Too Many Requests', { status: 429, headers: { 'Content-Type': 'text/plain' } }),
+  ]) {
+    const response = await proxyApi(
+      new Request('https://bar.example/api/setup/status'),
+      env,
+      async () => upstream,
+    );
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('retry-after'), '15');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const payload = await response.json();
+    assert.equal(typeof payload.error, 'string');
+    assert.doesNotMatch(payload.error, /<html>|Challenge/);
+  }
+  const limited = await proxyApi(
+    new Request('https://bar.example/api/auth/status'),
+    env,
+    async () =>
+      Response.json({ error: 'Rate limit' }, { status: 429, headers: { 'Retry-After': '60' } }),
+  );
+  assert.equal(limited.status, 429);
+  assert.equal(limited.headers.get('retry-after'), '60');
 });

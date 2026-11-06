@@ -52,12 +52,32 @@ export async function proxyApi(request, env, upstreamFetch = fetch) {
     );
     // Returning the original 101 response preserves Cloudflare's WebSocket tunnel.
     if (upstream.status === 101) return upstream;
+    // Provider startup/challenge HTML is not an API payload and cannot be solved
+    // under the frontend origin. Return a bounded, recoverable API error instead.
+    const contentType = upstream.headers.get('Content-Type') ?? '';
+    if (
+      upstream.headers.get('cf-mitigated') === 'challenge' ||
+      /text\/html/i.test(contentType) ||
+      (upstream.status === 429 && !/application\/json/i.test(contentType))
+    ) {
+      await upstream.body?.cancel();
+      return Response.json(
+        {
+          error:
+            'El proveedor del servidor está temporalmente ocupado. Volvé a intentar en un momento.',
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '15' } },
+      );
+    }
     const response = new Response(upstream.body, upstream);
     response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch {
     return Response.json(
-      { error: 'El servidor está iniciando o no está disponible. Volvé a intentar en un momento.' },
+      {
+        error:
+          'El servidor está iniciando o no está disponible. Volvé a intentar en un momento.',
+      },
       { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '15' } },
     );
   }
@@ -71,10 +91,17 @@ export default {
     if (/\.(?:js|css)$/.test(pathname)) {
       const expected = pathname.endsWith('.js') ? /(?:javascript|ecmascript)/i : /text\/css/i;
       if (!response.ok || !expected.test(response.headers.get('Content-Type') ?? ''))
-        return new Response('Archivo no encontrado. Actualizá la página para cargar la versión vigente.', {
-          status: 404,
-          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
-        });
+        return new Response(
+          'Archivo no encontrado. Actualizá la página para cargar la versión vigente.',
+          {
+            status: 404,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Cache-Control': 'no-store',
+              'X-Content-Type-Options': 'nosniff',
+            },
+          },
+        );
     }
     return response;
   },
