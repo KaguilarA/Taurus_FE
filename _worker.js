@@ -64,9 +64,18 @@ export async function proxyApi(request, env, upstreamFetch = fetch) {
 }
 
 export default {
-  fetch(request, env) {
+  async fetch(request, env) {
     const { pathname } = new URL(request.url);
     if (pathname === '/api' || pathname.startsWith('/api/')) return proxyApi(request, env);
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+    if (/\.(?:js|css)$/.test(pathname)) {
+      const expected = pathname.endsWith('.js') ? /(?:javascript|ecmascript)/i : /text\/css/i;
+      if (!response.ok || !expected.test(response.headers.get('Content-Type') ?? ''))
+        return new Response('Archivo no encontrado. Actualizá la página para cargar la versión vigente.', {
+          status: 404,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
+        });
+    }
+    return response;
   },
 };
