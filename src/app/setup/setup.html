@@ -48,13 +48,13 @@
 					[ngModel]="password()"
 					(ngModelChange)="password.set($event)"
 					required
-					minlength="12"
+					minlength="15"
 					maxlength="200"
 					autocomplete="new-password"
 					[disabled]="busy()"
 			/></label>
 			<p class="muted text-muted upload-hint text-xs leading-[1.6] mt-[9px] text-warm">
-				Usá una contraseña única de al menos 12 caracteres.
+				Usá una contraseña única de al menos 15 caracteres.
 			</p>
 			<label
 				>Confirmar contraseña<input
@@ -63,7 +63,7 @@
 					[ngModel]="passwordConfirmation()"
 					(ngModelChange)="passwordConfirmation.set($event)"
 					required
-					minlength="12"
+					minlength="15"
 					maxlength="200"
 					autocomplete="new-password"
 					[disabled]="busy()"

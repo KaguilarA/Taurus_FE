@@ -43,7 +43,7 @@
 					[ngModel]="replacementPassword().password"
 					(ngModelChange)="updateField(replacementPassword, ['password'], $event)"
 					required
-					minlength="12"
+					minlength="15"
 					maxlength="200"
 					autocomplete="new-password"
 			/></label>
@@ -56,7 +56,7 @@
 						updateField(replacementPassword, ['passwordConfirmation'], $event)
 					"
 					required
-					minlength="12"
+					minlength="15"
 					maxlength="200"
 					autocomplete="new-password"
 			/></label>

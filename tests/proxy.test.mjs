@@ -4,6 +4,22 @@ import worker, { proxyApi } from '../public/_worker.js';
 
 const env = { BACKEND_ORIGIN: 'https://api.example', PUBLIC_FRONTEND_URL: 'https://bar.example' };
 
+test('los módulos ausentes devuelven 404 y nunca el HTML del fallback SPA', async () => {
+  for (const path of ['/chunk-OLD.js', '/main-OLD.js', '/styles-OLD.css']) {
+    const response = await worker.fetch(new Request(`https://bar.example${path}`), {
+      ASSETS: { fetch: () => new Response('<html>Angular</html>', { headers: { 'Content-Type': 'text/html' } }) },
+    });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.doesNotMatch(response.headers.get('content-type'), /html/);
+  }
+  const response = await worker.fetch(new Request('https://bar.example/chunk-CURRENT.js'), {
+    ASSETS: { fetch: () => new Response('export{}', { headers: { 'Content-Type': 'application/javascript' } }) },
+  });
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'export{}');
+});
+
 test('el proxy conserva cookies, ruta, query y cuerpo; evita cachear respuestas privadas', async () => {
   const request = new Request('https://bar.example/api/auth/login?source=menu', {
     method: 'POST',

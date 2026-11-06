@@ -27,6 +27,31 @@ const git = (args, options = {}) => execFileSync('git', args, { cwd: workspace, 
 const branch = 'production';
 const previous = git(['ls-remote', '--heads', 'origin', `refs/heads/${branch}`]).split(/\s/)[0];
 if (previous) git(['fetch', '--no-tags', '--depth=1', 'origin', branch]);
+// Keep two previous generations for already-open tabs requesting lazy modules.
+// Only content-hashed executable assets are eligible, never HTML or configuration.
+const immutable = /^(?:main|chunk|styles)-[A-Za-z0-9_-]+\.(?:js|css)$/;
+const currentAssets = (await readdir(directory)).filter((name) => immutable.test(name));
+const generations = [currentAssets];
+if (previous) {
+  let older;
+  try {
+    older = JSON.parse(git(['show', `${previous}:asset-generations.json`]));
+  } catch {
+    older = [git(['ls-tree', '--name-only', previous]).split('\n').filter((name) => immutable.test(name))];
+  }
+  assert.ok(Array.isArray(older) && older.length <= 3, 'Invalid asset generations.');
+  for (const generation of older.slice(0, 2)) {
+    assert.ok(Array.isArray(generation) && generation.length <= 500);
+    assert.ok(generation.every((name) => typeof name === 'string' && immutable.test(name)));
+    generations.push(generation);
+    for (const name of generation) {
+      if (currentAssets.includes(name)) continue;
+      const content = execFileSync('git', ['show', `${previous}:${name}`], { cwd: workspace, maxBuffer: 4 * 1024 * 1024 });
+      await writeFile(join(directory, name), content);
+    }
+  }
+}
+await writeFile(join(directory, 'asset-generations.json'), JSON.stringify(generations) + '\n');
 const temp = await mkdtemp(join(process.env.RUNNER_TEMP, 'publish-index-'));
 const env = {
   ...process.env,

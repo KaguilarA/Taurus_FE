@@ -53,7 +53,7 @@
 							[ngModel]="ownPassword().password"
 							(ngModelChange)="updateField(ownPassword, ['password'], $event)"
 							autocomplete="new-password"
-							minlength="12"
+							minlength="15"
 							required
 					/></label>
 					<label
@@ -65,7 +65,7 @@
 								updateField(ownPassword, ['passwordConfirmation'], $event)
 							"
 							autocomplete="new-password"
-							minlength="12"
+							minlength="15"
 							required
 					/></label>
 					<button appButton="primary" [disabled]="busy()">Cambiar contraseña</button>

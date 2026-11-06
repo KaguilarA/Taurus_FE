@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
 import { appendFile } from 'node:fs/promises';
+import { verifyModules } from './verify-modules.mjs';
 
 const base = new URL(process.env.DEPLOYMENT_URL ?? '');
 assert.equal(base.protocol, 'https:', 'Configure the DEPLOYMENT_URL repository variable with the public HTTPS origin.');
@@ -18,6 +19,8 @@ while (Date.now() < deadline) {
     if (response.ok && (await response.json()).sourceSha === sourceSha) {
       const ready = await fetch(new URL('/api/ready', base), { signal: AbortSignal.timeout(15000) });
       if (ready.ok && (await ready.json()).ok === true) {
+        const modules = await verifyModules(base);
+        console.log(`Verified ${modules} JavaScript modules including lazy routes.`);
         console.log(`Production verified: ${base.origin} serves ${sourceSha} and the API is ready.`);
         if (process.env.GITHUB_STEP_SUMMARY)
           await appendFile(process.env.GITHUB_STEP_SUMMARY, `\nProduction verified: ${base.origin} — \`${sourceSha}\`.\n`);
