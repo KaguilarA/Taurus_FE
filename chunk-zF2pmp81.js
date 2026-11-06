@@ -1,0 +1,1 @@
+import"./chunk-kVzLKgrx.js";import"./chunk-B8zJopto.js";import"./main-QZDZJGPS.js";import"./chunk-D6pZNTWh.js";import"./chunk-Bc5406_D.js";import{t as L}from"./chunk-BY0-5Evv.js";export{L as RecommendedProducts};

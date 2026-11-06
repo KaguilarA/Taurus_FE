@@ -82,10 +82,228 @@ export async function proxyApi(request, env, upstreamFetch = fetch) {
   }
 }
 
+// Only public metadata is cached. Cookies, sessions and API responses never enter this cache.
+export async function publicSeoData(
+  request,
+  env,
+  endpoint,
+  upstreamFetch = fetch,
+  cache = typeof caches === 'undefined' ? undefined : caches.default,
+) {
+  const incoming = new URL(request.url);
+  const frontend = new URL(env.PUBLIC_FRONTEND_URL);
+  const backend = new URL(env.BACKEND_ORIGIN);
+  if (
+    incoming.origin !== frontend.origin ||
+    frontend.protocol !== 'https:' ||
+    backend.protocol !== 'https:' ||
+    backend.origin === frontend.origin ||
+    backend.username ||
+    backend.password ||
+    backend.pathname !== '/'
+  )
+    throw new Error('Invalid SEO origin');
+  const key = new Request(new URL('/__public-seo/' + encodeURIComponent(endpoint), frontend));
+  const hit = await cache?.match(key);
+  if (hit) return hit.json();
+  const response = await upstreamFetch(
+    new Request(new URL(endpoint, backend), {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(2500),
+      redirect: 'error',
+    }),
+  );
+  if (!response.ok || !/application\/json/i.test(response.headers.get('Content-Type') ?? ''))
+    throw new Error('SEO unavailable');
+  const body = await response.text();
+  if (body.length > 131072) throw new Error('SEO payload exceeds limit');
+  const data = JSON.parse(body);
+  if (cache) {
+    try {
+      await cache.put(
+        key,
+        new Response(body, {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=30' },
+        }),
+      );
+    } catch {
+      /* Cache availability must not affect navigation. */
+    }
+  }
+  return data;
+}
+export const escapeSeo = (value) =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character],
+  );
+export function seoHead(data, path) {
+  const tag = (name, value, property = false) =>
+    '<meta ' +
+    (property ? 'property' : 'name') +
+    '="' +
+    name +
+    '" content="' +
+    escapeSeo(value) +
+    '">';
+  return (
+    tag('description', data.description) +
+    tag('robots', data.indexable ? 'index, follow' : 'noindex, nofollow') +
+    '<link rel="canonical" href="' +
+    escapeSeo(data.canonical) +
+    '">' +
+    tag('og:type', 'website', true) +
+    tag('og:title', data.shareTitle, true) +
+    tag('og:description', data.shareDescription, true) +
+    tag('og:url', data.canonical, true) +
+    tag('og:site_name', data.siteName, true) +
+    tag('og:locale', data.locale, true) +
+    (data.image ? tag('og:image', data.image, true) : '') +
+    tag('twitter:card', data.image ? 'summary_large_image' : 'summary') +
+    tag('twitter:title', data.shareTitle) +
+    tag('twitter:description', data.shareDescription) +
+    (data.image ? tag('twitter:image', data.image) : '') +
+    tag('taurus-seo-path', path)
+  );
+}
+export function rewriteSeo(response, data, path) {
+  const rewriter = new HTMLRewriter()
+    .on('title', {
+      element(element) {
+        element.setInnerContent(data.title, { html: false });
+      },
+    })
+    .on('head', {
+      element(element) {
+        element.append(seoHead(data, path), { html: true });
+      },
+    });
+  for (const selector of [
+    'meta[name="description"]',
+    'meta[name="robots"]',
+    'meta[property^="og:"]',
+    'meta[name^="twitter:"]',
+    'link[rel="canonical"]',
+    'meta[name="taurus-seo-path"]',
+  ]) {
+    rewriter.on(selector, {
+      element(element) {
+        element.remove();
+      },
+    });
+  }
+  return rewriter.transform(response);
+}
+export async function seoNavigation(
+  request,
+  env,
+  upstreamFetch = fetch,
+  rewrite = rewriteSeo,
+  cache,
+) {
+  const incoming = new URL(request.url);
+  const path = incoming.pathname === '/index.html' ? '/' : incoming.pathname;
+  const assetHeaders = new Headers(request.headers);
+  assetHeaders.delete('If-None-Match');
+  assetHeaders.delete('If-Modified-Since');
+  const [asset, metadata] = await Promise.all([
+    env.ASSETS.fetch(new Request(request, { headers: assetHeaders })),
+    publicSeoData(
+      request,
+      env,
+      '/api/seo?path=' + encodeURIComponent(path),
+      upstreamFetch,
+      cache,
+    ).catch(() => null),
+  ]);
+  // SEO failure must never prevent the application from loading or trigger a browser challenge.
+  if (!metadata || !asset.ok || !/text\/html/i.test(asset.headers.get('Content-Type') ?? ''))
+    return asset;
+  try {
+    const canonical = new URL(metadata.canonical);
+    if (
+      canonical.origin !== incoming.origin ||
+      canonical.pathname !== path ||
+      typeof metadata.indexable !== 'boolean' ||
+      ![
+        'title',
+        'description',
+        'shareTitle',
+        'shareDescription',
+        'siteName',
+        'locale',
+        'image',
+      ].every((key) => typeof metadata[key] === 'string' && metadata[key].length <= 2000)
+    )
+      return asset;
+  } catch {
+    return asset;
+  }
+  const response = new Response(asset.body, asset);
+  response.headers.set('Cache-Control', 'no-cache');
+  response.headers.delete('ETag');
+  response.headers.delete('Content-Length');
+  response.headers.set('X-Robots-Tag', metadata.indexable ? 'index, follow' : 'noindex, nofollow');
+  try {
+    return rewrite(response, metadata, path);
+  } catch {
+    return response;
+  }
+}
+export async function seoDiscovery(request, env, upstreamFetch = fetch, cache) {
+  const incoming = new URL(request.url);
+  try {
+    const origin = new URL(env.PUBLIC_FRONTEND_URL).origin;
+    if (incoming.pathname === '/robots.txt') {
+      const seo = await publicSeoData(request, env, '/api/seo?path=%2F', upstreamFetch, cache);
+      const rules = seo.indexable
+        ? 'Allow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /cuenta\nDisallow: /setup\nDisallow: /start\nDisallow: /business/'
+        : 'Disallow: /';
+      return new Response('User-agent: *\n' + rules + '\n\nSitemap: ' + origin + '/sitemap.xml\n', {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' },
+      });
+    }
+    const sitemap = await publicSeoData(request, env, '/api/seo/sitemap', upstreamFetch, cache);
+    if (!Array.isArray(sitemap.urls) || sitemap.urls.length > 1001)
+      throw new Error('Invalid sitemap');
+    const urls = sitemap.urls.filter((value) => {
+      const url = new URL(value);
+      return (
+        url.origin === origin &&
+        !url.search &&
+        !url.hash &&
+        (url.pathname === '/' || /^\/producto\/[a-f\d]{24}$/.test(url.pathname))
+      );
+    });
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        urls.map((url) => '<url><loc>' + escapeSeo(url) + '</loc></url>').join('') +
+        '</urlset>',
+      {
+        headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' },
+      },
+    );
+  } catch {
+    return new Response('SEO temporalmente no disponible.', {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store', 'Retry-After': '30' },
+    });
+  }
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     if (pathname === '/api' || pathname.startsWith('/api/')) return proxyApi(request, env);
+    if (pathname === '/robots.txt' || pathname === '/sitemap.xml')
+      return seoDiscovery(request, env);
+    if (
+      pathname === '/' ||
+      pathname === '/index.html' ||
+      /^\/producto\/[a-f\d]{24}$/.test(pathname)
+    )
+      return seoNavigation(request, env);
     const response = await env.ASSETS.fetch(request);
     if (/\.(?:js|css)$/.test(pathname)) {
       // A conditional cache hit is valid and intentionally has no body or MIME header.
@@ -104,6 +322,12 @@ export default {
             },
           },
         );
+    }
+    if (/^\/(?:admin|cuenta|setup|start|business)(?:\/|$)/.test(pathname)) {
+      const privatePage = new Response(response.body, response);
+      privatePage.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      privatePage.headers.set('Cache-Control', 'no-store');
+      return privatePage;
     }
     return response;
   },
