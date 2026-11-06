@@ -91,7 +91,13 @@
     show();
   });
   document.getElementById('connection-reload').addEventListener('click', function () {
-    window.location.reload();
+    var url = new URL(window.location.href);
+    if (url.searchParams.has('connection')) {
+      url.searchParams.delete('connection');
+      window.location.replace(url.href);
+    } else {
+      window.location.reload();
+    }
   });
   toggle.addEventListener('click', function () {
     details.hidden = !details.hidden;
