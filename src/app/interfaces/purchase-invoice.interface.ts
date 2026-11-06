@@ -4,6 +4,6 @@ export interface PurchaseInvoice {
   supplier: string;
   invoiceNumber: string;
   currency: string;
-  source: 'quimar-pdf' | 'vision';
+  source: 'quimar-pdf' | 'local-ocr';
   lines: InvoiceLine[];
 }

@@ -53,7 +53,9 @@ export class InvoiceImport extends AdminTask {
     );
   });
   public chooseFile(event: Event): void {
-    this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);
+    const input = event.target as HTMLInputElement;
+    this.file.set(input.files?.[0] ?? null);
+    input.value = '';
     this.invoice.set(null);
     this.confirmed.set(false);
     this.error.set('');
@@ -72,6 +74,7 @@ export class InvoiceImport extends AdminTask {
       this.invoice.set(
         await this.api.request<PurchaseInvoice>('/admin/products/invoices/preview', 'POST', form),
       );
+      this.file.set(null);
     });
   }
   public updateLine(index: number, field: keyof InvoiceLine, value: unknown): void {
@@ -136,10 +139,12 @@ export class InvoiceImport extends AdminTask {
       await this.api.request('/admin/products/invoices/' + invoice._id + '/confirm', 'POST', {
         supplier: invoice.supplier,
         invoiceNumber: invoice.invoiceNumber,
+        currency: invoice.currency,
         updatePurchasePrices: this.updatePurchasePrices(),
         rememberMatches: this.rememberMatches(),
         entries: this.included().map((line) => ({
           lineIndex: line.lineIndex,
+          description: line.description,
           productId: line.productId,
           quantity: line.quantity,
           unitsPerPack: line.unitsPerPack,
@@ -148,6 +153,8 @@ export class InvoiceImport extends AdminTask {
         })),
       });
       this.confirmed.set(true);
+      this.invoice.set(null);
+      this.file.set(null);
       await this.api.load();
     }, 'Compra registrada. Las existencias y los costos seleccionados se actualizaron.');
   }
