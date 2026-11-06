@@ -64,13 +64,13 @@ La carta utiliza la paleta #F5A623 / #D99B26 / #C26D38 sobre #121110, con detall
 
 Las tres fuentes se sirven desde `public/fonts/`, sin Google Fonts ni CDN:
 
-- Texas Tango para la marca y los titulares públicos.
+- Bricolage Grotesque para la marca y los titulares públicos.
 - Bricolage Grotesque para titulares del panel.
 - Space Grotesk para textos, controles y datos.
 
-La versión pública de Texas Tango incluida es la muestra del autor para uso personal. Para publicar comercialmente, reemplazarla por el archivo cubierto por una licencia Website de Billy Argel. Se conserva el aviso original junto al archivo. Bricolage y Space Grotesk incluyen sus licencias OFL locales.
+El build de producción usa Bricolage y Space Grotesk, con sus licencias OFL locales. La muestra personal de Texas Tango se conserva solo como referencia fuente y está excluida del artefacto público.
 
-Los iconos Lucide se sirven como un único sprite SVG con solo 35 iconos seleccionados (aprox. 1,9 KB gzip); no se carga una fuente de iconos ni el JavaScript de Lucide en el navegador. `npm run assets:ui` regenera el sprite y los recursos abiertos desde las dependencias de desarrollo. Texas Tango permanece como archivo local independiente, sin conversiones. `scripts/generate-preview-art.mjs` crea las ilustraciones locales de productos de prueba; no es necesario ejecutarlo para iniciar la aplicación.
+Los iconos Lucide se sirven como un único sprite SVG con solo 35 iconos seleccionados (aprox. 1,9 KB gzip); no se carga una fuente de iconos ni el JavaScript de Lucide en el navegador. `npm run assets:ui` regenera el sprite y los recursos abiertos desde las dependencias de desarrollo. La muestra Texas Tango se conserva en las fuentes del proyecto, excluida del build. `scripts/generate-preview-art.mjs` crea las ilustraciones locales de productos de prueba; no es necesario ejecutarlo para iniciar la aplicación.
 
 El acceso usa **usuario y contraseña**. Con la carga local de prueba: **admin / 12345678**. La configuración de MongoDB se mantiene en `.env` del backend; el frontend solo llama a `/api`.
 
@@ -90,7 +90,7 @@ El cliente Socket.IO se importa de forma diferida al necesitar una suscripción.
 
 Desde `taurus-api`, `npm run bundle:production -- --combined` construye esta aplicación y la incorpora a un paquete portable junto con la API. El servidor Express sirve `web/`, `/api` y los sockets bajo la misma dirección HTTPS; no se necesitan URLs de API compiladas ni un servidor Angular de desarrollo en producción. El paquete incluye configuración para Render Free + Atlas y una guía de variables de entorno. Los secretos permanecen exclusivamente en el backend.
 
-Las imágenes y fuentes locales se incluyen en el build. Para publicar comercialmente, reemplazar Texas Tango de muestra por la fuente con licencia web antes de generar el paquete final. El sitio puede probarse gratis en Render, cuyo plan Free tiene suspensión por inactividad y no garantiza servicio continuo.
+Las imágenes y fuentes OFL locales se incluyen en el build; la fuente de muestra personal está excluida. El sitio puede probarse gratis en Render, cuyo plan Free tiene suspensión por inactividad y no garantiza servicio continuo.
 
 ## Publicación separada: Cloudflare Pages
 
@@ -98,7 +98,7 @@ La salida de `npm run build` es `dist/taurus-ng-fe/browser`. Publicarla en Pages
 
 Configurar `BACKEND_ORIGIN` y `PUBLIC_FRONTEND_URL` como variables del entorno de Pages Functions. La API usa `FRONTEND_URL` con la misma URL pública del frontend. Ver `.dev.vars.example`; no incluir secretos de MongoDB en este proyecto. `node --test tests/proxy.test.mjs` verifica el gateway.
 
-La guía completa está en `../taurus-api/deploy/separate/README.md`. El script `npm run bundle:production` del backend genera los dos paquetes sin copiar la base local. Texas Tango requiere una licencia web para publicar el sitio comercial.
+La guía completa está en `../taurus-api/deploy/separate/README.md`. El script `npm run bundle:production` del backend genera los dos paquetes sin copiar la base local. Las fuentes publicadas incluyen sus licencias OFL.
 
 
 ## Despliegues con GitHub Actions

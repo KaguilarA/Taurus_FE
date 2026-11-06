@@ -1,7 +1,7 @@
 # Fuentes locales
 
-- `texas-tango.otf`: Texas Tango, Billy Argel. Archivo original de muestra publicado por el autor en https://www.dafont.com/texas-tango.font. Uso personal únicamente según el aviso incluido en `texas-tango-INSTRUCTIONS & LICENSE.txt`. Para publicar el sitio comercial, usar un archivo con licencia Website de https://billyargel.com/product/texas-tango-bold/.
+- La muestra `texas-tango.otf` y su aviso se conservan únicamente como referencia fuente; están excluidos del build y no se cargan en el sitio. No se habilita esa fuente sin una licencia web correspondiente.
 - `bricolage-grotesque-latin.woff2`: Bricolage Grotesque, pesos variables, alfabeto latino. Licencia OFL incluida.
 - `space-grotesk-latin.woff2`: Space Grotesk, pesos variables, alfabeto latino. Licencia OFL incluida.
 
-Todas se cargan desde el mismo origen del sitio. No hay solicitudes de fuentes a servicios externos. No se modificó ni convirtió el archivo de Texas Tango.
+Las fuentes OFL se cargan desde el mismo origen del sitio. No hay solicitudes de fuentes a servicios externos. Bricolage Grotesque se usa para la marca y los titulares; Space Grotesk para el cuerpo.
