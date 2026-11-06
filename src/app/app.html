@@ -1,3 +1,11 @@
+@if (api.connecting()) {
+	<p
+		class="fixed inset-x-4 top-4 z-50 mx-auto max-w-xl rounded-lg border border-border bg-surface-raised px-5 py-3 text-sm text-foreground"
+		role="status"
+	>
+		Estamos conectando con el servidor. El primer acceso puede tardar cerca de un minuto.
+	</p>
+}
 @if (navigating() && initial()) {
 	<app-page-skeleton
 		[variant]="

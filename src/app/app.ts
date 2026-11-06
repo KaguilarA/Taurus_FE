@@ -9,6 +9,7 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
+import { Api } from './api';
 import { Feedback } from './shared/ui/feedback';
 import { PageSkeleton } from './shared/ui/page-skeleton';
 
@@ -19,6 +20,7 @@ import { PageSkeleton } from './shared/ui/page-skeleton';
   templateUrl: './app.html',
 })
 export class App {
+  public readonly api = inject(Api);
   protected readonly router = inject(Router);
   public readonly navigating = signal(true);
   public readonly initial = signal(true);

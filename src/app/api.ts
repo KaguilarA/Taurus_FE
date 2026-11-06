@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import type { OrderScope, OrderSubscription, ProductType, Role, State } from './interfaces';
 import { openOrderSocket } from './order-socket';
 export const themeAccent = (value?: string) => value || '#F5A623';
@@ -10,6 +10,8 @@ export const servingName = (serving: string) =>
   ({ large: 'Grande', small: 'Pequeño', shot: 'Shot', unit: '' })[serving] ?? serving;
 @Injectable({ providedIn: 'root' })
 export class Api {
+  private readonly slowReads = signal(0);
+  public readonly connecting = computed(() => this.slowReads() > 0);
   private readonly pendingReads = new Map<string, Promise<unknown>>();
   public readonly state = signal<State | null>(null);
   public readonly productTypes = signal<ProductType[]>([]);
@@ -40,26 +42,88 @@ export class Api {
     body: unknown,
     options: { signal?: AbortSignal },
   ): Promise<T> {
-    const multipart = body instanceof FormData;
-    let response: Response;
+    const read = method === 'GET';
+    let slow = false;
+    const indicator = read
+      ? setTimeout(() => {
+          slow = true;
+          this.slowReads.update((count) => count + 1);
+        }, 5000)
+      : undefined;
     try {
-      response = await fetch('/api' + path, {
-        method,
-        signal: options.signal,
-        credentials: 'include',
-        headers: body && !multipart ? { 'Content-Type': 'application/json' } : {},
-        body: multipart ? body : body ? JSON.stringify(body) : undefined,
-      });
-    } catch (reason) {
-      if (options.signal?.aborted) throw reason;
-      throw new Error('No hay conexión con el servidor. Verificá que la API esté encendida.');
+      for (let attempt = 0; ; attempt++) {
+        options.signal?.throwIfAborted();
+        const controller = new AbortController();
+        const timeout = read ? setTimeout(() => controller.abort(), 25000) : undefined;
+        const signal = read
+          ? options.signal
+            ? AbortSignal.any([options.signal, controller.signal])
+            : controller.signal
+          : options.signal;
+        let response: Response | undefined;
+        try {
+          const multipart = body instanceof FormData;
+          response = await fetch('/api' + path, {
+            method,
+            signal,
+            credentials: 'include',
+            headers: body && !multipart ? { 'Content-Type': 'application/json' } : {},
+            body: multipart ? body : body ? JSON.stringify(body) : undefined,
+          });
+        } catch (reason) {
+          if (options.signal?.aborted) throw reason;
+          if (!read || attempt >= 2)
+            throw new Error('No hay conexión con el servidor. Volvé a intentar en un momento.');
+        } finally {
+          clearTimeout(timeout);
+        }
+        const retryAfter = Number(response?.headers.get('Retry-After') ?? 0);
+        if (
+          read &&
+          attempt < 2 &&
+          (!response || [429, 502, 503, 504].includes(response.status)) &&
+          retryAfter <= 15
+        ) {
+          // Only reads can be replayed. Never repeat an order, payment, login or upload.
+          await response?.body?.cancel();
+          await this.waitForRetry(
+            Math.max(retryAfter * 1000, attempt === 0 ? 15000 : 30000),
+            options.signal,
+          );
+          continue;
+        }
+        if (!response) throw new Error('No hay conexión con el servidor. Volvé a intentar.');
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401) this.authenticated.set(false);
+          throw new Error(
+            data.error ??
+              ([429, 502, 503, 504].includes(response.status)
+                ? 'El servidor está temporalmente ocupado. Volvé a intentar en un momento.'
+                : 'No se pudo completar la operación.'),
+          );
+        }
+        return data as T;
+      }
+    } finally {
+      clearTimeout(indicator);
+      if (slow) this.slowReads.update((count) => count - 1);
     }
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      if (response.status === 401) this.authenticated.set(false);
-      throw new Error(data.error ?? 'No se pudo completar la operación.');
-    }
-    return data as T;
+  }
+  private waitForRetry(milliseconds: number, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const abort = (): void => {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', abort);
+        reject(signal?.reason);
+      };
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', abort);
+        resolve();
+      }, milliseconds);
+      signal?.addEventListener('abort', abort, { once: true });
+      if (signal?.aborted) abort();
+    });
   }
   public uploadImage(
     file: File,
