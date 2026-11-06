@@ -8,8 +8,13 @@
 } @else {
 	<form (ngSubmit)="save()" class="grid gap-6 lg:grid-cols-2">
 		<div class="grid content-start gap-6">
-			<fieldset class="grid gap-5 rounded-xl border border-border bg-surface p-6">
-				<legend class="px-2 font-display text-lg">Apariencia en buscadores</legend>
+			<section
+				aria-labelledby="search-appearance-heading"
+				class="grid min-w-0 gap-5 rounded-xl border border-border bg-surface p-6"
+			>
+				<h2 id="search-appearance-heading" class="text-lg leading-snug">
+					Apariencia en buscadores
+				</h2>
 				<p class="text-sm text-muted">
 					Si dejás un texto vacío se usa la información del negocio. El contenido de la
 					carta se mantiene independiente.
@@ -72,9 +77,14 @@
 					Las cuentas de clientes, el panel y los formularios de configuración siempre
 					quedan fuera de la indexación.
 				</p>
-			</fieldset>
-			<fieldset class="grid gap-5 rounded-xl border border-border bg-surface p-6">
-				<legend class="px-2 font-display text-lg">Al compartir enlaces</legend>
+			</section>
+			<section
+				aria-labelledby="sharing-appearance-heading"
+				class="grid min-w-0 gap-5 rounded-xl border border-border bg-surface p-6"
+			>
+				<h2 id="sharing-appearance-heading" class="text-lg leading-snug">
+					Al compartir enlaces
+				</h2>
 				<label
 					>Título al compartir<input
 						name="shareTitle"
@@ -105,7 +115,7 @@
 					Si no elegís una imagen se usa el logo o la portada. Para enlaces de productos
 					se usa primero su propia imagen y descripción.
 				</p>
-			</fieldset>
+			</section>
 			<button appButton="primary" type="submit" [disabled]="busy() || imageUploading()">
 				{{ busy() ? 'Guardando…' : 'Guardar SEO' }}
 			</button>
