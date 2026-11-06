@@ -165,3 +165,20 @@ test('private pages cannot be indexed and do not query public metadata', async (
   assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
+
+test('the SEO provider deadline reaches the upstream fetch and still returns app HTML', async () => {
+  const start = Date.now();
+  const response = await seoNavigation(
+    new Request('https://bar.example/'),
+    { ...env, ASSETS: { fetch: async () => html() } },
+    async (upstream) =>
+      new Promise((_resolve, reject) => {
+        upstream.signal.addEventListener('abort', () => reject(upstream.signal.reason), {
+          once: true,
+        });
+      }),
+  );
+  assert.equal(response.status, 200);
+  assert.ok(Date.now() - start < 4500);
+  assert.match(await response.text(), /Loading/);
+});

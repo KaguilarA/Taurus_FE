@@ -47,6 +47,7 @@ export async function proxyApi(request, env, upstreamFetch = fetch) {
         headers,
         body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
         redirect: 'manual',
+        signal: request.signal,
         duplex: 'half',
       }),
     );
@@ -104,18 +105,32 @@ export async function publicSeoData(
   )
     throw new Error('Invalid SEO origin');
   const key = new Request(new URL('/__public-seo/' + encodeURIComponent(endpoint), frontend));
-  const hit = await cache?.match(key);
-  if (hit) return hit.json();
-  const response = await upstreamFetch(
-    new Request(new URL(endpoint, backend), {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(2500),
-      redirect: 'error',
-    }),
-  );
-  if (!response.ok || !/application\/json/i.test(response.headers.get('Content-Type') ?? ''))
-    throw new Error('SEO unavailable');
-  const body = await response.text();
+  try {
+    const hit = await cache?.match(key);
+    if (hit) return await hit.json();
+  } catch {
+    /* A cache error must not prevent an origin read. */
+  }
+  const headers = new Headers({ Accept: 'application/json' });
+  for (const name of ['User-Agent', 'Accept-Language', 'CF-Connecting-IP']) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
+  let body;
+  try {
+    const response = await proxyApi(
+      new Request(new URL(endpoint, frontend), { headers, signal: controller.signal }),
+      env,
+      upstreamFetch,
+    );
+    if (!response.ok || !/application\/json/i.test(response.headers.get('Content-Type') ?? ''))
+      throw new Error('SEO_HTTP_' + response.status);
+    body = await response.text();
+  } finally {
+    clearTimeout(timeout);
+  }
   if (body.length > 131072) throw new Error('SEO payload exceeds limit');
   const data = JSON.parse(body);
   if (cache) {
@@ -207,6 +222,7 @@ export async function seoNavigation(
   const assetHeaders = new Headers(request.headers);
   assetHeaders.delete('If-None-Match');
   assetHeaders.delete('If-Modified-Since');
+  let seoStatus = 'unavailable';
   const [asset, metadata] = await Promise.all([
     env.ASSETS.fetch(new Request(request, { headers: assetHeaders })),
     publicSeoData(
@@ -215,11 +231,17 @@ export async function seoNavigation(
       '/api/seo?path=' + encodeURIComponent(path),
       upstreamFetch,
       cache,
-    ).catch(() => null),
+    ).catch((error) => {
+      seoStatus = /^SEO_HTTP_\d{3}$/.test(error.message) ? error.message : 'unavailable';
+      return null;
+    }),
   ]);
   // SEO failure must never prevent the application from loading or trigger a browser challenge.
-  if (!metadata || !asset.ok || !/text\/html/i.test(asset.headers.get('Content-Type') ?? ''))
-    return asset;
+  if (!metadata || !asset.ok || !/text\/html/i.test(asset.headers.get('Content-Type') ?? '')) {
+    const fallback = new Response(asset.body, asset);
+    fallback.headers.set('X-SEO-Status', seoStatus);
+    return fallback;
+  }
   try {
     const canonical = new URL(metadata.canonical);
     if (
@@ -242,6 +264,7 @@ export async function seoNavigation(
   }
   const response = new Response(asset.body, asset);
   response.headers.set('Cache-Control', 'no-cache');
+  response.headers.set('X-SEO-Status', 'rendered');
   response.headers.delete('ETag');
   response.headers.delete('Content-Length');
   response.headers.set('X-Robots-Tag', metadata.indexable ? 'index, follow' : 'noindex, nofollow');
@@ -284,10 +307,14 @@ export async function seoDiscovery(request, env, upstreamFetch = fetch, cache) {
         headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' },
       },
     );
-  } catch {
+  } catch (error) {
     return new Response('SEO temporalmente no disponible.', {
       status: 503,
-      headers: { 'Cache-Control': 'no-store', 'Retry-After': '30' },
+      headers: {
+        'Cache-Control': 'no-store',
+        'Retry-After': '30',
+        'X-SEO-Status': /^SEO_HTTP_\d{3}$/.test(error.message) ? error.message : 'unavailable',
+      },
     });
   }
 }
