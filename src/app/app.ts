@@ -9,6 +9,7 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
+import { reportConnection } from './connection-diagnostics';
 import { Api } from './api';
 import { Feedback } from './shared/ui/feedback';
 import { PageSkeleton } from './shared/ui/page-skeleton';
@@ -35,7 +36,10 @@ export class App {
         this.navigationError.set('');
       }
 
-      if (event instanceof NavigationEnd) this.initial.set(false);
+      if (event instanceof NavigationEnd) {
+        this.initial.set(false);
+        reportConnection('READY');
+      }
 
       if (event instanceof NavigationError)
         this.navigationError.set(

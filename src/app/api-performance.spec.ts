@@ -30,7 +30,7 @@ describe('API concurrent reads', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
   it('keeps abortable reads independent and never shares reads across a mutation', async () => {
-    const fetch = vi.fn().mockResolvedValue(Response.json({ ok: true }));
+    const fetch = vi.fn().mockImplementation(() => Promise.resolve(Response.json({ ok: true })));
     vi.stubGlobal('fetch', fetch);
     const api = TestBed.inject(Api);
     const first = api.request('/auth/status');

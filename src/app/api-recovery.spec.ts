@@ -6,6 +6,7 @@ describe('API recovery during backend startup', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     TestBed.resetTestingModule();
   });
@@ -102,5 +103,66 @@ describe('API recovery during backend startup', () => {
     vi.stubGlobal('fetch', fetch);
     await expect(TestBed.inject(Api).request('/public')).rejects.toThrow('temporalmente ocupado');
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the timeout active when headers arrive but the JSON body stalls', async () => {
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce((_url, options) =>
+        Promise.resolve(
+          new Response(
+            new ReadableStream({
+              start(stream) {
+                stream.enqueue(new TextEncoder().encode('{"partial":'));
+                options.signal.addEventListener('abort', () => stream.error(options.signal.reason));
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } },
+          ),
+        ),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    vi.stubGlobal('fetch', fetch);
+    const api = TestBed.inject(Api);
+    const result = api.request('/public');
+    await vi.advanceTimersByTimeAsync(40000);
+    expect(await result).toEqual({ ok: true });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(api.connecting()).toBe(false);
+  });
+
+  it('supports cancellable reads without AbortSignal.any', async () => {
+    const any = vi.spyOn(AbortSignal, 'any').mockImplementation(() => {
+      throw new Error('Unsupported browser API');
+    });
+    const fetch = vi.fn().mockImplementation(
+      (_url, options) =>
+        new Promise((_resolve, reject) => {
+          options.signal.addEventListener('abort', () => reject(options.signal.reason));
+        }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const controller = new AbortController();
+    const result = TestBed.inject(Api).request('/public/menu', 'GET', undefined, {
+      signal: controller.signal,
+    });
+    const rejected = expect(result).rejects.toThrow();
+    controller.abort();
+    await rejected;
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(any).not.toHaveBeenCalled();
+  });
+
+  it('rejects successful HTML responses instead of accepting an empty business configuration', async () => {
+    const fetch = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(new Response('<html>Provider loading</html>')));
+    vi.stubGlobal('fetch', fetch);
+    const rejected = expect(TestBed.inject(Api).request('/setup/status')).rejects.toThrow(
+      'conexión',
+    );
+    await vi.advanceTimersByTimeAsync(45000);
+    await rejected;
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 });

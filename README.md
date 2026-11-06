@@ -122,3 +122,10 @@ La portada consulta la configuracion antes de activarse. Sin administrador abre 
 Performance is the first project rule, alongside accessible interactions and correct data. Keep `npm run build`, `npm test -- --watch=false` and the proxy tests green. The initial bundle budget warns at 360 kB and fails at 400 kB. The optimized build is 351.58 kB raw / 94.48 kB estimated transfer, compared with 391.95 kB / 103.81 kB before this pass. These are build measurements, not device load-time guarantees.
 
 Initial HTML supplies a skeleton before Angular starts. Route/data skeletons and deferred sections continue it; signal-driven presentation components use OnPush. Concurrent identical GET requests share only the pending promise, never a stored response; abortable requests stay independent and mutations invalidate pending sharing. Repeated unchanged menu filters avoid another request; retries always fetch. Images decode asynchronously, optional sections remain lazy, and the main text font is preloaded. Verify mobile layout, keyboard use and slow-network recovery before release.
+
+
+## Recuperación de carga en dispositivos
+
+Las lecturas de la API mantienen un límite de 25 segundos hasta recibir y procesar el cuerpo completo. Solo GET puede reintentarse, con un máximo de tres intentos; cancelar una búsqueda cancela también su lectura o espera. Los pedidos, pagos, accesos y subidas nunca se reenvían automáticamente. Una respuesta HTML o JSON incompleto no se acepta como configuración del negocio.
+
+`public/startup.js` funciona independientemente de Angular. Si el arranque tarda más de 12 segundos, muestra una opción para volver a cargar y detalles locales del error. Incluye código, estado HTTP, ruta pública acotada, referencia de Cloudflare y navegador; no almacena datos ni envía telemetría. No incluye cuerpos, contraseñas, tokens, query strings ni mensajes internos de excepciones. Una carga correcta oculta el aviso.

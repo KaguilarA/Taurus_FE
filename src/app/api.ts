@@ -1,5 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 import type { OrderScope, OrderSubscription, ProductType, Role, State } from './interfaces';
+import { reportConnection } from './connection-diagnostics';
 import { openOrderSocket } from './order-socket';
 export const themeAccent = (value?: string) => value || '#F5A623';
 export const categoryName = (category: string) =>
@@ -52,57 +53,88 @@ export class Api {
       : undefined;
     try {
       for (let attempt = 0; ; attempt++) {
-        options.signal?.throwIfAborted();
+        if (options.signal?.aborted) throw options.signal.reason;
         const controller = new AbortController();
+        const abort = (): void => controller.abort();
+        options.signal?.addEventListener('abort', abort, { once: true });
         const timeout = read ? setTimeout(() => controller.abort(), 25000) : undefined;
-        const signal = read
-          ? options.signal
-            ? AbortSignal.any([options.signal, controller.signal])
-            : controller.signal
-          : options.signal;
         let response: Response | undefined;
+        let data: unknown;
+        let failure = '';
         try {
           const multipart = body instanceof FormData;
           response = await fetch('/api' + path, {
             method,
-            signal,
+            signal: controller.signal,
             credentials: 'include',
             headers: body && !multipart ? { 'Content-Type': 'application/json' } : {},
             body: multipart ? body : body ? JSON.stringify(body) : undefined,
           });
+          // Keep the deadline active until the complete body has arrived.
+          try {
+            data = await response.json();
+          } catch (reason) {
+            if (controller.signal.aborted || response.ok) throw reason;
+          }
         } catch (reason) {
           if (options.signal?.aborted) throw reason;
-          if (!read || attempt >= 2)
-            throw new Error('No hay conexión con el servidor. Volvé a intentar en un momento.');
+          failure = controller.signal.aborted
+            ? 'API_TIMEOUT'
+            : response
+              ? 'API_INVALID_RESPONSE'
+              : 'API_NETWORK';
         } finally {
           clearTimeout(timeout);
+          options.signal?.removeEventListener('abort', abort);
         }
         const retryAfter = Number(response?.headers.get('Retry-After') ?? 0);
-        if (
-          read &&
-          attempt < 2 &&
-          (!response || [429, 502, 503, 504].includes(response.status)) &&
-          retryAfter <= 15
-        ) {
-          // Only reads can be replayed. Never repeat an order, payment, login or upload.
-          await response?.body?.cancel();
+        const transient =
+          !!failure || (!!response && [429, 502, 503, 504].includes(response.status));
+        if (read && attempt < 2 && transient && retryAfter <= 15) {
+          reportConnection(
+            'API_RETRY',
+            path,
+            response?.status ?? 0,
+            response?.headers.get('cf-ray') ?? '',
+          );
           await this.waitForRetry(
             Math.max(retryAfter * 1000, attempt === 0 ? 15000 : 30000),
             options.signal,
           );
           continue;
         }
-        if (!response) throw new Error('No hay conexión con el servidor. Volvé a intentar.');
-        const data = await response.json().catch(() => ({}));
+        if (failure || !response) {
+          reportConnection(
+            failure || 'API_NETWORK',
+            path,
+            response?.status ?? 0,
+            response?.headers.get('cf-ray') ?? '',
+          );
+          throw new Error(
+            'No se pudo completar la conexión con el servidor. Volvé a intentar en un momento.',
+          );
+        }
         if (!response.ok) {
           if (response.status === 401) this.authenticated.set(false);
+          if (response.status >= 500 || response.status === 429)
+            reportConnection(
+              'API_HTTP',
+              path,
+              response.status,
+              response.headers.get('cf-ray') ?? '',
+            );
+          const error =
+            data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+              ? data.error
+              : '';
           throw new Error(
-            data.error ??
-              ([429, 502, 503, 504].includes(response.status)
+            error ||
+              (transient
                 ? 'El servidor está temporalmente ocupado. Volvé a intentar en un momento.'
                 : 'No se pudo completar la operación.'),
           );
         }
+        reportConnection('API_OK', path);
         return data as T;
       }
     } finally {
