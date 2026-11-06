@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './theme.css';
+@import './brand.css';
 @import './scrollbars.css';
 
 /* Native element defaults stay below feature utilities in Tailwind's cascade. */

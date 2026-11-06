@@ -133,3 +133,7 @@ Las lecturas de la API mantienen un límite de 25 segundos hasta recibir y proce
 Un fallo de descarga de módulos durante la navegación inicial permite una sola recarga automática por pestaña cada dos minutos. Después de abrir una página no se recarga automáticamente, para no interrumpir formularios, pedidos ni pagos. El aviso permanece disponible si el fallo se repite.
 
 La entrega de JS/CSS conserva respuestas `304 Not Modified` y sus cabeceras de caché; no las transforma en 404 por carecer de cuerpo o Content-Type. La verificación manual del grafo de módulos comprueba tanto descargas nuevas como revalidaciones con ETag.
+
+## Producto reutilizable y compatibilidad
+
+La política de navegadores está fijada y se verifica con `npm run compatibility:check`. Ver [compatibilidad](docs/browser-compatibility.md) y [personalización por negocio](docs/business-customization.md). La marca del piloto vive en `src/brand.css`; la configuración comercial permanece en Business.

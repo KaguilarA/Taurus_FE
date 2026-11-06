@@ -1,0 +1,40 @@
+/* Felos pilot identity. Replace these tokens for another business; keep shared UI unchanged. */
+:root {
+  color-scheme: dark;
+  --business-font-body: 'Space Grotesk';
+  --business-font-display: 'Bricolage Grotesque';
+  --business-font-brand: 'Texas Tango';
+  --accent: #f5a623;
+  --primary: var(--accent);
+  --secondary: color-mix(in srgb, var(--accent) 85%, #fff);
+  --tertiary: color-mix(in srgb, var(--accent) 65%, #945338);
+  --canvas: #121110;
+  --surface: #22211f;
+  --surface-raised: #2c2a27;
+  --border: #403a32;
+  --text: #e9e5e0;
+  --text-muted: #ada399;
+  --muted: var(--text-muted);
+  --text-warm: #d7c3ab;
+  --accent-soft: color-mix(in srgb, var(--accent) 15%, var(--canvas));
+  --danger: #ffb4ab;
+  --danger-soft: #432825;
+  --scroll-thumb: var(--border);
+  --scroll-track: var(--canvas);
+  --business-texture:
+    linear-gradient(90deg, var(--canvas), transparent, var(--canvas)),
+    repeating-linear-gradient(
+      0deg,
+      var(--surface) 0px,
+      var(--surface) 88px,
+      var(--canvas) 89px,
+      var(--border) 92px
+    );
+  --business-poster-background: repeating-linear-gradient(
+    0deg,
+    var(--surface-raised) 0,
+    var(--surface-raised) 58px,
+    var(--canvas) 60px,
+    var(--surface) 63px
+  );
+}

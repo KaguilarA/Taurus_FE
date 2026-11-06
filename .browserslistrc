@@ -1,0 +1,4 @@
+# Angular 22 supported Baseline; retain older supported engines, not only latest releases.
+baseline widely available on 2026-05-07
+# Tailwind 4 requires Firefox 128 or newer.
+not firefox < 128
