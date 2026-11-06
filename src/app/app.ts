@@ -10,6 +10,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { reportConnection } from './connection-diagnostics';
+import { SeoService } from './seo.service';
 import { Api } from './api';
 import { Feedback } from './shared/ui/feedback';
 import { PageSkeleton } from './shared/ui/page-skeleton';
@@ -22,6 +23,7 @@ import { PageSkeleton } from './shared/ui/page-skeleton';
 })
 export class App {
   public readonly api = inject(Api);
+  private readonly seo = inject(SeoService);
   protected readonly router = inject(Router);
   public readonly navigating = signal(true);
   public readonly initial = signal(true);
@@ -29,6 +31,7 @@ export class App {
   public readonly destination = signal(location.pathname);
 
   constructor() {
+    this.seo.start();
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.destination.set(event.url);

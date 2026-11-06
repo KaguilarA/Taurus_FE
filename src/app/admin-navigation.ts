@@ -34,6 +34,7 @@ const navigation: readonly NavigationGroup[] = [
     adminOnly: true,
     items: [
       { id: 'settings', icon: 'settings-2', label: 'Personalización' },
+      { id: 'seo', icon: 'search', label: 'SEO y enlaces compartidos' },
       { id: 'accounts', icon: 'users-round', label: 'Equipo y roles' },
     ],
   },

@@ -91,6 +91,11 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/service').then((m) => m.ServicePage),
   },
   {
+    path: 'seo',
+    data: { roles: owner, label: 'SEO y enlaces compartidos' },
+    loadComponent: () => import('./pages/seo').then((m) => m.SeoPage),
+  },
+  {
     path: 'settings',
     data: {
       roles: owner,

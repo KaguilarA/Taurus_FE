@@ -137,3 +137,7 @@ La entrega de JS/CSS conserva respuestas `304 Not Modified` y sus cabeceras de c
 ## Producto reutilizable y compatibilidad
 
 La política de navegadores está fijada y se verifica con `npm run compatibility:check`. Ver [compatibilidad](docs/browser-compatibility.md) y [personalización por negocio](docs/business-customization.md). La marca del piloto vive en `src/brand.css`; la configuración comercial permanece en Business.
+
+## SEO y enlaces compartidos
+
+Administrar en **Negocio → SEO y enlaces compartidos**. Ver [SEO administrable](docs/seo.md) para formularios, metadatos iniciales, router, caché y archivos de rastreo dinámicos.

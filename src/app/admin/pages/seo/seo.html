@@ -1,0 +1,151 @@
+<app-admin-page-heading
+	title="SEO y enlaces compartidos"
+	description="Elegí cómo aparece tu sitio en buscadores y cuando compartís un enlace."
+/>
+<app-feedback [error]="error()" [notice]="notice()" />
+@if (loading()) {
+	<app-page-skeleton variant="section" />
+} @else {
+	<form (ngSubmit)="save()" class="grid gap-6 lg:grid-cols-2">
+		<div class="grid content-start gap-6">
+			<fieldset class="grid gap-5 rounded-xl border border-border bg-surface p-6">
+				<legend class="px-2 font-display text-lg">Apariencia en buscadores</legend>
+				<p class="text-sm text-muted">
+					Si dejás un texto vacío se usa la información del negocio. El contenido de la
+					carta se mantiene independiente.
+				</p>
+				<label
+					>Título SEO<input
+						name="seoTitle"
+						[ngModel]="seo().title"
+						(ngModelChange)="updateField(seo, ['title'], $event)"
+						[placeholder]="defaultTitle()"
+						maxlength="70"
+					/><span class="mt-1 block text-xs text-muted"
+						>{{ seo().title.length }}/70 caracteres</span
+					></label
+				>
+				<label
+					>Descripción SEO<textarea
+						name="seoDescription"
+						[ngModel]="seo().description"
+						(ngModelChange)="updateField(seo, ['description'], $event)"
+						[placeholder]="businessDescription()"
+						maxlength="200"
+						rows="4"
+					></textarea
+					><span class="mt-1 block text-xs text-muted"
+						>{{ seo().description.length }}/200 caracteres</span
+					></label
+				>
+				<label
+					>Idioma y región<input
+						name="seoLocale"
+						[ngModel]="seo().locale"
+						(ngModelChange)="updateField(seo, ['locale'], $event)"
+						pattern="[a-z]{2}_[A-Z]{2}"
+						maxlength="10"
+						required
+					/><span class="mt-1 block text-xs text-muted"
+						>Por ejemplo: es_CR, es_MX o en_US.</span
+					></label
+				>
+				<label class="flex items-start gap-3 text-sm"
+					><input
+						class="mt-0 size-5 shrink-0"
+						type="checkbox"
+						name="seoIndexable"
+						[ngModel]="seo().indexable"
+						(ngModelChange)="updateField(seo, ['indexable'], $event)"
+					/>Permitir que los buscadores indexen la carta pública</label
+				>
+				<label class="flex items-start gap-3 text-sm"
+					><input
+						class="mt-0 size-5 shrink-0"
+						type="checkbox"
+						name="seoProducts"
+						[ngModel]="seo().includeProducts"
+						(ngModelChange)="updateField(seo, ['includeProducts'], $event)"
+					/>Incluir los productos activos en el mapa del sitio</label
+				>
+				<p class="text-xs text-muted">
+					Las cuentas de clientes, el panel y los formularios de configuración siempre
+					quedan fuera de la indexación.
+				</p>
+			</fieldset>
+			<fieldset class="grid gap-5 rounded-xl border border-border bg-surface p-6">
+				<legend class="px-2 font-display text-lg">Al compartir enlaces</legend>
+				<label
+					>Título al compartir<input
+						name="shareTitle"
+						[ngModel]="seo().shareTitle"
+						(ngModelChange)="updateField(seo, ['shareTitle'], $event)"
+						[placeholder]="previewTitle()"
+						maxlength="100"
+				/></label>
+				<label
+					>Descripción al compartir<textarea
+						name="shareDescription"
+						[ngModel]="seo().shareDescription"
+						(ngModelChange)="updateField(seo, ['shareDescription'], $event)"
+						[placeholder]="previewDescription()"
+						maxlength="300"
+						rows="3"
+					></textarea>
+				</label>
+				<app-image-upload
+					[value]="seo().shareImage"
+					(valueChange)="updateField(seo, ['shareImage'], $event)"
+					purpose="branding"
+					label="Imagen para enlaces compartidos"
+					[disabled]="busy()"
+					(pending)="imageUploading.set($event)"
+				/>
+				<p class="text-xs text-muted">
+					Si no elegís una imagen se usa el logo o la portada. Para enlaces de productos
+					se usa primero su propia imagen y descripción.
+				</p>
+			</fieldset>
+			<button appButton="primary" type="submit" [disabled]="busy() || imageUploading()">
+				{{ busy() ? 'Guardando…' : 'Guardar SEO' }}
+			</button>
+		</div>
+		<aside class="grid content-start gap-6">
+			<section
+				class="rounded-xl border border-border bg-surface p-6"
+				aria-label="Vista previa en buscadores"
+			>
+				<h2 class="mb-4">Vista previa en buscadores</h2>
+				<p class="text-lg text-accent break-words">{{ previewTitle() }}</p>
+				<p class="mt-2 text-sm text-muted break-words">{{ previewDescription() }}</p>
+			</section>
+			<section
+				class="rounded-xl border border-border bg-surface p-6"
+				aria-label="Vista previa al compartir"
+			>
+				<h2 class="mb-4">Vista previa al compartir</h2>
+				@if (previewImage()) {
+					<img
+						[src]="previewImage()"
+						alt=""
+						class="mb-4 aspect-video w-full rounded-lg object-cover"
+					/>
+				}
+				<p class="font-semibold break-words">{{ seo().shareTitle || previewTitle() }}</p>
+				<p class="mt-2 text-sm text-muted break-words">
+					{{ seo().shareDescription || previewDescription() }}
+				</p>
+			</section>
+			<section class="rounded-xl border border-border bg-surface p-6">
+				<h2>Archivos públicos</h2>
+				<p class="mt-2 text-sm text-muted">
+					El dominio y las direcciones canónicas se toman del sitio publicado.
+				</p>
+				<div class="mt-4 flex flex-wrap gap-4 text-sm text-accent">
+					<a href="/robots.txt" target="_blank" rel="noopener">Ver robots.txt</a
+					><a href="/sitemap.xml" target="_blank" rel="noopener">Ver mapa del sitio</a>
+				</div>
+			</section>
+		</aside>
+	</form>
+}

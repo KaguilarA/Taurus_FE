@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Api, themeAccent } from '../api';
 import { Icon } from '../icon';
@@ -35,8 +34,6 @@ import { PageSkeleton } from '../shared/ui/page-skeleton';
 })
 export class PublicPage {
   private readonly api = inject(Api);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
   public readonly data = signal<PublicState | null>(null);
   public readonly error = signal('');
   public readonly navigationOpen = signal(false);
@@ -53,10 +50,6 @@ export class PublicPage {
       data.settings.accent = themeAccent(data.settings.accent);
       this.data.set(data);
       this.api.productTypes.set(data.productTypes ?? []);
-      this.title.setTitle(
-        `${data.settings.name}${data.settings.subtitle ? ' · ' + data.settings.subtitle : ''}`,
-      );
-      this.meta.updateTag({ name: 'description', content: data.settings.description });
     } catch (error) {
       this.error.set((error as Error).message);
     }

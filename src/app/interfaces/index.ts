@@ -35,3 +35,6 @@ export * from './staff-account.interface';
 export * from './state.interface';
 export * from './invoice-line.interface';
 export * from './purchase-invoice.interface';
+
+export * from './seo-settings.interface';
+export * from './seo-metadata.interface';
