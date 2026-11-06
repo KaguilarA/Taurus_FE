@@ -19,6 +19,21 @@
   var waiting = false;
   var timer;
 
+  function refreshModules() {
+    // Only before a page has opened: never interrupt an order, payment or form.
+    if (ready) return;
+    try {
+      var key = 'taurus-module-reload';
+      var now = Date.now();
+      var previous = Number(window.sessionStorage.getItem(key)) || 0;
+      if (now - previous < 120000) return;
+      window.sessionStorage.setItem(key, String(now));
+      window.location.reload();
+    } catch (_) {
+      // Storage may be disabled. Keep the explicit retry instead of risking a loop.
+    }
+  }
+
   function show() {
     panel.hidden = false;
     title.textContent = failed ? 'No pudimos completar la carga' : 'La carga está tardando';
@@ -68,6 +83,7 @@
     };
     failed = detail.code !== 'API_RETRY';
     if (failed || waiting) show();
+    if (last.code === 'MODULE_DOWNLOAD') refreshModules();
   });
 
   window.addEventListener(
@@ -80,6 +96,7 @@
       last.time = new Date().toISOString();
       failed = true;
       show();
+      if (last.code === 'MODULE_DOWNLOAD') refreshModules();
     },
     true,
   );

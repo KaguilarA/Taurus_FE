@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { JSDOM } from 'jsdom';
+import { JSDOM, VirtualConsole } from 'jsdom';
 
 const html = await readFile(new URL('../src/index.html', import.meta.url), 'utf8');
 const script = await readFile(new URL('../public/startup.js', import.meta.url), 'utf8');
@@ -9,6 +9,7 @@ function setup() {
   const dom = new JSDOM(html, {
     url: 'https://bar.example/?token=private',
     runScripts: 'outside-only',
+    virtualConsole: new VirtualConsole(),
   });
   const { window } = dom;
   let deadline;
@@ -80,6 +81,34 @@ test('diagnostics never expose injected paths, exception messages, or query para
     assert.doesNotMatch(value, /secret|private|password|<script>/);
     view.window.dispatchEvent(new view.window.ErrorEvent('error', { message: 'password=secret' }));
     assert.doesNotMatch(view.document.getElementById('connection-details').value, /secret/);
+  } finally {
+    view.dom.window.close();
+  }
+});
+
+test('an initial module download failure triggers at most one reload per two minutes', () => {
+  const view = setup();
+  try {
+    view.event({ code: 'MODULE_DOWNLOAD' });
+    const first = view.window.sessionStorage.getItem('taurus-module-reload');
+    assert.ok(Number(first) > 0);
+    view.window.sessionStorage.setItem('taurus-module-reload', String(Date.now() - 1000));
+    const previous = view.window.sessionStorage.getItem('taurus-module-reload');
+    view.event({ code: 'MODULE_DOWNLOAD' });
+    assert.equal(view.window.sessionStorage.getItem('taurus-module-reload'), previous);
+    assert.equal(view.document.getElementById('connection-diagnostic').hidden, false);
+  } finally {
+    view.dom.window.close();
+  }
+});
+
+test('a module failure after opening a page never reloads an active order or form', () => {
+  const view = setup();
+  try {
+    view.event({ code: 'READY' });
+    view.event({ code: 'MODULE_DOWNLOAD' });
+    assert.equal(view.window.sessionStorage.getItem('taurus-module-reload'), null);
+    assert.equal(view.document.getElementById('connection-diagnostic').hidden, false);
   } finally {
     view.dom.window.close();
   }

@@ -41,10 +41,15 @@ export class App {
         reportConnection('READY');
       }
 
-      if (event instanceof NavigationError)
+      if (event instanceof NavigationError) {
+        const moduleFailure = /dynamically imported module|loading chunk|importing a module/i.test(
+          String(event.error?.message ?? ''),
+        );
+        reportConnection(moduleFailure ? 'MODULE_DOWNLOAD' : 'BOOT_ERROR');
         this.navigationError.set(
           'No pudimos abrir la página. Revisá tu conexión y volvé a intentar.',
         );
+      }
 
       if (
         event instanceof NavigationEnd ||
