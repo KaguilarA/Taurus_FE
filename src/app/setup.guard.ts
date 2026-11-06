@@ -38,11 +38,13 @@ export const configuredGuard: CanActivateFn = async (route, state) => {
     return true;
   } catch {
     // A failed check must never make the public menu accessible.
-    return state.url.startsWith('/admin') ? true : router.parseUrl('/start');
+    return state.url.startsWith('/admin') ? true : router.parseUrl('/start?connection=unavailable');
   }
 };
 
-export const startupGuard: CanActivateFn = async () => {
+export const startupGuard: CanActivateFn = async (route) => {
+  // An error page grants no access. Do not immediately repeat an exhausted read.
+  if (route.queryParamMap.get('connection') === 'unavailable') return true;
   const api = inject(Api);
   const router = inject(Router);
   try {

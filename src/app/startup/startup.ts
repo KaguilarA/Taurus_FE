@@ -13,6 +13,10 @@ export class StartupPage {
     inject(Title).setTitle('Inicio del sitio');
   }
   public retry(): void {
-    this.document.defaultView?.location.reload();
+    const view = this.document.defaultView;
+    if (!view) return;
+    const url = new URL(view.location.href);
+    url.searchParams.delete('connection');
+    view.location.replace(url.href);
   }
 }

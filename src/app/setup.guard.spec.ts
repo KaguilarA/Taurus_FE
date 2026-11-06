@@ -114,7 +114,8 @@ describe('Initial administrator routing', () => {
     fail = true;
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/');
-    expect(TestBed.inject(Router).url).toBe('/start');
+    expect(TestBed.inject(Router).url).toBe('/start?connection=unavailable');
+    expect(TestBed.inject(Api).request).toHaveBeenCalledTimes(1);
   });
   it('allows the public menu again once the business is configured', async () => {
     required = false;
