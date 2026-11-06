@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 
 // Only the deployment job receives contents:write. PRs never run this script.
 assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Run this publisher in GitHub Actions.');
-assert.equal(process.env.GITHUB_REF, 'refs/heads/main', 'Only main can publish production.');
+assert.equal(process.env.GITHUB_REF, 'refs/heads/master', 'Only master can publish production.');
 const sourceSha = process.env.GITHUB_SHA;
 assert.match(sourceSha ?? '', /^[a-f0-9]{40}$/);
 const workspace = await realpath(process.env.GITHUB_WORKSPACE);
