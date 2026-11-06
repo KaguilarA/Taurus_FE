@@ -17,6 +17,15 @@ export async function verifyModules(base, request = fetch) {
       seen.add(url.href);
       const response = await request(url, { signal: AbortSignal.timeout(15000) });
       assert.ok(response.ok && /(?:javascript|ecmascript)/i.test(response.headers.get('content-type') ?? ''), `Missing JavaScript module: ${url.pathname}`);
+      const etag = response.headers.get('ETag');
+      if (etag) {
+        const conditional = await request(url, {
+          signal: AbortSignal.timeout(15000),
+          headers: { 'If-None-Match': etag },
+        });
+        assert.ok(conditional.status === 304 || conditional.ok && /(?:javascript|ecmascript)/i.test(conditional.headers.get('content-type') ?? ''), `Broken cached JavaScript module: ${url.pathname}`);
+        await conditional.body?.cancel();
+      }
       return [...(await response.text()).matchAll(/["'`](\.\/(?:chunk|main)-[A-Za-z0-9_-]+\.js)["'`]/g)].map((match) => new URL(match[1], url));
     }));
     pending = [...new Map(next.flat().filter((url) => !seen.has(url.href)).map((url) => [url.href, url])).values()];

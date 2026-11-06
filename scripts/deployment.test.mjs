@@ -81,3 +81,21 @@ test('publishes only validated artifacts, preserves production history and rejec
     await rm(target, { recursive: true, force: true });
   }
 });
+
+
+test('deployment verification checks cached module responses as well as fresh downloads', async () => {
+  let broken = false;
+  let validations = 0;
+  const request = async (url, options) => {
+    if (new URL(url).pathname === '/') return new Response('<script src="/main-CURRENT.js"></script>', { headers: { 'Content-Type': 'text/html' } });
+    if (options?.headers?.['If-None-Match']) {
+      validations++;
+      return new Response(null, { status: broken ? 404 : 304 });
+    }
+    return new Response('export{}', { headers: { 'Content-Type': 'application/javascript', ETag: '"current"' } });
+  };
+  assert.equal(await verifyModules('https://bar.example', request), 1);
+  assert.equal(validations, 1);
+  broken = true;
+  await assert.rejects(verifyModules('https://bar.example', request), /Broken cached JavaScript module/);
+});

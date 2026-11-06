@@ -153,3 +153,37 @@ test('el HTML de arranque y los bloqueos del proveedor nunca se aceptan como dat
   assert.equal(limited.status, 429);
   assert.equal(limited.headers.get('retry-after'), '60');
 });
+
+test('la revalidación de módulos en caché conserva el 304 aunque no incluya Content-Type', async () => {
+  for (const path of [
+    '/chunk-CURRENT.js',
+    '/main-CURRENT.js',
+    '/styles-CURRENT.css',
+    '/startup.js',
+  ]) {
+    const response = await worker.fetch(
+      new Request('https://bar.example' + path, { headers: { 'If-None-Match': '"current"' } }),
+      {
+        ASSETS: {
+          fetch: (request) => {
+            assert.equal(request.headers.get('if-none-match'), '"current"');
+            return new Response(null, {
+              status: 304,
+              headers: {
+                ETag: '"current"',
+                'Cache-Control': 'public, max-age=0, must-revalidate',
+                Vary: 'Accept-Encoding',
+              },
+            });
+          },
+        },
+      },
+    );
+    assert.equal(response.status, 304);
+    assert.equal(response.headers.get('etag'), '"current"');
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
+    assert.equal(response.headers.get('vary'), 'Accept-Encoding');
+    assert.equal(response.headers.has('content-type'), false);
+    assert.equal(await response.text(), '');
+  }
+});

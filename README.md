@@ -131,3 +131,5 @@ Las lecturas de la API mantienen un límite de 25 segundos hasta recibir y proce
 `public/startup.js` funciona independientemente de Angular. Si el arranque tarda más de 12 segundos, muestra una opción para volver a cargar y detalles locales del error. Incluye código, estado HTTP, ruta pública acotada, referencia de Cloudflare y navegador; no almacena datos ni envía telemetría. No incluye cuerpos, contraseñas, tokens, query strings ni mensajes internos de excepciones. Una carga correcta oculta el aviso.
 
 Un fallo de descarga de módulos durante la navegación inicial permite una sola recarga automática por pestaña cada dos minutos. Después de abrir una página no se recarga automáticamente, para no interrumpir formularios, pedidos ni pagos. El aviso permanece disponible si el fallo se repite.
+
+La entrega de JS/CSS conserva respuestas `304 Not Modified` y sus cabeceras de caché; no las transforma en 404 por carecer de cuerpo o Content-Type. La verificación manual del grafo de módulos comprueba tanto descargas nuevas como revalidaciones con ETag.
