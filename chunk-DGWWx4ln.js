@@ -1,1 +1,0 @@
-import"./chunk-kVzLKgrx.js";import"./chunk-B8zJopto.js";import"./main-LBOAQ5RA.js";import"./chunk-Bc5406_D.js";import"./chunk-C-V3pFVn.js";import{n as se,r as ue,t as ce}from"./chunk-DJNka9A3.js";import{t as L}from"./chunk-CbrPail9.js";export{L as RecommendedProducts};
