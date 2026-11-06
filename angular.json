@@ -22,8 +22,7 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public",
-                "ignore": ["**/texas-tango*"]
+                "input": "public"
               }
             ],
             "styles": [

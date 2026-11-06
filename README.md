@@ -107,9 +107,9 @@ El workflow `.github/workflows/deploy.yml` valida los pull requests y pushes a `
 
 Actions publica un artefacto validado en la rama `production`, sin secretos ni dependencias instaladas. La rama conserva el historial de despliegues y contiene `deployment.json` con la revision fuente. El job de publicacion tiene `contents: write`; las pruebas solo tienen lectura. No se necesitan tokens personales ni claves de los proveedores en GitHub.
 
-Configurar la variable de repositorio `DEPLOYMENT_URL` con el origen HTTPS publico. El workflow espera a que el proveedor sirva la misma revision y a que `/api/ready` responda correctamente. Un timeout marca el workflow como fallido; no se presenta una publicacion pendiente como exitosa.
+Actions valida y publica el artefacto sin hacer llamadas HTTP al frontend ni a la API de producción. La revisión pública y readiness se comprueban fuera de GitHub Actions.
 
-Cloudflare Pages debe observar `production`, sin comando de build y con directorio de salida `.`. Angular se compila en Actions. Mantener `BACKEND_ORIGIN` y `PUBLIC_FRONTEND_URL` en las variables de produccion de Pages. `DEPLOYMENT_URL` en GitHub apunta al dominio publico del frontend.
+Cloudflare Pages debe observar `production`, sin comando de build y con directorio de salida `.`. Angular se compila en Actions. Mantener `BACKEND_ORIGIN` y `PUBLIC_FRONTEND_URL` en las variables de produccion de Pages.
 
 La portada consulta la configuracion antes de activarse. Sin administrador abre `/setup`; con administrador y sin Business abre el inicio `/start`, que conduce al login o a `/business/setup`. Si la API no responde, `/start` muestra un error recuperable y la portada permanece bloqueada.
 

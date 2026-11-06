@@ -15,10 +15,18 @@
   src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Texas Tango';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/texas-tango.otf') format('opentype');
+}
+
 @theme inline {
   --font-sans: var(--business-font-body, 'Space Grotesk'), sans-serif;
   --font-display: var(--business-font-display, 'Bricolage Grotesque'), sans-serif;
-  --font-brand: var(--business-font-brand, 'Bricolage Grotesque'), sans-serif;
+  --font-brand: var(--business-font-brand, 'Texas Tango'), serif;
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-secondary: var(--secondary);
@@ -40,7 +48,7 @@
   color-scheme: dark;
   --business-font-body: 'Space Grotesk';
   --business-font-display: 'Bricolage Grotesque';
-  --business-font-brand: 'Bricolage Grotesque';
+  --business-font-brand: 'Texas Tango';
   --accent: #f5a623;
   --primary: var(--accent);
   --secondary: color-mix(in srgb, var(--accent) 85%, #fff);
