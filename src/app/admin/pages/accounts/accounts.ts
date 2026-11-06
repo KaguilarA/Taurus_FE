@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Role, StaffAccount } from '../../../interfaces';
 import { Button, Feedback } from '../../../shared/ui';
@@ -11,10 +11,14 @@ import { AdminPageHeading } from '../../shared/page-heading';
   selector: 'app-admin-accounts',
   imports: [Button, Feedback, AdminPageHeading, PageSkeleton, FormsModule, DatePipe],
   templateUrl: './accounts.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountsPage extends AdminTask {
   public readonly updateField = updateField;
   public readonly accounts = signal<StaffAccount[]>([]);
+  public readonly editing = signal<StaffAccount | null>(null);
+  public readonly replacementPassword = signal({ password: '', passwordConfirmation: '' });
+  public readonly ownId = signal('');
   public readonly staff = signal({ name: '', username: '', password: '', role: 'waiter' as Role });
   public readonly resetRequests = signal<
     {
@@ -28,7 +32,50 @@ export class AccountsPage extends AdminTask {
   >([]);
   constructor() {
     super();
-    this.initialize(() => this.loadAccounts());
+    this.initialize(async () => {
+      const [, own] = await Promise.all([
+        this.loadAccounts(),
+        this.api.request<StaffAccount>('/admin/me'),
+      ]);
+      this.ownId.set(own._id);
+    });
+  }
+  public editAccount(account: StaffAccount): void {
+    this.editing.set({ ...account });
+    this.replacementPassword.set({ password: '', passwordConfirmation: '' });
+    this.error.set('');
+    this.notice.set('');
+  }
+  public closeEditor(): void {
+    this.editing.set(null);
+    this.replacementPassword.set({ password: '', passwordConfirmation: '' });
+  }
+  public saveAccount(): void {
+    const account = this.editing();
+    if (!account) return;
+    this.run(async () => {
+      const updated = await this.api.request<StaffAccount>(
+        '/admin/accounts/' + account._id,
+        'PUT',
+        account,
+      );
+      this.editing.set(updated);
+      this.accounts.update((accounts) =>
+        accounts.map((item) => (item._id === updated._id ? updated : item)),
+      );
+    }, 'Perfil actualizado.');
+  }
+  public resetPassword(): void {
+    const account = this.editing();
+    if (!account) return;
+    this.run(async () => {
+      await this.api.request(
+        '/admin/accounts/' + account._id + '/password',
+        'PUT',
+        this.replacementPassword(),
+      );
+      this.replacementPassword.set({ password: '', passwordConfirmation: '' });
+    }, 'Contraseña restablecida. El usuario deberá iniciar sesión de nuevo.');
   }
   public loadResets(): void {
     this.run(async () => {

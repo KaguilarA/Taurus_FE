@@ -3,6 +3,76 @@
 	description="Administrá los accesos y solicitudes del equipo."
 />
 <app-feedback [error]="error()" [notice]="notice()" />
+@if (editing(); as account) {
+	<section
+		class="panel rounded-xl border border-border bg-surface p-6 mb-6"
+		aria-labelledby="edit-account-title"
+	>
+		<h2 id="edit-account-title">Editar perfil de {{ account.username }}</h2>
+		<form class="grid gap-5 mt-4" (ngSubmit)="saveAccount()">
+			<label
+				>Nombre<input
+					name="editName"
+					[ngModel]="account.name"
+					(ngModelChange)="updateField(editing, ['name'], $event)"
+					required
+					maxlength="100"
+			/></label>
+			<label
+				>Usuario<input
+					name="editUsername"
+					[ngModel]="account.username"
+					(ngModelChange)="updateField(editing, ['username'], $event)"
+					required
+					minlength="3"
+					maxlength="40"
+					autocapitalize="none"
+					spellcheck="false"
+			/></label>
+			<button appButton="primary" [disabled]="busy()">Guardar perfil</button>
+		</form>
+		<form class="grid gap-5 mt-6" (ngSubmit)="resetPassword()">
+			<h3>Restablecer contraseña</h3>
+			<p>
+				Las sesiones de esta cuenta se cerrarán. No necesitás conocer su contraseña actual.
+			</p>
+			<label
+				>Nueva contraseña<input
+					type="password"
+					name="replacementPassword"
+					[ngModel]="replacementPassword().password"
+					(ngModelChange)="updateField(replacementPassword, ['password'], $event)"
+					required
+					minlength="12"
+					maxlength="200"
+					autocomplete="new-password"
+			/></label>
+			<label
+				>Confirmar nueva contraseña<input
+					type="password"
+					name="replacementConfirmation"
+					[ngModel]="replacementPassword().passwordConfirmation"
+					(ngModelChange)="
+						updateField(replacementPassword, ['passwordConfirmation'], $event)
+					"
+					required
+					minlength="12"
+					maxlength="200"
+					autocomplete="new-password"
+			/></label>
+			<button appButton="primary" [disabled]="busy()">Restablecer contraseña</button>
+		</form>
+		<button
+			type="button"
+			appButton="outline"
+			class="mt-4"
+			(click)="closeEditor()"
+			[disabled]="busy()"
+		>
+			Cerrar edición
+		</button>
+	</section>
+}
 @if (loading()) {
 	<app-page-skeleton variant="section" />
 } @else {
@@ -101,6 +171,17 @@
 					<article class="guest-order border-t border-border mt-4 px-0 py-4.5">
 						<strong>{{ account.name || account.username }}</strong>
 						<p>{{ account.username }}</p>
+						@if (account._id !== ownId()) {
+							<button
+								type="button"
+								appButton="outline"
+								(click)="editAccount(account)"
+								[disabled]="busy()"
+								[attr.aria-label]="'Editar perfil de ' + account.username"
+							>
+								Editar perfil y contraseña
+							</button>
+						}
 						<span
 							class="badge inline-flex whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent"
 							>{{
