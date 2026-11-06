@@ -75,8 +75,7 @@ export async function proxyApi(request, env, upstreamFetch = fetch) {
   } catch {
     return Response.json(
       {
-        error:
-          'El servidor está iniciando o no está disponible. Volvé a intentar en un momento.',
+        error: 'El servidor está iniciando o no está disponible. Volvé a intentar en un momento.',
       },
       { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '15' } },
     );
@@ -89,6 +88,9 @@ export default {
     if (pathname === '/api' || pathname.startsWith('/api/')) return proxyApi(request, env);
     const response = await env.ASSETS.fetch(request);
     if (/\.(?:js|css)$/.test(pathname)) {
+      // A conditional cache hit is valid and intentionally has no body or MIME header.
+      // Preserve it so the browser can reuse the module it already downloaded.
+      if (response.status === 304) return response;
       const expected = pathname.endsWith('.js') ? /(?:javascript|ecmascript)/i : /text\/css/i;
       if (!response.ok || !expected.test(response.headers.get('Content-Type') ?? ''))
         return new Response(
