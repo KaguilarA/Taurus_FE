@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { Icon } from '../../../icon';
 import type { DiningTable } from '../../../interfaces';
 import { Button, Feedback } from '../../../shared/ui';
@@ -8,11 +9,30 @@ import { AdminTask } from '../../shared/admin-task';
 import { AdminPageHeading } from '../../shared/page-heading';
 @Component({
   selector: 'app-admin-tables',
-  imports: [Button, Feedback, FormsModule, AdminPageHeading, PageSkeleton, Icon],
+  imports: [Button, Feedback, FormsModule, AdminPageHeading, PageSkeleton, Icon, RouterLink],
   templateUrl: './tables.html',
 })
 export class TablesPage extends AdminTask {
+  private readonly router = inject(Router);
   public readonly tables = signal<DiningTable[]>([]);
+  public readonly tableLinks = computed(
+    () =>
+      new Map(
+        this.tables().map((table) => {
+          try {
+            const url = new URL(table.url);
+            return [
+              table._id,
+              url.pathname === '/cuenta'
+                ? this.router.parseUrl(url.pathname + url.search + url.hash)
+                : null,
+            ] as const;
+          } catch {
+            return [table._id, null] as const;
+          }
+        }),
+      ),
+  );
   public readonly tableName = signal('');
   constructor() {
     super();

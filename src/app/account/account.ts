@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet, UrlTree } from '@angular/router';
 import { Api, servingName, themeAccent } from '../api';
 import { Icon } from '../icon';
 import type {
@@ -152,8 +152,11 @@ export class AccountPage {
       ready: 'Por servir',
       delivered: 'Servida',
     })[status] ?? status;
-  public sectionLink(section: string): string {
-    return this.router.url.split('#')[0] + '#' + section;
+  public sectionLink(section: string): UrlTree {
+    return this.router.createUrlTree(['/cuenta'], {
+      queryParamsHandling: 'preserve',
+      fragment: section,
+    });
   }
   constructor() {
     this.load();

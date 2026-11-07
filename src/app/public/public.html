@@ -8,7 +8,7 @@
 		>
 			<a
 				class="brand min-w-0 [overflow-wrap:anywhere] font-brand text-2xl sm:text-3xl uppercase leading-none tracking-wide [&_span]:mt-2 [&_span]:block [&_span]:font-sans [&_span]:text-[8px] [&_span]:font-semibold [&_span]:tracking-[0.3em]"
-				[href]="sectionLink('')"
+				[routerLink]="sectionLink('')"
 				>{{ d.settings.name }}<span>{{ d.settings.subtitle }}</span></a
 			>
 			<nav
@@ -16,10 +16,11 @@
 				aria-label="Navegación principal"
 			>
 				<a routerLink="/cuenta">Mi cuenta</a>
-				<a [href]="sectionLink('carta')">La carta</a
-				><a [href]="sectionLink('eventos')">Eventos</a
-				><a [href]="sectionLink('promociones')">Promociones</a
-				><a class="hide-mobile max-sm:hidden" [href]="sectionLink('visitanos')">Visitanos</a
+				<a [routerLink]="sectionLink('carta')">La carta</a
+				><a [routerLink]="sectionLink('eventos')">Eventos</a
+				><a [routerLink]="sectionLink('promociones')">Promociones</a
+				><a class="hide-mobile max-sm:hidden" [routerLink]="sectionLink('visitanos')"
+					>Visitanos</a
 				><a
 					class="nav-arrow grid place-items-center border border-border w-9 h-9 rounded-full text-[21px]"
 					routerLink="/admin"
@@ -50,10 +51,10 @@
 					(click)="navigationOpen.set(false)"
 				>
 					<a routerLink="/cuenta">Mi cuenta</a>
-					<a [href]="sectionLink('carta')">La carta</a>
-					<a [href]="sectionLink('eventos')">Eventos</a>
-					<a [href]="sectionLink('promociones')">Promociones</a>
-					<a [href]="sectionLink('visitanos')">Visitanos</a>
+					<a [routerLink]="sectionLink('carta')">La carta</a>
+					<a [routerLink]="sectionLink('eventos')">Eventos</a>
+					<a [routerLink]="sectionLink('promociones')">Promociones</a>
+					<a [routerLink]="sectionLink('visitanos')">Visitanos</a>
 					<a routerLink="/admin">Administración</a>
 				</nav>
 			</app-dialog>
@@ -90,11 +91,12 @@
 					>
 						<p>{{ d.settings.description }}</p>
 						<div>
-							<a appButton="primary" href="#carta"
+							<a appButton="primary" routerLink="/" fragment="carta"
 								>Explorar la carta <app-icon name="arrow-up-right" /></a
 							><a
 								class="hero-event-link inline-flex items-center gap-2.5 text-sm hover:underline hover:underline-offset-4 py-3.5"
-								href="#eventos"
+								routerLink="/"
+								fragment="eventos"
 								>Ver eventos <app-icon name="calendar-days"
 							/></a>
 						</div>

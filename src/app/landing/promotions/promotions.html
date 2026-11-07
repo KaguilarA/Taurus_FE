@@ -16,7 +16,9 @@
 					>
 					<h3>{{ promo.title }}</h3>
 					<p>{{ promo.description }}</p>
-					<a [href]="'/#visitanos'">Te esperamos <app-icon name="arrow-up-right" /></a>
+					<a routerLink="/" fragment="visitanos"
+						>Te esperamos <app-icon name="arrow-up-right"
+					/></a>
 				</div>
 				<img
 					decoding="async"

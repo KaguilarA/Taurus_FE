@@ -140,6 +140,55 @@ describe('Dashboard child routes and access control', () => {
     expect(harness.routeDebugElement!.componentInstance).toBe(shell);
   });
 
+  it('opens the public page through the same router without a new browsing context', async () => {
+    const harness = await RouterTestingHarness.create('/admin/accounts');
+    await harness.fixture.whenStable();
+    const link = harness.routeNativeElement?.querySelector(
+      'a[aria-label="Ver página pública"]',
+    ) as HTMLAnchorElement;
+    expect(link.target).toBe('');
+    link.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it('table previews keep their QR token while navigating inside the SPA', async () => {
+    const original = vi.mocked(api.request).getMockImplementation()!;
+    vi.mocked(api.request).mockImplementation(async (path, ...args) => {
+      if (path.startsWith('/public/tables/') || path.startsWith('/public/bills/'))
+        return {
+          token: 'preview-bill',
+          label: 'Table',
+          status: 'open',
+          total: 0,
+          balance: 0,
+          orders: [],
+        } as never;
+      if (path === '/admin/tables')
+        return [
+          {
+            _id: 'table',
+            name: 'Table',
+            active: true,
+            qr: '',
+            url: 'https://business.test/cuenta?mesa=table%2Btoken',
+          },
+        ] as never;
+      return original(path, ...args);
+    });
+    const harness = await RouterTestingHarness.create('/admin/tables');
+    await harness.fixture.whenStable();
+    const link = [...harness.routeNativeElement!.querySelectorAll('a')].find((a) =>
+      a.textContent?.includes('Probar menú'),
+    )!;
+    expect(link.target).toBe('');
+    expect(link.getAttribute('href')).toBe('/cuenta?mesa=table%2Btoken');
+    link.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/cuenta?mesa=table%2Btoken');
+    localStorage.removeItem('bill:table+token');
+  });
+
   it('rechecks expired sessions and changed roles before navigating to another child', async () => {
     const harness = await RouterTestingHarness.create('/admin/products');
     role = 'kitchen';

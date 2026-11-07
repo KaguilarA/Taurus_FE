@@ -48,7 +48,7 @@
 					<div class="flex flex-wrap gap-3">
 						<a appButton="primary" [href]="table.qr" [download]="table.name + '-qr.png'"
 							><app-icon name="download" /> Descargar QR</a
-						><a appButton="outline" [href]="table.url" target="_blank" rel="noreferrer"
+						><a appButton="outline" [routerLink]="tableLinks().get(table._id)"
 							>Probar menú <app-icon name="arrow-up-right" /></a
 						><button
 							appButton="outline"

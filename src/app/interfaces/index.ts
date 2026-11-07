@@ -38,3 +38,5 @@ export * from './purchase-invoice.interface';
 
 export * from './seo-settings.interface';
 export * from './seo-metadata.interface';
+export * from './staff-password-reset.interface';
+export * from './seo-discovery-document.interface';

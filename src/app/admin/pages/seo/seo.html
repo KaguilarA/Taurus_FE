@@ -152,9 +152,34 @@
 					El dominio y las direcciones canónicas se toman del sitio publicado.
 				</p>
 				<div class="mt-4 flex flex-wrap gap-4 text-sm text-accent">
-					<a href="/robots.txt" target="_blank" rel="noopener">Ver robots.txt</a
-					><a href="/sitemap.xml" target="_blank" rel="noopener">Ver mapa del sitio</a>
+					<button type="button" [disabled]="busy()" (click)="showDiscovery('robots.txt')">
+						Ver robots.txt
+					</button>
+					<button
+						type="button"
+						[disabled]="busy()"
+						(click)="showDiscovery('sitemap.xml')"
+					>
+						Ver mapa del sitio
+					</button>
 				</div>
+				@if (discovery(); as document) {
+					<div class="mt-5 min-w-0 rounded-lg border border-border p-4">
+						<h3>{{ document.name }}</h3>
+						<pre
+							tabindex="0"
+							[attr.aria-label]="'Contenido de ' + document.name"
+							class="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-all text-xs"
+							>{{ document.content }}</pre>
+						<button
+							type="button"
+							class="mt-3 text-sm text-accent"
+							(click)="discovery.set(null)"
+						>
+							Cerrar vista previa
+						</button>
+					</div>
+				}
 			</section>
 		</aside>
 	</form>

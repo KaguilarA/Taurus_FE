@@ -10,6 +10,7 @@
 - Use Tailwind utilities and the central business theme. Create component CSS only when utilities cannot express the requirement cleanly.
 - Self-close components with no projected content. Preserve traditional paired tags when they contain content.
 - Keep business identity configurable and preserve API contracts, stored data, authentication and role restrictions.
+- Keep internal navigation inside the SPA, using Angular Router in the same browser tab. Do not use `target="_blank"`, `window.open`, or full-document navigation for internal routes. Show administrative document previews inside the app; retain normal file downloads.
 - Declare visibility explicitly on component properties and methods; use private/protected for dependencies and internal behavior, public for the component API, and annotate every method return type (`void` or `Promise<void>` when appropriate).
 - Keep each interface and type alias in its own file under `src/app/interfaces/`, exported through its barrel. Components must not declare domain interfaces inline.
 - Never use the `void` operator before a method or function invocation. Handle promises explicitly; `void` remains valid as a return type.

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy } from '@angular/core';
-import { Component, inject, signal } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { afterNextRender, Component, inject, Injector, signal } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet, UrlTree } from '@angular/router';
 import { Api, themeAccent } from '../api';
 import { Icon } from '../icon';
 import type { PublicState } from '../interfaces';
@@ -33,12 +34,16 @@ import { PageSkeleton } from '../shared/ui/page-skeleton';
   templateUrl: './public.html',
 })
 export class PublicPage {
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly viewport = inject(ViewportScroller);
+  private readonly injector = inject(Injector);
   private readonly api = inject(Api);
   public readonly data = signal<PublicState | null>(null);
   public readonly error = signal('');
   public readonly navigationOpen = signal(false);
-  public sectionLink(section: string): string {
-    return '/#' + section;
+  public sectionLink(section: string): UrlTree {
+    return this.router.createUrlTree(['/'], { fragment: section || undefined });
   }
   constructor() {
     this.load();
@@ -50,6 +55,13 @@ export class PublicPage {
       data.settings.accent = themeAccent(data.settings.accent);
       this.data.set(data);
       this.api.productTypes.set(data.productTypes ?? []);
+      afterNextRender(
+        () => {
+          const fragment = this.route.snapshot.fragment;
+          if (fragment) this.viewport.scrollToAnchor(fragment);
+        },
+        { injector: this.injector },
+      );
     } catch (error) {
       this.error.set((error as Error).message);
     }

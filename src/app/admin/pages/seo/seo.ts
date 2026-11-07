@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { SeoSettings } from '../../../interfaces';
+import type { SeoSettings, SeoDiscoveryDocument } from '../../../interfaces';
 import { ImageUpload } from '../../../image-upload';
 import { Button, Feedback } from '../../../shared/ui';
 import { PageSkeleton } from '../../../shared/ui/page-skeleton';
@@ -15,6 +15,7 @@ import { AdminPageHeading } from '../../shared/page-heading';
   templateUrl: './seo.html',
 })
 export class SeoPage extends AdminTask {
+  public readonly discovery = signal<SeoDiscoveryDocument | null>(null);
   public readonly updateField = updateField;
   public readonly seo = signal<SeoSettings>({
     title: '',
@@ -57,5 +58,18 @@ export class SeoPage extends AdminTask {
         this.seo.set(await this.api.request<SeoSettings>('/admin/seo', 'PUT', this.seo())),
       'SEO guardado. Los enlaces compartidos y buscadores pueden tardar hasta 30 segundos en recibir los cambios; sus propias vistas previas pueden conservar una caché adicional.',
     );
+  }
+  public async showDiscovery(name: 'robots.txt' | 'sitemap.xml'): Promise<void> {
+    await this.run(async () => {
+      const response = await fetch('/' + name, {
+        signal: AbortSignal.timeout(10000),
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error('No se pudo consultar ' + name + '. Intentá nuevamente.');
+      const content = await response.text();
+      if (content.length > 512000)
+        throw new Error('El archivo es demasiado grande para esta vista previa.');
+      this.discovery.set({ name, content });
+    });
   }
 }

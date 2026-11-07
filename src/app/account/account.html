@@ -285,7 +285,7 @@
 							</p>
 						}
 						<a
-							[href]="sectionLink('mi-cuenta')"
+							[routerLink]="sectionLink('mi-cuenta')"
 							class="back-link mt-7 inline-flex items-center justify-center gap-2 text-center text-xs text-accent max-[760px]:[.account-header_&]:text-xs [.account-header_&]:m-0"
 							>Ver la cuenta de la mesa <app-icon name="arrow-up"
 						/></a>
@@ -305,7 +305,7 @@
 			<a
 				appButton="primary"
 				class="guest-cart-link fixed bottom-5 left-1/2 [transform:translateX(-50%)] z-[20] whitespace-nowrap [box-shadow:0_6px_30px_#00000035]"
-				href="#tu-pedido"
+				[routerLink]="sectionLink('tu-pedido')"
 				>Ver pedido · {{ api.money(total(), d.settings.currency) }}
 				<app-icon name="arrow-down"
 			/></a>
